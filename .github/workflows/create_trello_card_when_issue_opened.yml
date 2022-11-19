@@ -6,7 +6,7 @@ on:
 
 jobs:
   create_trello_card_job:
-    runs-on: ubuntu-lates
+    runs-on: ubuntu-latest
     name: Create Trello Card 
     steps: 
     - name: Call trello-github-actions 

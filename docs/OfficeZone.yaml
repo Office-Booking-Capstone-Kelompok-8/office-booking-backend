@@ -1,0 +1,355 @@
+openapi: 3.0.3
+info:
+  title: OfficeZone API
+  description: OfficeZone office space booking API
+  version: 1.0.0
+
+servers:
+  - url: 'https://dev.fortyfour.com/v1'
+    description: Development server
+  - url: 'https://staging.fortyfour.com/v1'
+    description: Staging server
+  - url: 'https://api.fortyfour.com/v1'
+    description: Production server
+  - url: '{path}'
+    variables:
+      path:
+        default: 'dev.fortyfour.com/v1'
+        description: Development server
+
+paths:
+  /ping:
+    get:
+      summary: Ping
+      description: Ping the server
+      operationId: ping
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Pong
+  /users/register:
+    post:
+      summary: Register a new user
+      operationId: registerUser
+      tags:
+        - EndUser.Users
+      requestBody:
+        description: User registration details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: John Doe
+                email:
+                  type: string
+                  format: email
+                  example: oz@mail.com
+                password:
+                  type: string
+                  format: password
+                  example: password
+                phone:
+                  type: string
+                  example: +1 234 567 890
+      responses:
+        201:
+          description: Successfully registering a new user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: user created successfully
+        409:
+          description: User with provided email already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: user already exists
+        400:
+          $ref: '#/components/responses/InvalidRequestBody'
+
+  /users/login:
+    post:
+      summary: Login
+      operationId: login
+      tags:
+        - EndUser.Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: oz@mail.com
+                password:
+                  type: string
+                  format: password
+                  example: password
+        required: true
+      responses:
+        200:
+          description: Successfully logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Login successful
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiI3MTg1OGNmMS1lNDhkLTQzYmQtOGU0YS1jZDNkNGE1YjIwMDMiLCJyb2xlIjoxLCJleHAiOjB9.G0PITHn6gz-fu6kqrZYwBc_bAca1YCZvMNGFvKHDytk
+        401:
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: invalid email or password
+        400:
+          $ref: '#/components/responses/InvalidRequestBody'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /buildings:
+    get:
+      summary: Get all buildings in the system
+      description: Get all buildings in the system with custom filters. (*) denotes required to be provided at least one of the filters
+      operationId: getBuildings
+      parameters:
+        - name: q
+          in: query
+          description: Search query string to filter buildings by name (*)
+          required: false
+          schema:
+            type: string
+            example: 'building'
+        - name: city
+          in: query
+          description: City ID to filter buildings by city (*)
+          required: false
+          schema:
+            type: integer
+        - name: district
+          in: query
+          description: District ID to filter buildings by district (*)
+          required: false
+          schema:
+            type: integer
+        - name: startDate
+          in: query
+          description: Start date to filter buildings by availability in yyyy-mm-dd format. Must be used together with endDate
+          required: false
+          schema:
+            type: string
+            format: date
+            example: '2020-01-01'
+        - name: endDate
+          in: query
+          description: End date to filter buildings by availability in yyyy-mm-dd format. Must be used together with startDate
+          required: false
+          schema:
+            type: string
+            format: date
+            example: '2020-01-01'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/page'
+
+      responses:
+        200:
+          description: Successfully retrieved buildings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: buildings retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BriefBuildingDetails'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+
+        400:
+          description: Bad parameter request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidParameterValue:
+                  description: Invalid parameter value provided
+                  value:
+                    message: Invalid parameter value
+                ParameterRequired:
+                  description: Required parameter not provided
+                  value:
+                    message: Parameter required
+
+        404:
+          description: No buildings found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: no building found
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  responses:
+    InvalidRequestBody:
+      description: Invalid request body
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: invalid request body
+    InternalServerError:
+      description: Unexpected error occurred
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                description: Error message
+                example: database error....
+
+  parameters:
+    page:
+      name: page
+      in: query
+      description: Page number
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    limit:
+      name: limit
+      in: query
+      description: Number of items to return
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  schemas:
+    BaseResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    Meta:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 1
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+    InvalidParameterValue:
+      type: object
+      properties:
+        message:
+          type: string
+          example: invalid parameter value
+    ParameterRequired:
+      type: object
+      properties:
+        message:
+          type: string
+          example: required filters not provided
+    BriefBuildingDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+        name:
+          type: string
+          example: Jakarta Convention Center
+        picture:
+          type: string
+          example: https://ik.imagekit.io/fortyfour/default-image.jpg?ik-sdk-version=javascript-1.4.3&updatedAt=1651795109157
+        price:
+          type: object
+          properties:
+            annual:
+              type: integer
+              example: 12000000
+            monthly:
+              type: integer
+              example: 1000000
+        owner:
+          type: string
+          example: PT. Graha Sidang Pratama
+        location:
+          type: object
+          properties:
+            city:
+              type: string
+              example: Jakarta Selatan
+            district:
+              type: string
+              example: Tanah Abang
+
+tags:
+  - name: EndUser.Users
+    description: End user users related endpoints
+  - name: EndUser.Buildings
+    description: End user buildings related endpoints
+  - name: EndUser.Reservations
+    description: End user reservations related endpoints
+  - name: Admin.Users
+    description: Admin users related endpoints
+  - name: Admin.Buildings
+    description: Admin buildings related endpoints
+  - name: Admin.Reservations
+    description: Admin reservations related endpoints

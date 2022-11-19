@@ -139,6 +139,109 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
+  /users:
+    get:
+      summary: Get logged in user detail
+      operationId: getUserDetail
+      security:
+        - userBearerAuth: []
+      tags:
+        - EndUser.Users
+      responses:
+        200:
+          description: Successfully retrieved user details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: user details retrieved successfully
+                  data:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: John Doe
+                      email:
+                        type: string
+                        example: of@mail.com
+                      phone:
+                        type: string
+                        example: +1 234 567 890
+        400:
+          $ref: '#/components/responses/MissingJWTToken'
+        404:
+          $ref: '#/components/responses/UserNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /reservations:
+    get:
+      summary: Get all reservations for a user
+      operationId: getReservations
+      security:
+        - userBearerAuth: []
+      tags:
+        - EndUser.Reservations
+      responses:
+        200:
+          description: successfully retrieved reservations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: reservations retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+                        buildings:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
+                            name:
+                              type: string
+                              example: Jakarta Convention Center
+                        companyName:
+                          type: string
+                          example: Alterra
+                        startDate:
+                          type: string
+                          format: date
+                          description: Start date of the reservation with format YYYY-MM-DD
+                          example: 2020-01-01
+                        endDate:
+                          type: string
+                          format: date
+                          description: End date of the reservation with format YYYY-MM-DD
+                          example: 2020-01-01
+                        status:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            message:
+                              type: string
+                              example: Pending
+        400:
+          $ref: '#/components/responses/MissingJWTToken'
+        404:
+          $ref: '#/components/responses/ReservationNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
   /buildings:
     get:
       summary: Get all buildings in the system
@@ -216,22 +319,43 @@ paths:
                   description: Required parameter not provided
                   value:
                     message: Parameter required
-
         404:
-          description: No buildings found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: no building found
+          $ref: '#/components/responses/BuildingNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
 
 components:
   responses:
+    ReservationNotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: reservation not found
+    UserNotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: user not found
+    BuildingNotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: building not found
     InvalidRequestBody:
       description: Invalid request body
       content:
@@ -242,6 +366,22 @@ components:
               message:
                 type: string
                 example: invalid request body
+    UnauthorizedError:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: unauthorized
+    MissingJWTToken:
+      description: Missing JWT Token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MissingJWTToken'
     InternalServerError:
       description: Unexpected error occurred
       content:
@@ -293,6 +433,12 @@ components:
         limit:
           type: integer
           example: 20
+    MissingJWTToken:
+      type: object
+      properties:
+        message:
+          type: string
+          example: missing or malformed jwt
     InvalidParameterValue:
       type: object
       properties:
@@ -340,11 +486,19 @@ components:
               type: string
               example: Tanah Abang
 
+  securitySchemes:
+    userBearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    adminBearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
 tags:
   - name: EndUser.Users
     description: End user users related endpoints
-  - name: EndUser.Buildings
-    description: End user buildings related endpoints
   - name: EndUser.Reservations
     description: End user reservations related endpoints
   - name: Admin.Users

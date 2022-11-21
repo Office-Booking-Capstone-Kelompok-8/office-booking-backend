@@ -76,7 +76,20 @@ paths:
         409:
           $ref: '#/components/responses/EmailAlreadyUsed'
         400:
-          $ref: '#/components/responses/InvalidRequestBody'
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidEmail:
+                  $ref: '#/components/examples/InvalidEmail'
+                InvalidPassword:
+                  $ref: '#/components/examples/InvalidPassword'
+        500:
+          $ref: '#/components/responses/InternalServerError'
 
   /users/login:
     post:
@@ -162,8 +175,11 @@ paths:
                       phone:
                         type: string
                         example: +1 234 567 890
-        400:
-          $ref: '#/components/responses/MissingJWTToken'
+                      picture:
+                        type: string
+                        example: https://ik.imagekit.io/fortyfour/default-image.jpg?ik-sdk-version=javascript-1.4.3&updatedAt=1651795109157
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
         404:
           $ref: '#/components/responses/UserNotFound'
         500:
@@ -205,17 +221,9 @@ paths:
                     type: string
                     example: user details updated successfully
         400:
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BaseResponse'
-              examples:
-                MissingJWTToken:
-                  $ref: '#/components/examples/MissingJWTToken'
-                InvalidRequestBody:
-                  $ref: '#/components/examples/InvalidRequestBody'
-
+          $ref: '#/components/responses/InvalidRequestBody'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
         404:
           $ref: '#/components/responses/UserNotFound'
         409:
@@ -261,20 +269,18 @@ paths:
                     type: string
                     example: user password updated successfully
         400:
-          description: Invalid request
+          description: Bad request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BaseResponse'
               examples:
-                MissingJWTToken:
-                  $ref: '#/components/examples/MissingJWTToken'
                 InvalidRequestBody:
                   $ref: '#/components/examples/InvalidRequestBody'
-                InvalidNewPassword:
-                  description: New password is in invalid format
-                  value:
-                    message: invalid new password
+                InvalidPassword:
+                  $ref: '#/components/examples/InvalidPassword'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
         404:
           $ref: '#/components/responses/UserNotFound'
         409:
@@ -348,8 +354,8 @@ paths:
                             message:
                               type: string
                               example: Pending
-        400:
-          $ref: '#/components/responses/MissingJWTToken'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
         404:
           $ref: '#/components/responses/ReservationNotFound'
         500:
@@ -415,24 +421,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/BaseResponse'
               examples:
-                MissingJWTToken:
-                  $ref: '#/components/examples/MissingJWTToken'
                 InvalidRequestBody:
                   $ref: '#/components/examples/InvalidRequestBody'
                 InvalidStartDate:
-                  description: Start date is in invalid format
-                  value:
-                    message: invalid start date
+                  $ref: '#/components/examples/InvalidStartDate'
                 InvalidEndDate:
-                  description: End date is in invalid format
-                  value:
-                    message: invalid end date
+                  $ref: '#/components/examples/InvalidEndDate'
                 InvalidDateRange:
-                  description: End date is before start date
-                  value:
-                    message: invalid date range
-        404:
-          $ref: '#/components/responses/BuildingNotFound'
+                  $ref: '#/components/examples/InvalidDateRange'
+                InvalidBuildingID:
+                  $ref: '#/components/examples/InvalidBuildingID'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
         409:
           description: Reservation date range is not available
           content:
@@ -474,10 +474,944 @@ paths:
                   message:
                     type: string
                     example: reservation deleted successfully
-        400:
-          $ref: '#/components/responses/MissingJWTToken'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
         404:
           $ref: '#/components/responses/ReservationNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/buildings/picture:
+    post:
+      summary: Upload a picture for a building
+      operationId: uploadBuildingPicture
+      security:
+        - adminBearerAuth: []
+      tags:
+        - Admin.Buildings
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - picture
+              properties:
+                picture:
+                  type: string
+                  format: binary
+                  description: Picture of the building
+                alt:
+                  type: string
+                  description: Alternative text for the picture
+        required: true
+      responses:
+        201:
+          description: Successfully uploaded building picture
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building picture uploaded successfully
+                  data:
+                    type: object
+                    properties:
+                      pictureID:
+                        type: string
+                        format: uuid
+                        example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+                      url:
+                        type: string
+                        example: https://ik.imagekit.io/fortyfour/default-image.jpg?ik-sdk-version=javascript-1.4.3&updatedAt=1651795109157
+                      alt:
+                        type: string
+                        example: Jakarta Convention Center
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/buildings:
+    post:
+      summary: Create a building
+      operationId: createBuilding
+      security:
+        - adminBearerAuth: []
+      tags:
+        - Admin.Buildings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - picture
+                - description
+                - facilities
+                - capacity
+                - price
+                - location
+              properties:
+                name:
+                  type: string
+                  example: Jakarta Convention Center
+                picture:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - index
+                      - pictureID
+                    properties:
+                      index:
+                        type: integer
+                        example: 0
+                      pictureID:
+                        type: string
+                        example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+                description:
+                  type: string
+                  example: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                facilities:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - name
+                      - iconID
+                    properties:
+                      name:
+                        type: string
+                        example: Wifi
+                      iconID:
+                        type: integer
+                        example: 1
+                      description:
+                        type: string
+                        example: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                capacity:
+                  type: integer
+                  example: 1000
+                price:
+                  type: object
+                  required:
+                    - annual
+                    - monthly
+                  properties:
+                    annual:
+                      type: integer
+                      example: 100000000
+                    monthly:
+                      type: integer
+                      example: 10000000
+                location:
+                  type: object
+                  required:
+                    - districtID
+                    - cityID
+                    - address
+                    - geo
+                  properties:
+                    districtID:
+                      type: integer
+                      example: 1
+                    cityID:
+                      type: integer
+                      example: 1
+                    address:
+                      type: string
+                      example: Jl. MH Thamrin No. 1, RT.1/RW.2, Gondangdia, Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10340
+                    geo:
+                      type: object
+                      required:
+                        - lat
+                        - long
+                      properties:
+                        lat:
+                          type: number
+                          example: -6.175392
+                        long:
+                          type: number
+                          example: 106.827153
+        required: true
+      responses:
+        201:
+          description: Successfully created building
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building created successfully
+                  data:
+                    type: object
+                    properties:
+                      buildingID:
+                        type: string
+                        format: uuid
+                        example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+        400:
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidPictureID:
+                  $ref: '#/components/examples/InvalidPictureID'
+                InvalidDistrictID:
+                  $ref: '#/components/examples/InvalidDistrictID'
+                InvalidCityID:
+                  $ref: '#/components/examples/InvalidCityID'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  
+  /admin/buildings/{buildingID}:
+    put:
+      summary: Update a building
+      operationId: updateBuilding
+      security:
+        - adminBearerAuth: []
+      tags:
+        - Admin.Buildings
+      parameters:
+        - name: buildingID
+          in: path
+          description: ID of the building to be updated
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                name:
+                  type: string
+                  example: Jakarta Convention Center
+                picture:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - index
+                      - pictureID
+                    properties:
+                      index:
+                        type: integer
+                        example: 0
+                      pictureID:
+                        type: string
+                        example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+                description:
+                  type: string
+                  example: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                facilities:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - name
+                      - iconID
+                    properties:
+                      name:
+                        type: string
+                        example: Wifi
+                      iconID:
+                        type: integer
+                        example: 1
+                      description:
+                        type: string
+                        example: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                capacity:
+                  type: integer
+                  example: 1000
+                price:
+                  type: object
+                  minProperties: 1
+                  properties:
+                    annual:
+                      type: integer
+                      example: 100000000
+                    monthly:
+                      type: integer
+                      example: 10000000
+                location:
+                  type: object
+                  minProperties: 1
+                  properties:
+                    districtID:
+                      type: integer
+                      example: 1
+                    cityID:
+                      type: integer
+                      example: 1
+                    address:
+                      type: string
+                      example: Jl. MH Thamrin No. 1, RT.1/RW.2, Gondangdia, Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10340
+                    geo:
+                      type: object
+                      minProperties: 1
+                      properties:
+                        lat:
+                          type: number
+                          example: -6.175392
+                        long:
+                          type: number
+                          example: 106.827153
+        required: true
+      responses:
+        200:
+          description: Successfully updated building
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building updated successfully
+        400:
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidPictureID:
+                  $ref: '#/components/examples/InvalidPictureID'
+                InvalidDistrictID:
+                  $ref: '#/components/examples/InvalidDistrictID'
+                InvalidCityID:
+                  $ref: '#/components/examples/InvalidCityID'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        404:
+          $ref: '#/components/responses/BuildingNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Delete a building
+      operationId: deleteBuilding
+      security:
+        - adminBearerAuth: []
+      tags:
+        - Admin.Buildings
+      parameters:
+        - name: buildingID
+          in: path
+          description: ID of the building to be deleted
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+      responses:
+        200:
+          description: Successfully deleted building
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building deleted successfully
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        404:
+          $ref: '#/components/responses/BuildingNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/reservations:
+    get:
+      summary: Get all reservations
+      operationId: getReservations
+      security:
+        - adminBearerAuth: []
+      tags:
+        - Admin.Reservations
+      parameters:
+        - name: status
+          in: query
+          description: Status of the reservation
+          required: false
+          schema:
+            type: string
+            enum:
+              - pending
+              - payment
+              - approved
+              - rejected
+              - cancelled
+              - finished
+              - null
+            description: >
+              status of the reservation
+              * `pending` - reservation is waiting for manual approval from admin
+              * `payment` - reservation is waiting for payment
+              * `approved` - reservation is approved
+              * `rejected` - reservation is rejected
+              * `cancelled` - reservation is cancelled
+              * `finished` - reservation is finished
+            
+        - name: buildingID
+          in: query
+          description: ID of the building that the reservation is made for
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: userID
+          in: query
+          description: ID of the user
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: userName
+          in: query
+          description: Name of the user
+          required: false
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          description: Start date of the reservation
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: End date of the reservation
+          required: false
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        200:
+          description: Successfully retrieved reservations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: reservations retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BriefReservationDetails'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        404:
+          $ref: '#/components/responses/ReservationNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Create a reservation
+      operationId: createReservation
+      security:
+        - adminBearerAuth: []
+      tags:
+        - Admin.Reservations 
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userID
+                - buildingID
+                - companyName
+                - startDate
+                - endDate
+              properties:
+                userID:
+                  type: string
+                  description: ID of the user that made the reservation
+                  format: uuid
+                  example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+                buildingID:
+                  type: string
+                  format: uuid
+                  example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
+                companyName:
+                  type: string
+                  example: Alterra
+                startDate:
+                  type: string
+                  format: date
+                  description: Start date of the reservation with format YYYY-MM-DD
+                  example: 2020-01-01
+                endDate:
+                  type: string
+                  format: date
+                  description: End date of the reservation with format YYYY-MM-DD
+                  example: 2020-01-01
+        required: true
+      responses:
+        200:
+          description: Successfully created reservation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: reservation created successfully
+                  data:
+                    type: object
+                    properties:
+                      reservationID:
+                        type: string
+                        format: uuid
+                        example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+        400:
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidStartDate:
+                  $ref: '#/components/examples/InvalidStartDate'
+                InvalidEndDate:
+                  $ref: '#/components/examples/InvalidEndDate'
+                InvalidDateRange:
+                  $ref: '#/components/examples/InvalidDateRange'
+                InvalidBuildingID:
+                  $ref: '#/components/examples/InvalidBuildingID'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        409:
+          description: Reservation date range is not available
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: reservation date range is not available
+        500:
+          $ref: '#/components/responses/InternalServerError'    
+  /admin/reservations/{reservationID}:
+    put:
+      summary: Update a reservation
+      operationId: updateReservation
+      security:
+        - adminBearerAuth: []
+      tags:
+        - Admin.Reservations
+      parameters:
+        - name: reservationID
+          in: path
+          description: ID of the reservation
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                companyName:
+                  type: string
+                  example: Alterra
+                buildingID:
+                  type: string
+                  format: uuid
+                  example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
+                startDate:
+                  type: string
+                  format: date
+                  description: Start date of the reservation with format YYYY-MM-DD
+                  example: 2020-01-01
+                endDate:
+                  type: string
+                  format: date
+                  description: End date of the reservation with format YYYY-MM-DD
+                  example: 2020-01-01
+                status:
+                  type: string
+                  enum:
+                    - pending
+                    - payment
+                    - approved
+                    - rejected
+                    - cancelled
+                    - finished
+                    - null
+                  description: >
+                    status of the reservation
+                    * `pending` - reservation is waiting for manual approval from admin
+                    * `payment` - reservation is waiting for payment
+                    * `approved` - reservation is approved
+                    * `rejected` - reservation is rejected
+                    * `cancelled` - reservation is cancelled
+                    * `finished` - reservation is finished
+                message:
+                  type: string
+                  description: Message from admin to user
+                  example: Your reservation is approved
+        required: true
+      responses:
+        200:
+          description: Successfully updated reservation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: reservation updated successfully
+        400:
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidStartDate:
+                  $ref: '#/components/examples/InvalidStartDate'
+                InvalidEndDate:
+                  $ref: '#/components/examples/InvalidEndDate'
+                InvalidDateRange:
+                  $ref: '#/components/examples/InvalidDateRange'
+                InvalidBuildingID:
+                  $ref: '#/components/examples/InvalidBuildingID'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        404:
+          $ref: '#/components/responses/ReservationNotFound'
+        409:
+          description: Reservation date range is not available
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: reservation date range is not available
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Delete a reservation
+      operationId: deleteReservation
+      security:
+        - adminBearerAuth: []
+      tags:
+        - Admin.Reservations
+      parameters:
+        - name: reservationID
+          in: path
+          description: ID of the reservation
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Successfully deleted reservation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: reservation deleted successfully
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        404:
+          $ref: '#/components/responses/ReservationNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /admin/reservations/total:
+    get:
+      summary: Get total number of reservations
+      operationId: getTotalReservations
+      security:
+        - adminBearerAuth: []
+      tags:
+        - Admin.Reservations
+      responses:
+        200:
+          description: Successfully get total number of reservations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: reservations total retrieved successfully
+                  data:
+                    type: object
+                    properties:
+                      pending:
+                        type: integer
+                        example: 1
+                      payment:
+                        type: integer
+                        example: 1
+                      approved:
+                        type: integer
+                        example: 1
+                      rejected:
+                        type: integer
+                        example: 1
+                      cancelled:
+                        type: integer
+                        example: 1
+                      monthly:
+                        type: integer
+                        example: 1
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /admin/reservations/statistic:
+    get:
+      summary: Get weekly statistic of reservations 
+      operationId: getReservationStatistic
+      security:
+        - adminBearerAuth: []
+      tags:
+        - Admin.Reservations
+      responses:
+        200:
+          description: Successfully get statistic of reservations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: reservations statistic retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ReservationsStat'
+                    example:
+                      - date: 2020-01-01
+                        total: 1
+                      - date: 2020-01-02
+                        total: 1
+                      - date: 2020-01-03
+                        total: 1
+                      - date: 2020-01-04
+                        total: 1
+                      - date: 2020-01-05
+                        total: 1
+                      - date: 2020-01-06
+                        total: 1
+                      - date: 2020-01-07
+                        total: 1
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/users/{userID}:
+    get:
+      summary: Get user by ID
+      operationId: getUserByID
+      security:
+        - adminBearerAuth: []
+      tags:
+        - Admin.Users
+      parameters:
+        - name: userID
+          in: path
+          description: ID of the user
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Successfully get user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: user retrieved successfully
+                  data:
+                    $ref: '#/components/schemas/UserDetail'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        404:
+          $ref: '#/components/responses/UserNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Update user by ID
+      operationId: updateUserByID
+      security:
+        - adminBearerAuth: []
+      tags:
+        - Admin.Users
+      parameters:
+        - name: userID
+          in: path
+          description: ID of the user
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: User object that needs to be updated
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                name:
+                  type: string
+                  example: John Doe
+                email:
+                  type: string
+                  format: email
+                  example: oz@mail.com
+                phone: 
+                  type: string
+                  example: 0123456789
+                pictureID:
+                  type: string
+                  example: 1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p
+                role:
+                  type: integer
+                  enum:
+                    - 1
+                    - 2
+                  description: 1 for user, 2 for admin
+                  example: 1
+        required: true
+      responses:
+        200:
+          description: Successfully updated user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: user updated successfully
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidEmail:
+                  $ref: '#/components/examples/InvalidEmail'
+                InvalidRole:
+                  value:
+                    message: invalid role
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        404:
+          $ref: '#/components/responses/UserNotFound'
+        409:
+          $ref: '#/components/responses/EmailAlreadyUsed'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Delete user by ID
+      operationId: deleteUserByID
+      security:
+        - adminBearerAuth: []
+      tags:
+        - Admin.Users
+      parameters:
+        - name: userID
+          in: path
+          description: ID of the user
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Successfully deleted user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: user deleted successfully
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        404:
+          $ref: '#/components/responses/UserNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
 
@@ -617,8 +1551,8 @@ components:
               message:
                 type: string
                 example: invalid request body
-    UnauthorizedError:
-      description: Unauthorized
+    InvalidOrMissingToken:
+      description: Missing JWT Token
       content:
         application/json:
           schema:
@@ -626,13 +1560,17 @@ components:
             properties:
               message:
                 type: string
-                example: unauthorized
-    MissingJWTToken:
-      description: Missing JWT Token
+                example: invalid or expired JWT
+    RolesNotSupported:
+      description: Role not supported for this endpoint, e.g. user role trying to access admin endpoints
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/MissingJWTToken'
+            type: object
+            properties:
+              message:
+                type: string
+                example: role not supported
     InternalServerError:
       description: Unexpected error occurred
       content:
@@ -684,30 +1622,6 @@ components:
         limit:
           type: integer
           example: 20
-    MissingJWTToken:
-      type: object
-      properties:
-        message:
-          type: string
-          example: missing or malformed jwt
-    InvalidParameterValue:
-      type: object
-      properties:
-        message:
-          type: string
-          example: invalid parameter value
-    InvalidRequestBody:
-      type: object
-      properties:
-        message:
-          type: string
-          example: invalid request body
-    ParameterRequired:
-      type: object
-      properties:
-        message:
-          type: string
-          example: required filters not provided
     BriefBuildingDetails:
       type: object
       properties:
@@ -742,15 +1656,148 @@ components:
             district:
               type: string
               example: Tanah Abang
+    ReservationsStat:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        total:
+          type: integer
+    BriefReservationDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+        building:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+            name:
+              type: string
+              example: Jakarta Convention Center
+        tenant:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+            name:
+              type: string
+              example: PT. Graha Sidang Pratama
+        startDate:
+          type: string
+          format: date
+          example: 2020-01-01
+        endDate:
+          type: string
+          format: date
+          example: 2020-01-01
+        status:
+          type: string
+          example: pending
+        message:
+          type: string
+          example: Please contact me for further details
+    BriefUserDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+        name:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          example: oz@email.com
+        phone:
+          type: string
+          example: 081234567890
+    UserDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+        name:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          example: oz@email.com
+        phone:
+          type: string
+          example: 081234567890
+        picture:
+          type: object
+          properties:
+            id:
+              type: string
+              example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+            url:
+              type: string
+              example: https://ik.imagekit.io/fortyfour/default-image.jpg?ik-sdk-version=javascript-1.4.3&updatedAt=1651795109157
+        role:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: admin
+        
   
   examples:
-    MissingJWTToken:
-      value:
-        message: missing or malformed jwt
     InvalidRequestBody:
-      description: request body is invalid and cannot be deserilized
+      description: Invalid request body due to either syntactically incorrect or confrom to the schema (e.g. missing required fields)
       value:
         message: invalid request body
+    InvalidEmail:
+      description: Invalid email format
+      value:
+        message: invalid email format
+    InvalidPassword:
+      description: Invalid password format
+      value:
+        message: invalid password format
+    InvalidPictureID:
+      description: picture id is invalid either because it is not a valid uuid or it does not exist in the database
+      value:
+        message: invalid picture id
+    InvalidDistrictID:
+      description: district id is invalid either because it is not a valid id or it does not exist in the database
+      value:
+        message: district id is invalid
+    InvalidCityID:
+      description: city id is invalid either because it is not a valid id or it does not exist in the database
+      value:
+        message: city id is invalid
+    InvalidBuildingID:
+      description: building id is invalid either because it is not a valid id or it does not exist in the database
+      value:
+        message: building id is invalid
+    InvalidStartDate:
+      description: Start date is in invalid format
+      value:
+        message: invalid start date
+    InvalidEndDate:
+      description: End date is in invalid format
+      value:
+        message: invalid end date
+    InvalidDateRange:
+      description: End date is before start date
+      value:
+        message: invalid date range
 
   securitySchemes:
     userBearerAuth:

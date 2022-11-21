@@ -5,16 +5,16 @@ info:
   version: 1.0.0
 
 servers:
-  - url: 'https://dev.fortyfour.com/v1'
+  - url: 'https://dev.fortyfourvisual.com/v1'
     description: Development server
-  - url: 'https://staging.fortyfour.com/v1'
+  - url: 'https://staging.fortyfourvisual.com/v1'
     description: Staging server
-  - url: 'https://api.fortyfour.com/v1'
+  - url: 'https://api.fortyfourvisual.com/v1'
     description: Production server
   - url: '{path}'
     variables:
       path:
-        default: 'dev.fortyfour.com/v1'
+        default: 'dev.fortyfourvisual.com/v1'
         description: Development server
 
 paths:

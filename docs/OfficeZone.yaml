@@ -140,9 +140,64 @@ paths:
                     type: string
                     example: invalid email or password
         400:
-          $ref: '#/components/responses/InvalidRequestBody'
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidEmail:
+                  $ref: '#/components/examples/InvalidEmail'
         500:
           $ref: '#/components/responses/InternalServerError'
+
+  /users/picture:
+    put:
+      summary: Upload and change  user picture
+      operationId: uploadUserPicture
+      security:
+        - userBearerAuth: [] 
+      tags:
+        - EndUser.Users
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                picture:
+                  type: string
+                  format: binary
+        required: true
+      responses:
+        200:
+          description: Successfully changed user picture
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: picture changed successfully
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        404:
+          $ref: '#/components/responses/UserNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
 
   /users:
     get:
@@ -175,9 +230,6 @@ paths:
                       phone:
                         type: string
                         example: +1 234 567 890
-                      picture:
-                        type: string
-                        example: https://ik.imagekit.io/fortyfour/default-image.jpg?ik-sdk-version=javascript-1.4.3&updatedAt=1651795109157
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         404:
@@ -208,6 +260,9 @@ paths:
                 phone:
                   type: string
                   example: +1 234 567 890
+                pictureID:
+                  type: string
+                  example: 5f9b9b9b9b9b9b9b9b9b9b9b
         required: true
       responses:
         200:
@@ -221,7 +276,18 @@ paths:
                     type: string
                     example: user details updated successfully
         400:
-          $ref: '#/components/responses/InvalidRequestBody'
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidEmail:
+                  $ref: '#/components/examples/InvalidEmail'
+                InvalidPictureID:
+                  $ref: '#/components/examples/InvalidPictureID'
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         404:
@@ -1414,6 +1480,196 @@ paths:
           $ref: '#/components/responses/UserNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
+  
+  /admin/payments/logo:
+    post:
+      summary: Upload logo for payment
+      operationId: uploadPaymentLogo
+      security:
+        - adminBearerAuth: []
+      tags:
+        - Admin.Payments
+      requestBody:
+        description: Logo for payment
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - logo
+              properties:
+                logo:
+                  type: string
+                  format: binary
+                alt:
+                  type: string
+                  example: logo BRI
+        required: true
+      responses:
+        200:
+          description: Successfully uploaded logo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: logo uploaded successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: 1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p
+                      url:
+                        type: string
+                        example: https://ik.imagekit.io/fortyfour/default-image.jpg?ik-sdk-version=javascript-1.4.3&updatedAt=1651795109157
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidLogo:
+                  value:
+                    message: invalid logo
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/payments:
+    post:
+      summary: Create payment detail
+      operationId: createPayment
+      security:
+        - adminBearerAuth: []
+      tags:
+        - Admin.Payments
+      requestBody:
+        description: Payment object that needs to be added
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - logo
+                - accountNumber
+                - description
+              properties:
+                name:
+                  type: string
+                  example: BRI
+                logoID:
+                  type: string
+                  example: 1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p
+                accountNumber:
+                  type: string
+                  example: 1234567890
+                description:
+                  type: string
+                  example: Silahkan transfer ke rekening ini
+        required: true
+      responses:
+        200:
+          description: Successfully created payment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: payment created successfully
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/payments/{paymentID}:
+    put:
+      summary: Update payment detail by ID
+      operationId: updatePaymentByID
+      security:
+        - adminBearerAuth: []
+      tags:
+        - Admin.Payments
+      parameters:
+        - name: paymentID
+          in: path
+          description: ID of the payment
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        description: Payment object that needs to be updated
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                name:
+                  type: string
+                  example: BRI
+                logoID:
+                  type: integer
+                  example: 1
+                accountNumber:
+                  type: string
+                  example: 1234567890
+                description:
+                  type: string
+                  example: Silahkan transfer ke rekening ini
+        required: true
+      responses:
+        200:
+          description: Successfully updated payment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: payment updated successfully
+        400:
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        404:
+          $ref: '#/components/responses/PaymentNotFound'
+        500: 
+          $ref: '#/components/responses/InternalServerError'
 
   /buildings:
     get:
@@ -1541,8 +1797,8 @@ components:
               message:
                 type: string
                 example: building not found
-    InvalidRequestBody:
-      description: Invalid request body
+    PaymentNotFound:
+      description: Not found
       content:
         application/json:
           schema:
@@ -1550,9 +1806,9 @@ components:
             properties:
               message:
                 type: string
-                example: invalid request body
+                example: payment not found
     InvalidOrMissingToken:
-      description: Missing JWT Token
+      description: Invalid or expired JWT
       content:
         application/json:
           schema:
@@ -1820,5 +2076,9 @@ tags:
     description: Buildings related endpoints for admin only
   - name: Admin.Reservations
     description: Reservations related endpoints for admin only
+  - name: Admin.Payments
+    description: Payments related endpoints for admin only
   - name: Buildings
     description: Buildings related endpoints
+  - name: Payments
+    description: Payments related endpoints

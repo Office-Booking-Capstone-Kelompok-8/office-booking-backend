@@ -74,15 +74,7 @@ paths:
                     type: string
                     example: user created successfully
         409:
-          description: User with provided email already exists
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: user already exists
+          $ref: '#/components/responses/EmailAlreadyUsed'
         400:
           $ref: '#/components/responses/InvalidRequestBody'
 
@@ -176,6 +168,127 @@ paths:
           $ref: '#/components/responses/UserNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Update logged in user details
+      operationId: updateUserDetail
+      security:
+        - userBearerAuth: []
+      tags:
+        - EndUser.Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                name:
+                  type: string
+                  example: John Doe
+                email:
+                  type: string
+                  format: email
+                  example: oz@email.com
+                phone:
+                  type: string
+                  example: +1 234 567 890
+        required: true
+      responses:
+        200:
+          description: Successfully updated user details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: user details updated successfully
+        400:
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                MissingJWTToken:
+                  $ref: '#/components/examples/MissingJWTToken'
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+
+        404:
+          $ref: '#/components/responses/UserNotFound'
+        409:
+          $ref: '#/components/responses/EmailAlreadyUsed'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /users/password:
+    put:
+      summary: Update logged in user password
+      operationId: updateUserPassword
+      security:
+        - userBearerAuth: []
+      tags:
+        - EndUser.Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - oldPassword
+                - newPassword
+              properties:
+                oldPassword:
+                  type: string
+                  format: password
+                  example: password
+                newPassword:
+                  type: string
+                  format: password
+                  example: password
+        required: true
+      responses:
+        200:
+          description: Successfully updated user password
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: user password updated successfully
+        400:
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                MissingJWTToken:
+                  $ref: '#/components/examples/MissingJWTToken'
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidNewPassword:
+                  description: New password is in invalid format
+                  value:
+                    message: invalid new password
+        404:
+          $ref: '#/components/responses/UserNotFound'
+        409:
+          description: Old password is incorrect
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: old password is incorrect
+        500:
+          $ref: '#/components/responses/InternalServerError'
 
   /reservations:
     get:
@@ -241,12 +354,140 @@ paths:
           $ref: '#/components/responses/ReservationNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Create a reservation
+      operationId: createReservation
+      security:
+        - userBearerAuth: []
+      tags:
+        - EndUser.Reservations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - buildingID
+                - companyName
+                - startDate
+                - endDate
+              properties:
+                buildingID:
+                  type: string
+                  format: uuid
+                  example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
+                companyName:
+                  type: string
+                  example: Alterra
+                startDate:
+                  type: string
+                  format: date
+                  description: Start date of the reservation with format YYYY-MM-DD
+                  example: 2020-01-01
+                endDate:
+                  type: string
+                  format: date
+                  description: End date of the reservation with format YYYY-MM-DD
+                  example: 2020-01-01
+        required: true
+      responses:
+        201:
+          description: Successfully created reservation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: reservation created successfully
+                  data:
+                    type: object
+                    properties:
+                      reservationID:
+                        type: string
+                        format: uuid
+                        example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a        
+        400:
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                MissingJWTToken:
+                  $ref: '#/components/examples/MissingJWTToken'
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidStartDate:
+                  description: Start date is in invalid format
+                  value:
+                    message: invalid start date
+                InvalidEndDate:
+                  description: End date is in invalid format
+                  value:
+                    message: invalid end date
+                InvalidDateRange:
+                  description: End date is before start date
+                  value:
+                    message: invalid date range
+        404:
+          $ref: '#/components/responses/BuildingNotFound'
+        409:
+          description: Reservation date range is not available
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: reservation date range is not available
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /reservations/{reservationID}:
+    delete:
+      summary: Delete a reservation
+      operationId: deleteReservation
+      security:
+        - userBearerAuth: []
+      tags:
+        - EndUser.Reservations
+      parameters:
+        - name: reservationID
+          in: path
+          description: ID of the reservation to be deleted
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+      responses:
+        200:
+          description: Successfully deleted reservation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: reservation deleted successfully
+        400:
+          $ref: '#/components/responses/MissingJWTToken'
+        404:
+          $ref: '#/components/responses/ReservationNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
 
   /buildings:
     get:
       summary: Get all buildings in the system
       description: Get all buildings in the system with custom filters. (*) denotes required to be provided at least one of the filters
       operationId: getBuildings
+      tags:
+        - Buildings
       parameters:
         - name: q
           in: query
@@ -326,6 +567,16 @@ paths:
 
 components:
   responses:
+    EmailAlreadyUsed:
+      description: User with provided email already exists
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: email already used
     ReservationNotFound:
       description: Not found
       content:
@@ -445,6 +696,12 @@ components:
         message:
           type: string
           example: invalid parameter value
+    InvalidRequestBody:
+      type: object
+      properties:
+        message:
+          type: string
+          example: invalid request body
     ParameterRequired:
       type: object
       properties:
@@ -485,6 +742,15 @@ components:
             district:
               type: string
               example: Tanah Abang
+  
+  examples:
+    MissingJWTToken:
+      value:
+        message: missing or malformed jwt
+    InvalidRequestBody:
+      description: request body is invalid and cannot be deserilized
+      value:
+        message: invalid request body
 
   securitySchemes:
     userBearerAuth:
@@ -502,8 +768,10 @@ tags:
   - name: EndUser.Reservations
     description: End user reservations related endpoints
   - name: Admin.Users
-    description: Admin users related endpoints
+    description: Users related endpoints for admin only
   - name: Admin.Buildings
-    description: Admin buildings related endpoints
+    description: Buildings related endpoints for admin only
   - name: Admin.Reservations
-    description: Admin reservations related endpoints
+    description: Reservations related endpoints for admin only
+  - name: Buildings
+    description: Buildings related endpoints

@@ -22,7 +22,7 @@ func (r *Routes) Init(app *fiber.App) {
 	}))
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
-		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
+		AllowMethods: "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
 	}))
 
 	v1 := app.Group("/v1")

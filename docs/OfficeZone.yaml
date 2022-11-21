@@ -153,52 +153,6 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  /users/picture:
-    put:
-      summary: Upload and change  user picture
-      operationId: uploadUserPicture
-      security:
-        - userBearerAuth: [] 
-      tags:
-        - EndUser.Users
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                picture:
-                  type: string
-                  format: binary
-        required: true
-      responses:
-        200:
-          description: Successfully changed user picture
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: picture changed successfully
-        400:
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BaseResponse'
-              examples:
-                InvalidRequestBody:
-                  $ref: '#/components/examples/InvalidRequestBody'
-        401:
-          $ref: '#/components/responses/InvalidOrMissingToken'
-        404:
-          $ref: '#/components/responses/UserNotFound'
-        500:
-          $ref: '#/components/responses/InternalServerError'
-
-
   /users:
     get:
       summary: Get logged in user detail
@@ -294,6 +248,51 @@ paths:
           $ref: '#/components/responses/UserNotFound'
         409:
           $ref: '#/components/responses/EmailAlreadyUsed'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  
+  /users/picture:
+    put:
+      summary: Upload and change  user picture
+      operationId: uploadUserPicture
+      security:
+        - userBearerAuth: [] 
+      tags:
+        - EndUser.Users
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                picture:
+                  type: string
+                  format: binary
+        required: true
+      responses:
+        200:
+          description: Successfully changed user picture
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: picture changed successfully
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        404:
+          $ref: '#/components/responses/UserNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
 
@@ -1046,7 +1045,7 @@ paths:
                   example: 2020-01-01
         required: true
       responses:
-        200:
+        201:
           description: Successfully created reservation
           content:
             application/json:
@@ -1506,7 +1505,7 @@ paths:
                   example: logo BRI
         required: true
       responses:
-        200:
+        201:
           description: Successfully uploaded logo
           content:
             application/json:
@@ -1579,7 +1578,7 @@ paths:
                   example: Silahkan transfer ke rekening ini
         required: true
       responses:
-        200:
+        201:
           description: Successfully created payment
           content:
             application/json:
@@ -1669,6 +1668,40 @@ paths:
         404:
           $ref: '#/components/responses/PaymentNotFound'
         500: 
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Delete payment detail by ID
+      operationId: deletePaymentByID
+      security:
+        - adminBearerAuth: []
+      tags:
+        - Admin.Payments
+      parameters:
+        - name: paymentID
+          in: path
+          description: ID of the payment
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        200:
+          description: Successfully deleted payment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: payment deleted successfully
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        404:
+          $ref: '#/components/responses/PaymentNotFound'
+        500:
           $ref: '#/components/responses/InternalServerError'
 
   /buildings:

@@ -34,12 +34,12 @@ paths:
                   message:
                     type: string
                     example: Pong
-  /users/register:
+  /auth/register:
     post:
       summary: Register a new user
       operationId: registerUser
       tags:
-        - EndUser.Users
+        - Auth
       requestBody:
         description: User registration details
         required: true
@@ -91,12 +91,12 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  /users/login:
+  /auth/login:
     post:
       summary: Login
       operationId: login
       tags:
-        - EndUser.Users
+        - Auth
       requestBody:
         content:
           application/json:
@@ -126,7 +126,10 @@ paths:
                   data:
                     type: object
                     properties:
-                      token:
+                      access_token:
+                        type: string
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiI3MTg1OGNmMS1lNDhkLTQzYmQtOGU0YS1jZDNkNGE1YjIwMDMiLCJyb2xlIjoxLCJleHAiOjB9.G0PITHn6gz-fu6kqrZYwBc_bAca1YCZvMNGFvKHDytk
+                      refresh_token:
                         type: string
                         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiI3MTg1OGNmMS1lNDhkLTQzYmQtOGU0YS1jZDNkNGE1YjIwMDMiLCJyb2xlIjoxLCJleHAiOjB9.G0PITHn6gz-fu6kqrZYwBc_bAca1YCZvMNGFvKHDytk
         401:
@@ -153,12 +156,84 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
+  /auth/logout:
+    post:
+      summary: Logout
+      operationId: logout
+      tags:
+        - Auth
+      security:
+        - refresh_token: []
+      responses:
+        200:
+          description: Successfully logged out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Logout successful
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthorized
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      operationId: refreshAccessToken
+      tags:
+        - Auth
+      security:
+        - refresh_token: []
+      responses:
+        200:
+          description: Successfully refreshed access token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Refresh successful
+                  data:
+                    type: object
+                    properties:
+                      access_token:
+                        type: string
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiI3MTg1OGNmMS1lNDhkLTQzYmQtOGU0YS1jZDNkNGE1YjIwMDMiLCJyb2xlIjoxLCJleHAiOjB9.G0PITHn6gz-fu6kqrZYwBc_bAca1YCZvMNGFvKHDytk
+                      refresh_token:
+                        type: string
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiI3MTg1OGNmMS1lNDhkLTQzYmQtOGU0YS1jZDNkNGE1YjIwMDMiLCJyb2xlIjoxLCJleHAiOjB9.G0PITHn6gz-fu6kqrZYwBc_bAca1YCZvMNGFvKHDytk
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthorized
+        500:
+          $ref: '#/components/responses/InternalServerError'
   /users:
     get:
       summary: Get logged in user detail
       operationId: getUserDetail
       security:
-        - userBearerAuth: []
+        - access_token : []
       tags:
         - EndUser.Users
       responses:
@@ -194,7 +269,7 @@ paths:
       summary: Update logged in user details
       operationId: updateUserDetail
       security:
-        - userBearerAuth: []
+        - access_token: []
       tags:
         - EndUser.Users
       requestBody:
@@ -256,7 +331,7 @@ paths:
       summary: Upload and change  user picture
       operationId: uploadUserPicture
       security:
-        - userBearerAuth: [] 
+        - access_token: [] 
       tags:
         - EndUser.Users
       requestBody:
@@ -301,7 +376,7 @@ paths:
       summary: Update logged in user password
       operationId: updateUserPassword
       security:
-        - userBearerAuth: []
+        - access_token: []
       tags:
         - EndUser.Users
       requestBody:
@@ -366,7 +441,7 @@ paths:
       summary: Get all reservations for a user
       operationId: getReservations
       security:
-        - userBearerAuth: []
+        - access_token: []
       tags:
         - EndUser.Reservations
       responses:
@@ -429,7 +504,7 @@ paths:
       summary: Create a reservation
       operationId: createReservation
       security:
-        - userBearerAuth: []
+        - access_token: []
       tags:
         - EndUser.Reservations
       requestBody:
@@ -516,7 +591,7 @@ paths:
       summary: Delete a reservation
       operationId: deleteReservation
       security:
-        - userBearerAuth: []
+        - access_token: []
       tags:
         - EndUser.Reservations
       parameters:
@@ -551,7 +626,7 @@ paths:
       summary: Upload a picture for a building
       operationId: uploadBuildingPicture
       security:
-        - adminBearerAuth: []
+        - access_token: []
       tags:
         - Admin.Buildings
       requestBody:
@@ -590,7 +665,7 @@ paths:
                         example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
                       url:
                         type: string
-                        example: https://ik.imagekit.io/fortyfour/default-image.jpg?ik-sdk-version=javascript-1.4.3&updatedAt=1651795109157
+                        example: https://ik.imagekit.io/fortyfour/default-image.jpg
                       alt:
                         type: string
                         example: Jakarta Convention Center
@@ -606,7 +681,7 @@ paths:
       summary: Create a building
       operationId: createBuilding
       security:
-        - adminBearerAuth: []
+        - access_token: []
       tags:
         - Admin.Buildings
       requestBody:
@@ -748,7 +823,7 @@ paths:
       summary: Update a building
       operationId: updateBuilding
       security:
-        - adminBearerAuth: []
+        - access_token: []
       tags:
         - Admin.Buildings
       parameters:
@@ -877,7 +952,7 @@ paths:
       summary: Delete a building
       operationId: deleteBuilding
       security:
-        - adminBearerAuth: []
+        - access_token: []
       tags:
         - Admin.Buildings
       parameters:
@@ -914,7 +989,7 @@ paths:
       summary: Get all reservations
       operationId: getReservations
       security:
-        - adminBearerAuth: []
+        - access_token: []
       tags:
         - Admin.Reservations
       parameters:
@@ -1006,7 +1081,7 @@ paths:
       summary: Create a reservation
       operationId: createReservation
       security:
-        - adminBearerAuth: []
+        - access_token: []
       tags:
         - Admin.Reservations 
       requestBody:
@@ -1100,7 +1175,7 @@ paths:
       summary: Update a reservation
       operationId: updateReservation
       security:
-        - adminBearerAuth: []
+        - access_token: []
       tags:
         - Admin.Reservations
       parameters:
@@ -1208,7 +1283,7 @@ paths:
       summary: Delete a reservation
       operationId: deleteReservation
       security:
-        - adminBearerAuth: []
+        - access_token: []
       tags:
         - Admin.Reservations
       parameters:
@@ -1243,7 +1318,7 @@ paths:
       summary: Get total number of reservations
       operationId: getTotalReservations
       security:
-        - adminBearerAuth: []
+        - access_token: []
       tags:
         - Admin.Reservations
       responses:
@@ -1289,7 +1364,7 @@ paths:
       summary: Get weekly statistic of reservations 
       operationId: getReservationStatistic
       security:
-        - adminBearerAuth: []
+        - access_token: []
       tags:
         - Admin.Reservations
       responses:
@@ -1334,7 +1409,7 @@ paths:
       summary: Get user by ID
       operationId: getUserByID
       security:
-        - adminBearerAuth: []
+        - access_token: []
       tags:
         - Admin.Users
       parameters:
@@ -1370,7 +1445,7 @@ paths:
       summary: Update user by ID
       operationId: updateUserByID
       security:
-        - adminBearerAuth: []
+        - access_token: []
       tags:
         - Admin.Users
       parameters:
@@ -1449,7 +1524,7 @@ paths:
       summary: Delete user by ID
       operationId: deleteUserByID
       security:
-        - adminBearerAuth: []
+        - access_token: []
       tags:
         - Admin.Users
       parameters:
@@ -1485,7 +1560,7 @@ paths:
       summary: Upload logo for payment
       operationId: uploadPaymentLogo
       security:
-        - adminBearerAuth: []
+        - access_token: []
       tags:
         - Admin.Payments
       requestBody:
@@ -1524,7 +1599,7 @@ paths:
                         example: 1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p
                       url:
                         type: string
-                        example: https://ik.imagekit.io/fortyfour/default-image.jpg?ik-sdk-version=javascript-1.4.3&updatedAt=1651795109157
+                        example: https://ik.imagekit.io/fortyfour/default-image.jpg
         400:
           description: Invalid input
           content:
@@ -1549,7 +1624,7 @@ paths:
       summary: Create payment detail
       operationId: createPayment
       security:
-        - adminBearerAuth: []
+        - access_token: []
       tags:
         - Admin.Payments
       requestBody:
@@ -1609,7 +1684,7 @@ paths:
       summary: Update payment detail by ID
       operationId: updatePaymentByID
       security:
-        - adminBearerAuth: []
+        - access_token: []
       tags:
         - Admin.Payments
       parameters:
@@ -1673,7 +1748,7 @@ paths:
       summary: Delete payment detail by ID
       operationId: deletePaymentByID
       security:
-        - adminBearerAuth: []
+        - access_token: []
       tags:
         - Admin.Payments
       parameters:
@@ -1787,6 +1862,116 @@ paths:
           $ref: '#/components/responses/BuildingNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
+  /buildings/{buildingID}:
+    get:
+      summary: Get building detail by ID
+      operationId: getBuildingByID
+      tags:
+        - Buildings
+      parameters:
+        - name: buildingID
+          in: path
+          description: ID of the building
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426655440000
+      responses:
+        200:
+          description: Successfully retrieved building
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building retrieved successfully
+                  data:
+                    $ref: '#/components/schemas/BuildingDetails'
+        404:
+          $ref: '#/components/responses/BuildingNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /buildings/faclities/categories:
+    get:
+      summary: Get all building facilities categories
+      operationId: getBuildingFacilitiesCategories
+      tags:
+        - Buildings
+      responses:
+        200:
+          description: Successfully retrieved building facilities categories
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building facilities categories retrieved successfully
+                  data:
+                    type: array
+                    items: 
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: kamar-mandi
+                        url:
+                          type: string
+                          example: https://ik.imagekit.io/fortyfour/default-image.jpg
+                      
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /payments:
+    get:
+      summary: Get all payments in the system
+      operationId: getPayments
+      tags:
+        - Payments
+      responses:
+        200:
+          description: Successfully retrieved payments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: payments retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: Bank Transfer
+                        logo:
+                          type: string
+                          example: https://ik.imagekit.io/fortyfour/default-image.jpg
+                        accountNumber:
+                          type: string
+                          example: 1234567890
+                        description:
+                          type: string
+                          example: Bank Transfer
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
 
 components:
   responses:
@@ -1923,7 +2108,7 @@ components:
           example: Jakarta Convention Center
         picture:
           type: string
-          example: https://ik.imagekit.io/fortyfour/default-image.jpg?ik-sdk-version=javascript-1.4.3&updatedAt=1651795109157
+          example: https://ik.imagekit.io/fortyfour/default-image.jpg
         price:
           type: object
           properties:
@@ -1945,6 +2130,90 @@ components:
             district:
               type: string
               example: Tanah Abang
+    BuildingDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+        name:
+          type: string
+          example: Jakarta Convention Center
+        pictures:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+              url:
+                type: string
+                example: https://ik.imagekit.io/fortyfour/default-image.jpg
+              alt:
+                type: string
+                example: Jakarta Convention Center
+        description:
+          type: string
+          example: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas quis bibendum ipsum. Maecenas in ante at velit rhoncus facilisis vel lacinia turpis. Fusce blandit ac augue a tincidunt. Pellentesque tristique augue rhoncus tortor dapibus vulputate condimentum in dolor. Aenean imperdiet augue eu facilisis luctus. Vivamus pretium in mauris sed interdum. Pellentesque cursus sem eget turpis tempus, nec ultrices elit porta.
+        facilities:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                example: Meeting Room
+              icon:
+                type: string
+                example: https://ik.imagekit.io/fortyfour/default-image.jpg
+              iconName:
+                type: string
+                example: meeting-room
+              description:
+                type: string
+                example: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas quis bibendum ipsum. 
+        capacity:
+          type: integer
+          example: 1000
+        price:
+          type: object
+          properties:
+            annual:
+              type: integer
+              example: 12000000
+            monthly:
+              type: integer
+              example: 1000000
+        owner:
+          type: string
+          example: PT. Graha Sidang Pratama
+        location:
+          type: object
+          properties:
+            address:
+              type: string
+              example: Jl. Jend. Sudirman Kav. 1
+            city:
+              type: string
+              example: Jakarta Selatan
+            district:
+              type: string
+              example: Tanah Abang
+            geo:
+              type: object
+              properties:
+                lat:
+                  type: number
+                  example: -6.1753924
+                long:
+                  type: number
+                  example: 106.827153
+
+              
+
     ReservationsStat:
       type: object
       properties:
@@ -2034,7 +2303,7 @@ components:
               example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
             url:
               type: string
-              example: https://ik.imagekit.io/fortyfour/default-image.jpg?ik-sdk-version=javascript-1.4.3&updatedAt=1651795109157
+              example: https://ik.imagekit.io/fortyfour/default-image.jpg
         role:
           type: object
           properties:
@@ -2089,16 +2358,18 @@ components:
         message: invalid date range
 
   securitySchemes:
-    userBearerAuth:
+    access_token:
       type: http
       scheme: bearer
       bearerFormat: JWT
-    adminBearerAuth:
+    refresh_token:
       type: http
       scheme: bearer
       bearerFormat: JWT
 
 tags:
+  - name: Auth
+    description: Authentication
   - name: EndUser.Users
     description: End user users related endpoints
   - name: EndUser.Reservations

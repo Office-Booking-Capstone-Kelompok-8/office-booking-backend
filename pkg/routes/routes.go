@@ -1,6 +1,10 @@
 package routes
 
 import (
+	auth "office-booking-backend/internal/auth/controller"
+	"office-booking-backend/pkg/handler"
+	"office-booking-backend/pkg/middlewares"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -8,32 +12,23 @@ import (
 )
 
 type Routes struct {
+	authController *auth.AuthController
 }
 
-func NewRoutes() *Routes {
-	return &Routes{}
+func NewRoutes(authController *auth.AuthController) *Routes {
+	return &Routes{
+		authController: authController,
+	}
 }
 
 func (r *Routes) Init(app *fiber.App) {
 	app.Use(recover.New())
-	app.Use(logger.New(logger.Config{
-		Format:     "${time} [${ip}] ${status} - ${method} ${path}\n",
-		TimeFormat: "2006/01/02 15:04:05",
-	}))
-	app.Use(cors.New(cors.Config{
-		AllowOrigins: "*",
-		AllowMethods: "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
-	}))
+	app.Use(logger.New(middlewares.LoggerConfig))
+	app.Use(cors.New(middlewares.CorsConfig))
 
 	v1 := app.Group("/v1")
-	v1.Get("/ping", ping)
+	v1.Get("/ping", handler.Ping)
 
-	// TODO: Add your routes here
-
-}
-
-func ping(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{
-		"message": "pong",
-	})
+	auth := v1.Group("/auth")
+	auth.Post("/register", r.authController.RegisterUser)
 }

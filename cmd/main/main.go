@@ -84,6 +84,7 @@ func main() {
 	env := config.LoadConfig()
 
 	redis := database.InitRedis(env["REDIS_HOST"], env["REDIS_PORT"], env["REDIS_PASSWORD"], env["REDIS_DB"])
+	db := database.InitDatabase(env["DB_HOST"], env["DB_PORT"], env["DB_USER"], env["DB_PASS"], env["DB_NAME"])
 
 	app := fiber.New(fiber.Config{
 		AppName:      config.APP_NAME,
@@ -93,22 +94,23 @@ func main() {
 		ErrorHandler: config.DefaultErrorHandler,
 	})
 
-	bootstrapper.Init(app, redis)
+	bootstrapper.Init(app, db, redis)
 
 	wait := gracefulShutdown(context.Background(), config.SHUTDOWN_TIMEOUT*time.Second, map[string]operation{
-		// Add cleanup operations here
+		"fiber": func(ctx context.Context) error {
+			return app.Shutdown()
+		},
 
-		// TODO: add database connection clean up
-		// "database": func(ctx context.Context) error {
-		// 	return db.Close()
-		// },
+		"database": func(ctx context.Context) error {
+			DB, err := db.DB()
+			if err != nil {
+				return err
+			}
+			return DB.Close()
+		},
 
 		"redis": func(ctx context.Context) error {
 			return redis.Close()
-		},
-
-		"fiber": func(ctx context.Context) error {
-			return app.Shutdown()
 		},
 	})
 

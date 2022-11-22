@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func InitDatabase(dbHost string, dbPort string, dbUsername string, dbPassword string, dbName string) (*gorm.DB, error) {
+func InitDatabase(dbHost string, dbPort string, dbUsername string, dbPassword string, dbName string) *gorm.DB {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", dbUsername, dbPassword, dbHost, dbPort, dbName)
 
 	gormConfig := &gorm.Config{
@@ -21,5 +21,5 @@ func InitDatabase(dbHost string, dbPort string, dbUsername string, dbPassword st
 	}
 	log.Println("Database connected successfully")
 
-	return db, err
+	return db
 }

@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/go-redis/redis/v9"
@@ -15,7 +16,7 @@ func InitRedis(host string, port string, password string, db string) *redis.Clie
 
 	dbInt, err := strconv.Atoi(db)
 	if err != nil {
-		panic(err)
+		log.Fatalf("Error converting redis db to int: %v", err)
 	}
 
 	address := fmt.Sprintf("%s:%s", host, port)
@@ -28,7 +29,7 @@ func InitRedis(host string, port string, password string, db string) *redis.Clie
 
 	_, err = client.Ping(context.Background()).Result()
 	if err != nil {
-		panic(err)
+		log.Fatalf("Error senidng ping to redis: %v", err)
 	}
 
 	return client

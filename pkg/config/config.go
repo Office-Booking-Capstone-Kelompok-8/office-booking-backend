@@ -2,8 +2,9 @@ package config
 
 import (
 	"errors"
-	"github.com/gofiber/fiber/v2"
 	"os"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 const (
@@ -36,8 +37,13 @@ func LoadConfig() map[string]string {
 	env["DB_USER"] = os.Getenv("DB_USER")
 	env["DB_PASS"] = os.Getenv("DB_PASS")
 	env["DB_NAME"] = os.Getenv("DB_NAME")
+	env["REDIS_HOST"] = os.Getenv("REDIS_HOST")
+	env["REDIS_PORT"] = os.Getenv("REDIS_PORT")
+	env["REDIS_PASSWORD"] = os.Getenv("REDIS_PASSWORD")
+	env["REDIS_DB"] = os.Getenv("REDIS_DB")
+	env["REFRESH_SECRET"] = os.Getenv("REFRESH_SECRET")
+	env["ACCESS_SECRET"] = os.Getenv("ACCESS_SECRET")
 	env["PORT"] = os.Getenv("PORT")
-	env["JWT_SECRET"] = os.Getenv("JWT_SECRET")
 	env["PREFORK"] = os.Getenv("PREFORK")
 
 	return env

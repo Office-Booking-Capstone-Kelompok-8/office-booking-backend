@@ -2,16 +2,18 @@ package main
 
 import (
 	"context"
-	"github.com/gofiber/fiber/v2"
-	"github.com/joho/godotenv"
 	"log"
 	"office-booking-backend/pkg/bootstrapper"
 	"office-booking-backend/pkg/config"
+	"office-booking-backend/pkg/database"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/joho/godotenv"
 )
 
 func init() {
@@ -81,6 +83,8 @@ func gracefulShutdown(ctx context.Context, timeout time.Duration, ops map[string
 func main() {
 	env := config.LoadConfig()
 
+	redis := database.InitRedis(env["REDIS_HOST"], env["REDIS_PORT"], env["REDIS_PASSWORD"], env["REDIS_DB"])
+
 	app := fiber.New(fiber.Config{
 		AppName:      config.APP_NAME,
 		ServerHeader: config.SERVER_HEADER,
@@ -89,7 +93,7 @@ func main() {
 		ErrorHandler: config.DefaultErrorHandler,
 	})
 
-	bootstrapper.Init(app)
+	bootstrapper.Init(app, redis)
 
 	wait := gracefulShutdown(context.Background(), config.SHUTDOWN_TIMEOUT*time.Second, map[string]operation{
 		// Add cleanup operations here
@@ -98,6 +102,10 @@ func main() {
 		// "database": func(ctx context.Context) error {
 		// 	return db.Close()
 		// },
+
+		"redis": func(ctx context.Context) error {
+			return redis.Close()
+		},
 
 		"fiber": func(ctx context.Context) error {
 			return app.Shutdown()

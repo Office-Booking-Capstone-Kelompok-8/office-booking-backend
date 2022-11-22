@@ -83,7 +83,7 @@ func gracefulShutdown(ctx context.Context, timeout time.Duration, ops map[string
 func main() {
 	env := config.LoadConfig()
 
-	redis := database.InitRedis(env["REDIS_HOST"], env["REDIS_PORT"], env["REDIS_PASSWORD"], env["REDIS_DB"])
+	redis := database.InitRedis(env["REDIS_HOST"], env["REDIS_PORT"], env["REDIS_PASS"], env["REDIS_DB"])
 	db := database.InitDatabase(env["DB_HOST"], env["DB_PORT"], env["DB_USER"], env["DB_PASS"], env["DB_NAME"])
 
 	app := fiber.New(fiber.Config{

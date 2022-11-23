@@ -1,0 +1,13 @@
+DROP TABLE users;
+DROP TABLE profile_pictures;
+DROP TABLE user_details;
+DROP TABLE payment_pictures;
+DROP TABLE payments;
+DROP TABLE cities;
+DROP TABLE districts;
+DROP TABLE buildings;
+DROP TABLE pictures;
+DROP TABLE facility_categories;
+DROP TABLE facilities;
+DROP TABLE status;
+DROP TABLE reservations;

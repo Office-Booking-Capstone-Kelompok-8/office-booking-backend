@@ -2,10 +2,12 @@ package impl
 
 import (
 	"context"
+	"errors"
 	"log"
 	"office-booking-backend/internal/auth/dto"
 	"office-booking-backend/internal/auth/repository"
 	"office-booking-backend/internal/auth/service"
+	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/utils/password"
 )
 
@@ -14,12 +16,14 @@ const DefaultPasswordCost = 10
 type AuthServiceImpl struct {
 	repository repository.AuthRepository
 	password   password.PasswordService
+	token      service.TokenService
 }
 
-func NewAuthServiceImpl(repository repository.AuthRepository, password password.PasswordService) service.AuthService {
+func NewAuthServiceImpl(repository repository.AuthRepository, tokenService service.TokenService, password password.PasswordService) service.AuthService {
 	return &AuthServiceImpl{
 		repository: repository,
 		password:   password,
+		token:      tokenService,
 	}
 }
 
@@ -39,4 +43,29 @@ func (a *AuthServiceImpl) RegisterUser(ctx context.Context, user *dto.SignupRequ
 	}
 
 	return nil
+}
+
+func (a *AuthServiceImpl) LoginUser(ctx context.Context, user *dto.LoginRequest) (*dto.TokenPair, error) {
+	userEntity, err := a.repository.FindUserByEmail(ctx, user.Email)
+	if err != nil {
+		if errors.Is(err, err2.ErrUserNotFound) {
+			return nil, err2.ErrInvalidCredentials
+		}
+
+		log.Println("Error while finding user by email: ", err)
+		return nil, err
+	}
+
+	err = a.password.CompareHashAndPassword([]byte(userEntity.Password), []byte(user.Password))
+	if err != nil {
+		return nil, err2.ErrInvalidCredentials
+	}
+
+	token, err := a.token.NewTokenPair(ctx, userEntity)
+	if err != nil {
+		log.Println("Error while generating token pair: ", err)
+		return nil, err
+	}
+
+	return token, nil
 }

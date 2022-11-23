@@ -6,7 +6,7 @@ import (
 	"office-booking-backend/pkg/bootstrapper"
 	"office-booking-backend/pkg/config"
 	"office-booking-backend/pkg/database"
-	"office-booking-backend/pkg/handler"
+	"office-booking-backend/pkg/response"
 	"os"
 	"os/signal"
 	"sync"
@@ -92,10 +92,10 @@ func main() {
 		ServerHeader: config.SERVER_HEADER,
 		Prefork:      env["PREFORK"] == "true",
 		ReadTimeout:  time.Second * config.READ_TIMEOUT_SECONDS,
-		ErrorHandler: handler.DefaultErrorHandler,
+		ErrorHandler: response.DefaultErrorHandler,
 	})
 
-	bootstrapper.Init(app, db, redis)
+	bootstrapper.Init(app, db, redis, env)
 
 	wait := gracefulShutdown(context.Background(), config.SHUTDOWN_TIMEOUT*time.Second, map[string]operation{
 		"fiber": func(ctx context.Context) error {

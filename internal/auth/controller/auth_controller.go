@@ -5,6 +5,7 @@ import (
 	"office-booking-backend/internal/auth/dto"
 	"office-booking-backend/internal/auth/service"
 	err2 "office-booking-backend/pkg/errors"
+	"office-booking-backend/pkg/response"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -32,7 +33,27 @@ func (a *AuthController) RegisterUser(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message": "user created successfully",
+	return c.Status(fiber.StatusCreated).JSON(response.BaseResponse{
+		Message: "user registered successfully",
+	})
+}
+
+func (a *AuthController) LoginUser(c *fiber.Ctx) error {
+	var user dto.LoginRequest
+	if err := c.BodyParser(&user); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	tokenPair, err := a.service.LoginUser(c.Context(), &user)
+	if err != nil {
+		if errors.Is(err, err2.ErrInvalidCredentials) {
+			return fiber.NewError(fiber.StatusUnauthorized, err.Error())
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "user logged in successfully",
+		Data:    tokenPair,
 	})
 }

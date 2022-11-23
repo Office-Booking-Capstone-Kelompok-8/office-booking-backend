@@ -8,7 +8,7 @@ import (
 	"office-booking-backend/internal/auth/dto"
 	mockService "office-booking-backend/internal/auth/service/mock"
 	err2 "office-booking-backend/pkg/errors"
-	"office-booking-backend/pkg/handler"
+	"office-booking-backend/pkg/response"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
@@ -27,7 +27,7 @@ func (s *TestSuiteAuthController) SetupTest() {
 	s.mockAuthService = new(mockService.AuthServiceMock)
 	s.authController = NewAuthController(s.mockAuthService)
 	s.fiberApp = fiber.New(fiber.Config{
-		ErrorHandler: handler.DefaultErrorHandler,
+		ErrorHandler: response.DefaultErrorHandler,
 	})
 }
 
@@ -51,7 +51,7 @@ func (s *TestSuiteAuthController) TestRegisterUser() {
 		RequestBody    interface{}
 		ServiceErr     error
 		ExpectedStatus int
-		ExpectedBody   fiber.Map
+		ExpectedBody   response.BaseResponse
 		ExpectedErr    error
 	}{
 		{
@@ -59,8 +59,8 @@ func (s *TestSuiteAuthController) TestRegisterUser() {
 			MimeType:       fiber.MIMEApplicationJSON,
 			RequestBody:    signupReq,
 			ExpectedStatus: fiber.StatusCreated,
-			ExpectedBody: fiber.Map{
-				"message": "user created successfully",
+			ExpectedBody: response.BaseResponse{
+				Message: "user registered successfully",
 			},
 		},
 		{
@@ -68,8 +68,8 @@ func (s *TestSuiteAuthController) TestRegisterUser() {
 			MimeType:       fiber.MIMETextPlain,
 			RequestBody:    []byte("invalid request body"),
 			ExpectedStatus: fiber.StatusBadRequest,
-			ExpectedBody: fiber.Map{
-				"message": "invalid request body",
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
 			},
 		},
 		{
@@ -78,8 +78,8 @@ func (s *TestSuiteAuthController) TestRegisterUser() {
 			RequestBody:    signupReq,
 			ServiceErr:     err2.ErrDuplicateEmail,
 			ExpectedStatus: fiber.StatusConflict,
-			ExpectedBody: fiber.Map{
-				"message": err2.ErrDuplicateEmail.Error(),
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrDuplicateEmail.Error(),
 			},
 		},
 		{
@@ -88,8 +88,8 @@ func (s *TestSuiteAuthController) TestRegisterUser() {
 			RequestBody:    signupReq,
 			ServiceErr:     errors.New("error"),
 			ExpectedStatus: fiber.StatusInternalServerError,
-			ExpectedBody: fiber.Map{
-				"message": "error",
+			ExpectedBody: response.BaseResponse{
+				Message: "error",
 			},
 		},
 	} {
@@ -106,7 +106,96 @@ func (s *TestSuiteAuthController) TestRegisterUser() {
 			resp, err := s.fiberApp.Test(r)
 			s.NoError(err)
 
-			var body fiber.Map
+			var body response.BaseResponse
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			s.NoError(err)
+
+			s.Equal(tc.ExpectedStatus, resp.StatusCode)
+			s.Equal(tc.ExpectedBody, body)
+		})
+		s.TearDownTest()
+	}
+}
+
+func (s *TestSuiteAuthController) TestLoginUser() {
+	loginReq := dto.LoginRequest{
+		Email:    "mail@mail.com",
+		Password: "password",
+	}
+
+	token := &dto.TokenPair{
+		AccessToken:  "some_access_token",
+		RefreshToken: "some_refresh_token",
+	}
+
+	for _, tc := range []struct {
+		Name           string
+		MimeType       string
+		RequestBody    interface{}
+		ServiceReturn  *dto.TokenPair
+		ServiceErr     error
+		ExpectedStatus int
+		ExpectedBody   response.BaseResponse
+		ExpectedErr    error
+	}{
+		{
+			Name:           "Success logging in user",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    loginReq,
+			ServiceReturn:  token,
+			ExpectedStatus: fiber.StatusOK,
+			ExpectedBody: response.BaseResponse{
+				Message: "user logged in successfully",
+				Data: map[string]interface{}{
+					"accessToken":  token.AccessToken,
+					"refreshToken": token.RefreshToken,
+				},
+			},
+		},
+		{
+			Name:           "Failed logging in user: invalid request body",
+			MimeType:       fiber.MIMETextPlain,
+			RequestBody:    []byte("invalid request body"),
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
+			},
+		},
+		{
+			Name:           "Failed logging in user: invalid credentials",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    loginReq,
+			ServiceErr:     err2.ErrInvalidCredentials,
+			ExpectedStatus: fiber.StatusUnauthorized,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidCredentials.Error(),
+			},
+		},
+		{
+			Name:           "Failed logging in user: service error",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    loginReq,
+			ServiceErr:     errors.New("error"),
+			ExpectedStatus: fiber.StatusInternalServerError,
+			ExpectedBody: response.BaseResponse{
+				Message: "error",
+			},
+		},
+	} {
+		s.SetupTest()
+		s.Run(tc.Name, func() {
+			jsonBody, err := json.Marshal(tc.RequestBody)
+			s.NoError(err)
+
+			s.mockAuthService.On("LoginUser", mock.Anything, mock.Anything).Return(tc.ServiceReturn, tc.ServiceErr)
+
+			s.fiberApp.Post("/", s.authController.LoginUser)
+			r := httptest.NewRequest("POST", "/", bytes.NewBuffer(jsonBody))
+			r.Header.Set(fiber.HeaderContentType, tc.MimeType)
+			resp, err := s.fiberApp.Test(r)
+			s.NoError(err)
+
+			var body response.BaseResponse
 			err = json.NewDecoder(resp.Body).Decode(&body)
 			s.NoError(err)
 

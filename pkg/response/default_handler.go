@@ -1,4 +1,4 @@
-package handler
+package response
 
 import (
 	"errors"
@@ -16,13 +16,7 @@ var DefaultErrorHandler = func(c *fiber.Ctx, err error) error {
 	}
 
 	// Return status code with error JSON
-	return c.Status(code).JSON(fiber.Map{
-		"message": err.Error(),
-	})
-}
-
-func Ping(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{
-		"message": "pong",
+	return c.Status(code).JSON(BaseResponse{
+		Message: err.Error(),
 	})
 }

@@ -1,33 +1,8 @@
 package config
 
 import (
-	"errors"
 	"os"
-
-	"github.com/gofiber/fiber/v2"
 )
-
-const (
-	APP_NAME             = "office-zone-api v0.1"
-	SERVER_HEADER        = "office-zone-api"
-	READ_TIMEOUT_SECONDS = 10
-	SHUTDOWN_TIMEOUT     = 15
-)
-
-var DefaultErrorHandler = func(c *fiber.Ctx, err error) error {
-	code := fiber.StatusInternalServerError
-
-	// Status code from errors if they implement *fiber.Error
-	var e *fiber.Error
-	if errors.As(err, &e) {
-		code = e.Code
-	}
-
-	// Return status code with error JSON
-	return c.Status(code).JSON(fiber.Map{
-		"message": err.Error(),
-	})
-}
 
 func LoadConfig() map[string]string {
 	env := make(map[string]string)

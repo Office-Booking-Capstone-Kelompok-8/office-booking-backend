@@ -22,6 +22,5 @@ jobs:
             git fetch origin develop
             git checkout develop
             cd ..
-            sudo docker compose stop dev
-            sudo docker compose build dev
-            sudo docker compose start dev
+            sudo docker compose kill dev
+            sudo docker compose up --build -d dev

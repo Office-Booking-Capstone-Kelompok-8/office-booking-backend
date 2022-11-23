@@ -28,7 +28,7 @@ func (r *Routes) Init(app *fiber.App) {
 	v1 := app.Group("/v1")
 	v1.Get("/ping", ping)
 
-	auth := v1.Group("/ac")
+	auth := v1.Group("/auth")
 	auth.Post("/register", r.authController.RegisterUser)
 	auth.Post("/login", r.authController.LoginUser)
 }

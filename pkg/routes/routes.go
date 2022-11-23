@@ -23,7 +23,7 @@ func NewRoutes(authController *ac.AuthController, accessTokenMiddleware fiber.Ha
 }
 
 func (r *Routes) Init(app *fiber.App) {
-	app.Use(recover.New())
+	app.Use(recover.New(middlewares.RecoverConfig))
 	app.Use(logger.New(middlewares.LoggerConfig))
 	app.Use(cors.New(middlewares.CorsConfig))
 

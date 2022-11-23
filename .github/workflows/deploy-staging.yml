@@ -19,9 +19,8 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             cd office-zone/office-booking-backend
-            git pull origin main
+            git fetch origin main
             git checkout main
             cd ..
-            sudo docker compose stop staging
-            sudo docker compose build staging
-            sudo docker compose start staging
+            sudo docker compose kill staging
+            sudo docker compose up --build -d staging

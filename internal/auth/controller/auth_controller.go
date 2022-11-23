@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"github.com/golang-jwt/jwt/v4"
 	"office-booking-backend/internal/auth/dto"
 	"office-booking-backend/internal/auth/service"
 	err2 "office-booking-backend/pkg/errors"
@@ -59,9 +60,11 @@ func (a *AuthController) LoginUser(c *fiber.Ctx) error {
 }
 
 func (a *AuthController) LogoutUser(c *fiber.Ctx) error {
-	//jwt := c.Locals("jwt").(*response.JwtToken)
+	token := c.Locals("user").(*jwt.Token)
+	claims := token.Claims.(jwt.MapClaims)
+	uid := claims["uid"].(string)
 
-	if err := a.service.LogoutUser(c.Context(), c.Locals("uid").(string)); err != nil {
+	if err := a.service.LogoutUser(c.Context(), uid); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 

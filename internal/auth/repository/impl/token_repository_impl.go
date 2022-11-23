@@ -3,6 +3,7 @@ package impl
 import (
 	"context"
 	"office-booking-backend/internal/auth/repository"
+	"time"
 
 	"github.com/go-redis/redis/v9"
 )
@@ -17,6 +18,6 @@ func NewTokenRepositoryImpl(redis *redis.Client) repository.TokenRepository {
 	}
 }
 
-func (t *TokenRepositoryImpl) SaveToken(ctx context.Context, tokenPair string, uid string) error {
-	return t.redis.Set(ctx, uid, tokenPair, 0).Err()
+func (t *TokenRepositoryImpl) SaveToken(ctx context.Context, tokenPair string, uid string, exp time.Duration) error {
+	return t.redis.Set(ctx, uid, tokenPair, exp).Err()
 }

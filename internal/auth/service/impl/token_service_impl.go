@@ -22,9 +22,9 @@ type TokenServiceImpl struct {
 	TokenRepository    repository.TokenRepository
 }
 
-func NewTokenServiceImpl(accesTokenSecret string, refreshTokenSecret string, accessTokenExp time.Duration, refreshTokenExp time.Duration, TokenRepository repository.TokenRepository) service.TokenService {
+func NewTokenServiceImpl(accessTokenSecret string, refreshTokenSecret string, accessTokenExp time.Duration, refreshTokenExp time.Duration, TokenRepository repository.TokenRepository) service.TokenService {
 	return &TokenServiceImpl{
-		AccessTokenSecret:  accesTokenSecret,
+		AccessTokenSecret:  accessTokenSecret,
 		RefreshTokenSecret: refreshTokenSecret,
 		AccessTokenExp:     accessTokenExp,
 		RefreshTokenExp:    refreshTokenExp,
@@ -73,7 +73,7 @@ func (t *TokenServiceImpl) NewTokenPair(ctx context.Context, user *entity.User) 
 		return nil, err
 	}
 
-	err = t.TokenRepository.SaveToken(ctx, string(serializedTokenPair), user.ID)
+	err = t.TokenRepository.SaveToken(ctx, string(serializedTokenPair), user.ID, t.RefreshTokenExp)
 	if err != nil {
 		log.Println("Error while saving token pair:", err)
 		return nil, err

@@ -1,8 +1,7 @@
 package routes
 
 import (
-	auth "office-booking-backend/internal/auth/controller"
-	"office-booking-backend/pkg/handler"
+	ac "office-booking-backend/internal/auth/controller"
 	"office-booking-backend/pkg/middlewares"
 
 	"github.com/gofiber/fiber/v2"
@@ -12,10 +11,10 @@ import (
 )
 
 type Routes struct {
-	authController *auth.AuthController
+	authController *ac.AuthController
 }
 
-func NewRoutes(authController *auth.AuthController) *Routes {
+func NewRoutes(authController *ac.AuthController) *Routes {
 	return &Routes{
 		authController: authController,
 	}
@@ -27,9 +26,15 @@ func (r *Routes) Init(app *fiber.App) {
 	app.Use(cors.New(middlewares.CorsConfig))
 
 	v1 := app.Group("/v1")
-	v1.Get("/ping", handler.Ping)
+	v1.Get("/ping", ping)
 
-	auth := v1.Group("/auth")
+	auth := v1.Group("/ac")
 	auth.Post("/register", r.authController.RegisterUser)
 	auth.Post("/login", r.authController.LoginUser)
+}
+
+func ping(c *fiber.Ctx) error {
+	return c.JSON(fiber.Map{
+		"message": "pong",
+	})
 }

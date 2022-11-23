@@ -8,7 +8,7 @@ import (
 	"office-booking-backend/internal/auth/dto"
 	mockService "office-booking-backend/internal/auth/service/mock"
 	err2 "office-booking-backend/pkg/errors"
-	"office-booking-backend/pkg/handler"
+	"office-booking-backend/pkg/response"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
@@ -27,7 +27,7 @@ func (s *TestSuiteAuthController) SetupTest() {
 	s.mockAuthService = new(mockService.AuthServiceMock)
 	s.authController = NewAuthController(s.mockAuthService)
 	s.fiberApp = fiber.New(fiber.Config{
-		ErrorHandler: handler.DefaultErrorHandler,
+		ErrorHandler: response.DefaultErrorHandler,
 	})
 }
 
@@ -51,7 +51,7 @@ func (s *TestSuiteAuthController) TestRegisterUser() {
 		RequestBody    interface{}
 		ServiceErr     error
 		ExpectedStatus int
-		ExpectedBody   fiber.Map
+		ExpectedBody   response.BaseResponse
 		ExpectedErr    error
 	}{
 		{
@@ -59,8 +59,8 @@ func (s *TestSuiteAuthController) TestRegisterUser() {
 			MimeType:       fiber.MIMEApplicationJSON,
 			RequestBody:    signupReq,
 			ExpectedStatus: fiber.StatusCreated,
-			ExpectedBody: fiber.Map{
-				"message": "user created successfully",
+			ExpectedBody: response.BaseResponse{
+				Message: "user registered successfully",
 			},
 		},
 		{
@@ -68,8 +68,8 @@ func (s *TestSuiteAuthController) TestRegisterUser() {
 			MimeType:       fiber.MIMETextPlain,
 			RequestBody:    []byte("invalid request body"),
 			ExpectedStatus: fiber.StatusBadRequest,
-			ExpectedBody: fiber.Map{
-				"message": "invalid request body",
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
 			},
 		},
 		{
@@ -78,8 +78,8 @@ func (s *TestSuiteAuthController) TestRegisterUser() {
 			RequestBody:    signupReq,
 			ServiceErr:     err2.ErrDuplicateEmail,
 			ExpectedStatus: fiber.StatusConflict,
-			ExpectedBody: fiber.Map{
-				"message": err2.ErrDuplicateEmail.Error(),
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrDuplicateEmail.Error(),
 			},
 		},
 		{
@@ -88,8 +88,8 @@ func (s *TestSuiteAuthController) TestRegisterUser() {
 			RequestBody:    signupReq,
 			ServiceErr:     errors.New("error"),
 			ExpectedStatus: fiber.StatusInternalServerError,
-			ExpectedBody: fiber.Map{
-				"message": "error",
+			ExpectedBody: response.BaseResponse{
+				Message: "error",
 			},
 		},
 	} {

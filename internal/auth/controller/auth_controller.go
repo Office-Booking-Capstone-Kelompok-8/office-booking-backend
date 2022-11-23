@@ -5,6 +5,7 @@ import (
 	"office-booking-backend/internal/auth/dto"
 	"office-booking-backend/internal/auth/service"
 	err2 "office-booking-backend/pkg/errors"
+	"office-booking-backend/pkg/response"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -32,8 +33,8 @@ func (a *AuthController) RegisterUser(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message": "user created successfully",
+	return c.Status(fiber.StatusCreated).JSON(response.BaseResponse{
+		Message: "user registered successfully",
 	})
 }
 
@@ -51,8 +52,8 @@ func (a *AuthController) LoginUser(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "user logged in successfully",
-		"data":    tokenPair,
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "user logged in successfully",
+		Data:    tokenPair,
 	})
 }

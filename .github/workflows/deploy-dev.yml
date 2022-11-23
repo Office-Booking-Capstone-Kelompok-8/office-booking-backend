@@ -19,7 +19,7 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             cd office-zone/office-booking-backend
-            git pull origin develop
+            git fetch origin develop
             git checkout develop
             cd ..
             sudo docker compose stop dev

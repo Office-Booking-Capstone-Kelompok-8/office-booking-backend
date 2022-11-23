@@ -36,3 +36,23 @@ func (a *AuthController) RegisterUser(c *fiber.Ctx) error {
 		"message": "user created successfully",
 	})
 }
+
+func (a *AuthController) LoginUser(c *fiber.Ctx) error {
+	var user dto.LoginRequest
+	if err := c.BodyParser(&user); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	tokenPair, err := a.service.LoginUser(c.Context(), &user)
+	if err != nil {
+		if errors.Is(err, err2.ErrInvalidCredentials) {
+			return fiber.NewError(fiber.StatusUnauthorized, err.Error())
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "user logged in successfully",
+		"data":    tokenPair,
+	})
+}

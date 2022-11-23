@@ -31,4 +31,5 @@ func (r *Routes) Init(app *fiber.App) {
 
 	auth := v1.Group("/auth")
 	auth.Post("/register", r.authController.RegisterUser)
+	auth.Post("/login", r.authController.LoginUser)
 }

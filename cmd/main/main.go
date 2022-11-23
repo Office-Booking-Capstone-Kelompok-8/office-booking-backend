@@ -95,7 +95,7 @@ func main() {
 		ErrorHandler: handler.DefaultErrorHandler,
 	})
 
-	bootstrapper.Init(app, db, redis)
+	bootstrapper.Init(app, db, redis, env)
 
 	wait := gracefulShutdown(context.Background(), config.SHUTDOWN_TIMEOUT*time.Second, map[string]operation{
 		"fiber": func(ctx context.Context) error {

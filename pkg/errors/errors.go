@@ -8,4 +8,10 @@ var (
 
 	// ErrDuplicateEmail is returned when the email is already registered
 	ErrDuplicateEmail = errors.New("email already used")
+
+	// ErrUserNotFound is returned when the user is not found
+	ErrUserNotFound = errors.New("user not found")
+
+	// ErrInvalidCredentials is returned when the email or password is incorrect
+	ErrInvalidCredentials = errors.New("invalid email or password")
 )

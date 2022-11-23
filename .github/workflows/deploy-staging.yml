@@ -21,6 +21,7 @@ jobs:
             cd office-zone/office-booking-backend
             git fetch origin main
             git checkout main
+            git pull origin main
             cd ..
             sudo docker compose kill staging
             sudo docker compose up --build -d staging

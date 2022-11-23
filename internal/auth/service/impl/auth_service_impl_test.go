@@ -6,6 +6,7 @@ import (
 	"office-booking-backend/internal/auth/dto"
 	mockRepo "office-booking-backend/internal/auth/repository/mock"
 	"office-booking-backend/internal/auth/service"
+	mock2 "office-booking-backend/internal/auth/service/mock"
 
 	mockPass "office-booking-backend/pkg/utils/password/mock"
 	"testing"
@@ -24,7 +25,7 @@ type TestSuiteAuthService struct {
 
 func (s *TestSuiteAuthService) SetupTest() {
 	s.mockRepo = new(mockRepo.AuthRepositoryMock)
-	s.mockToken = new(TokenServiceMock)
+	s.mockToken = new(mock2.TokenServiceMock)
 	s.mockPass = new(mockPass.PasswordHashService)
 	s.authService = NewAuthServiceImpl(s.mockRepo, s.mockToken, s.mockPass)
 }

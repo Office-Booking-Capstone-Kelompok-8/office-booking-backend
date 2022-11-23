@@ -14,4 +14,7 @@ var (
 
 	// ErrInvalidCredentials is returned when the email or password is incorrect
 	ErrInvalidCredentials = errors.New("invalid email or password")
+
+	// ErrInvalidToken is returned when the token is invalid or expired
+	ErrInvalidToken = errors.New("invalid or expired JWT")
 )

@@ -8,4 +8,5 @@ import (
 
 type TokenService interface {
 	NewTokenPair(ctx context.Context, user *entity.User) (*dto.TokenPair, error)
+	DeleteTokenPair(ctx context.Context, uid string) error
 }

@@ -20,3 +20,8 @@ func (m *AuthServiceMock) LoginUser(ctx context.Context, user *dto.LoginRequest)
 	args := m.Called(ctx, user)
 	return args.Get(0).(*dto.TokenPair), args.Error(1)
 }
+
+func (m *AuthServiceMock) LogoutUser(ctx context.Context, uid string) error {
+	args := m.Called(ctx, uid)
+	return args.Error(0)
+}

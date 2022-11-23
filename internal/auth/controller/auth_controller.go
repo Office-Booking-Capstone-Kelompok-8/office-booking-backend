@@ -57,3 +57,15 @@ func (a *AuthController) LoginUser(c *fiber.Ctx) error {
 		Data:    tokenPair,
 	})
 }
+
+func (a *AuthController) LogoutUser(c *fiber.Ctx) error {
+	//jwt := c.Locals("jwt").(*response.JwtToken)
+
+	if err := a.service.LogoutUser(c.Context(), c.Locals("uid").(string)); err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "user logged out successfully",
+	})
+}

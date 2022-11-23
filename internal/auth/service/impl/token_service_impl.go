@@ -85,3 +85,12 @@ func (t *TokenServiceImpl) NewTokenPair(ctx context.Context, user *entity.User) 
 		},
 		nil
 }
+
+func (t *TokenServiceImpl) DeleteTokenPair(ctx context.Context, uid string) error {
+	err := t.TokenRepository.DeleteToken(ctx, uid)
+	if err != nil {
+		log.Println("Error while deleting token pair:", err)
+		return err
+	}
+	return nil
+}

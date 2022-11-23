@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/golang-jwt/jwt/v4"
 	"net/http/httptest"
 	"office-booking-backend/internal/auth/dto"
 	mockService "office-booking-backend/internal/auth/service/mock"
@@ -192,6 +193,61 @@ func (s *TestSuiteAuthController) TestLoginUser() {
 			s.fiberApp.Post("/", s.authController.LoginUser)
 			r := httptest.NewRequest("POST", "/", bytes.NewBuffer(jsonBody))
 			r.Header.Set(fiber.HeaderContentType, tc.MimeType)
+			resp, err := s.fiberApp.Test(r)
+			s.NoError(err)
+
+			var body response.BaseResponse
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			s.NoError(err)
+
+			s.Equal(tc.ExpectedStatus, resp.StatusCode)
+			s.Equal(tc.ExpectedBody, body)
+		})
+		s.TearDownTest()
+	}
+}
+
+func (s *TestSuiteAuthController) TestLogoutUser() {
+	// LogoutUser handler always get valid token from middleware
+	token := &jwt.Token{
+		Claims: jwt.MapClaims{
+			"uid": "some_uid",
+		},
+	}
+
+	for _, tc := range []struct {
+		Name           string
+		ServiceErr     error
+		ExpectedStatus int
+		ExpectedBody   response.BaseResponse
+		ExpectedErr    error
+	}{
+		{
+			Name:           "Success logging out user",
+			ServiceErr:     nil,
+			ExpectedStatus: fiber.StatusOK,
+			ExpectedBody: response.BaseResponse{
+				Message: "user logged out successfully",
+			},
+		},
+		{
+			Name:           "Failed logging out user: service error",
+			ServiceErr:     errors.New("error"),
+			ExpectedStatus: fiber.StatusInternalServerError,
+			ExpectedBody: response.BaseResponse{
+				Message: "error",
+			},
+		},
+	} {
+		s.SetupTest()
+		s.Run(tc.Name, func() {
+			s.mockAuthService.On("LogoutUser", mock.Anything, mock.Anything).Return(tc.ServiceErr)
+
+			s.fiberApp.Post("/", func(ctx *fiber.Ctx) error {
+				ctx.Locals("user", token) // set token to context
+				return s.authController.LogoutUser(ctx)
+			})
+			r := httptest.NewRequest("POST", "/", nil)
 			resp, err := s.fiberApp.Test(r)
 			s.NoError(err)
 

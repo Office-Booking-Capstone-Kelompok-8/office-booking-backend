@@ -69,3 +69,7 @@ func (a *AuthServiceImpl) LoginUser(ctx context.Context, user *dto.LoginRequest)
 
 	return token, nil
 }
+
+func (a *AuthServiceImpl) LogoutUser(ctx context.Context, uid string) error {
+	return a.token.DeleteTokenPair(ctx, uid)
+}

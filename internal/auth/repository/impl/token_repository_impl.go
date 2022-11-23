@@ -21,3 +21,11 @@ func NewTokenRepositoryImpl(redis *redis.Client) repository.TokenRepository {
 func (t *TokenRepositoryImpl) SaveToken(ctx context.Context, tokenPair string, uid string, exp time.Duration) error {
 	return t.redis.Set(ctx, uid, tokenPair, exp).Err()
 }
+
+func (t *TokenRepositoryImpl) DeleteToken(ctx context.Context, uid string) error {
+	return t.redis.Del(ctx, uid).Err()
+}
+
+func (t *TokenRepositoryImpl) GetToken(ctx context.Context, uid string) (string, error) {
+	return t.redis.Get(ctx, uid).Result()
+}

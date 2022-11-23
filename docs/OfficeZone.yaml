@@ -176,15 +176,7 @@ paths:
                     type: string
                     example: Logout successful
         401:
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Unauthorized
+          $ref: '#/components/responses/InvalidOrMissingToken'
         500:
           $ref: '#/components/responses/InternalServerError'
 
@@ -217,15 +209,7 @@ paths:
                         type: string
                         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiI3MTg1OGNmMS1lNDhkLTQzYmQtOGU0YS1jZDNkNGE1YjIwMDMiLCJyb2xlIjoxLCJleHAiOjB9.G0PITHn6gz-fu6kqrZYwBc_bAca1YCZvMNGFvKHDytk
         401:
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Unauthorized
+          $ref: '#/components/responses/InvalidOrMissingToken'
         500:
           $ref: '#/components/responses/InternalServerError'
   /users:

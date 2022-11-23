@@ -11,17 +11,19 @@ import (
 )
 
 type Routes struct {
-	authController *ac.AuthController
+	authController        *ac.AuthController
+	accessTokenMiddleware fiber.Handler
 }
 
-func NewRoutes(authController *ac.AuthController) *Routes {
+func NewRoutes(authController *ac.AuthController, accessTokenMiddleware fiber.Handler) *Routes {
 	return &Routes{
-		authController: authController,
+		authController:        authController,
+		accessTokenMiddleware: accessTokenMiddleware,
 	}
 }
 
 func (r *Routes) Init(app *fiber.App) {
-	app.Use(recover.New())
+	app.Use(recover.New(middlewares.RecoverConfig))
 	app.Use(logger.New(middlewares.LoggerConfig))
 	app.Use(cors.New(middlewares.CorsConfig))
 
@@ -31,6 +33,7 @@ func (r *Routes) Init(app *fiber.App) {
 	auth := v1.Group("/auth")
 	auth.Post("/register", r.authController.RegisterUser)
 	auth.Post("/login", r.authController.LoginUser)
+	auth.Post("/logout", r.accessTokenMiddleware, r.authController.LogoutUser)
 }
 
 func ping(c *fiber.Ctx) error {

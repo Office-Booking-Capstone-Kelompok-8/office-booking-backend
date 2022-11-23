@@ -32,7 +32,7 @@ func NewTokenServiceImpl(accessTokenSecret string, refreshTokenSecret string, ac
 	}
 }
 
-func (t *TokenServiceImpl) GenerateAccessToken(user *entity.User, exp time.Time) (string, string, error) {
+func (t *TokenServiceImpl) generateAccessToken(user *entity.User, exp time.Time) (string, string, error) {
 	tokenID := uuid.New().String()
 	accessClaims := dto.NewAccessToken(user, tokenID, exp)
 	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims).SignedString([]byte(t.AccessTokenSecret))
@@ -43,7 +43,7 @@ func (t *TokenServiceImpl) GenerateAccessToken(user *entity.User, exp time.Time)
 	return accessToken, tokenID, nil
 }
 
-func (t *TokenServiceImpl) GenerateRefreshToken(user *entity.User, exp time.Time) (string, string, error) {
+func (t *TokenServiceImpl) generateRefreshToken(user *entity.User, exp time.Time) (string, string, error) {
 	tokenID := uuid.New().String()
 	refreshClaims := dto.NewRefreshToken(user, tokenID, exp)
 	refreshToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims).SignedString([]byte(t.RefreshTokenSecret))
@@ -55,11 +55,11 @@ func (t *TokenServiceImpl) GenerateRefreshToken(user *entity.User, exp time.Time
 }
 
 func (t *TokenServiceImpl) NewTokenPair(ctx context.Context, user *entity.User) (*dto.TokenPair, error) {
-	accessToken, accessID, err := t.GenerateAccessToken(user, time.Now().Add(t.AccessTokenExp))
+	accessToken, accessID, err := t.generateAccessToken(user, time.Now().Add(t.AccessTokenExp))
 	if err != nil {
 		return nil, err
 	}
-	refreshToken, refreshID, err := t.GenerateRefreshToken(user, time.Now().Add(t.RefreshTokenExp))
+	refreshToken, refreshID, err := t.generateRefreshToken(user, time.Now().Add(t.RefreshTokenExp))
 	if err != nil {
 		return nil, err
 	}
@@ -84,4 +84,34 @@ func (t *TokenServiceImpl) NewTokenPair(ctx context.Context, user *entity.User) 
 			RefreshToken: refreshToken,
 		},
 		nil
+}
+
+func (t *TokenServiceImpl) DeleteTokenPair(ctx context.Context, uid string) error {
+	err := t.TokenRepository.DeleteToken(ctx, uid)
+	if err != nil {
+		log.Println("Error while deleting token pair:", err)
+		return err
+	}
+	return nil
+}
+
+func (t *TokenServiceImpl) CheckAccessToken(ctx context.Context, token *jwt.MapClaims) (bool, error) {
+	cachedJson, err := t.TokenRepository.GetToken(ctx, (*token)["uid"].(string))
+	if err != nil {
+		if err.Error() == "redis: nil" {
+			return false, nil
+		}
+
+		log.Println("Error while getting token pair:", err)
+		return false, err
+	}
+
+	cachedToken := new(entity.CachedToken)
+	err = json.Unmarshal([]byte(cachedJson), cachedToken)
+
+	if err != nil || cachedToken.AccessID != (*token)["jti"].(string) {
+		return false, nil
+	}
+
+	return true, nil
 }

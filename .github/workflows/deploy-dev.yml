@@ -21,6 +21,7 @@ jobs:
             cd office-zone/office-booking-backend
             git fetch origin develop
             git checkout develop
+            git pull origin develop
             cd ..
             sudo docker compose kill dev
             sudo docker compose up --build -d dev

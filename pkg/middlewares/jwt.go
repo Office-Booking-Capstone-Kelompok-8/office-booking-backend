@@ -20,7 +20,7 @@ func NewJWTMiddleware(tokenSecret string, validator fiber.Handler) fiber.Handler
 }
 
 type AccessTokenValidator interface {
-	CheckAccessToken(ctx context.Context, token *jwt.MapClaims) (bool, error)
+	CheckToken(ctx context.Context, token *jwt.MapClaims) (bool, error)
 }
 
 func ValidateAccessToken(validator AccessTokenValidator) fiber.Handler {
@@ -28,7 +28,7 @@ func ValidateAccessToken(validator AccessTokenValidator) fiber.Handler {
 		user := c.Locals("user").(*jwt.Token)
 		claims := user.Claims.(jwt.MapClaims)
 
-		valid, err := validator.CheckAccessToken(c.Context(), &claims)
+		valid, err := validator.CheckToken(c.Context(), &claims)
 		if err != nil {
 			return fiber.NewError(fiber.StatusInternalServerError, "Internal server error")
 		}

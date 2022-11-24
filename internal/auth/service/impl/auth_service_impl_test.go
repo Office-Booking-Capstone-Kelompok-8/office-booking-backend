@@ -3,6 +3,7 @@ package impl
 import (
 	"context"
 	"errors"
+	"github.com/golang-jwt/jwt/v4"
 	"office-booking-backend/internal/auth/dto"
 	mockRepo "office-booking-backend/internal/auth/repository/mock"
 	"office-booking-backend/internal/auth/service"
@@ -33,6 +34,7 @@ func (s *TestSuiteAuthService) SetupTest() {
 
 func (s *TestSuiteAuthService) TearDownTest() {
 	s.mockRepo = nil
+	s.mockToken = nil
 	s.mockPass = nil
 	s.authService = nil
 }
@@ -160,6 +162,86 @@ func (s *TestSuiteAuthService) TestLoginUser() {
 			s.mockToken.On("NewTokenPair", mock.Anything, tc.RepoReturn).Return(tc.TokenReturn, tc.TokenError)
 
 			token, err := s.authService.LoginUser(context.Background(), user)
+			s.Equal(tc.Expected, token)
+			s.Equal(tc.ExpectedErr, err)
+		})
+		s.TearDownTest()
+	}
+}
+
+func (s *TestSuiteAuthService) TestRefreshToken() {
+	for _, tc := range []struct {
+		Name           string
+		TokenReturn    *dto.RefreshToken
+		TokenError     error
+		RepoReturn     *entity.User
+		RepoError      error
+		GenerateReturn *dto.TokenPair
+		GenerateError  error
+		Expected       *dto.TokenPair
+		ExpectedErr    error
+	}{
+		{
+			Name: "Success",
+			TokenReturn: &dto.RefreshToken{
+				RegisteredClaims: jwt.RegisteredClaims{},
+				UID:              "someId",
+				Category:         "someCategory",
+			},
+			RepoReturn: &entity.User{
+				ID:         "someId",
+				IsVerified: false,
+			},
+			GenerateReturn: &dto.TokenPair{
+				AccessToken:  "someAccessToken",
+				RefreshToken: "someRefreshToken",
+			},
+			Expected: &dto.TokenPair{
+				AccessToken:  "someAccessToken",
+				RefreshToken: "someRefreshToken",
+			},
+		},
+		{
+			Name:        "Fail: Error Parsing Token",
+			TokenReturn: nil,
+			TokenError:  errors.New("some error"),
+			Expected:    nil,
+			ExpectedErr: errors.New("some error"),
+		},
+		{
+			Name: "Fail: User Not Found",
+			TokenReturn: &dto.RefreshToken{
+				RegisteredClaims: jwt.RegisteredClaims{},
+			},
+			RepoReturn:  nil,
+			RepoError:   err2.ErrUserNotFound,
+			Expected:    nil,
+			ExpectedErr: err2.ErrUserNotFound,
+		},
+		{
+			Name: "Fail: Redis Error",
+			TokenReturn: &dto.RefreshToken{
+				RegisteredClaims: jwt.RegisteredClaims{},
+			},
+			RepoReturn: &entity.User{
+				ID: "someId",
+			},
+			RepoError:      nil,
+			GenerateReturn: nil,
+			GenerateError:  errors.New("some error"),
+			Expected:       nil,
+			ExpectedErr:    errors.New("some error"),
+		},
+	} {
+		s.SetupTest()
+		s.Run(tc.Name, func() {
+			s.mockToken.On("ParseRefreshToken", mock.Anything).Return(tc.TokenReturn, tc.TokenError)
+			s.mockRepo.On("FindUserByID", mock.Anything, mock.Anything).Return(tc.RepoReturn, tc.RepoError)
+			s.mockToken.On("NewTokenPair", mock.Anything, tc.RepoReturn).Return(tc.GenerateReturn, tc.GenerateError)
+
+			token, err := s.authService.RefreshToken(context.Background(), &dto.RefreshTokenRequest{
+				RefreshToken: "someRefreshToken",
+			})
 			s.Equal(tc.Expected, token)
 			s.Equal(tc.ExpectedErr, err)
 		})

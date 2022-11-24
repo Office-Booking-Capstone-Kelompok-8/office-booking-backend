@@ -186,8 +186,18 @@ paths:
       operationId: refreshAccessToken
       tags:
         - Auth
-      security:
-        - refresh_token: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzA0NTgwNDksImp0aSI6IjBiNGFmZmY5LTg0NzAtNDkxNi04NDEyLTllNjY3M2RhMmU0NyIsInVpZCI6IjY4ZjA2M2M0LTBjZGItNDJlNi1hNjFiLTg4NTg3MzkwMmJmZCIsImNhdCI6InJlZnJlc2gifQ.X0a_rKDJzQVSbgtN2BahhhVgJThemckCuImo6Axp0vg
+        required: true
       responses:
         200:
           description: Successfully refreshed access token
@@ -2307,11 +2317,17 @@ components:
     InvalidEmail:
       description: Invalid email format
       value:
-        message: invalid email format
+        message: invalid request body
+        data:
+          - field: email
+            message: must be email
     InvalidPassword:
-      description: Invalid password format
+      description: invalid request body
       value:
         message: invalid password format
+        data:
+          - field: password
+            message: must be at least 8 characters
     InvalidPictureID:
       description: picture id is invalid either because it is not a valid uuid or it does not exist in the database
       value:

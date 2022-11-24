@@ -22,7 +22,12 @@ func (m *TokenServiceMock) DeleteTokenPair(ctx context.Context, uid string) erro
 	return args.Error(0)
 }
 
-func (m *TokenServiceMock) CheckAccessToken(ctx context.Context, token *jwt.MapClaims) (bool, error) {
+func (m *TokenServiceMock) CheckToken(ctx context.Context, token *jwt.MapClaims) (bool, error) {
 	args := m.Called(ctx, token)
 	return args.Bool(0), args.Error(1)
+}
+
+func (m *TokenServiceMock) ParseRefreshToken(token string) (*dto.RefreshToken, error) {
+	args := m.Called(token)
+	return args.Get(0).(*dto.RefreshToken), args.Error(1)
 }

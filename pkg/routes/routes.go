@@ -34,6 +34,7 @@ func (r *Routes) Init(app *fiber.App) {
 	auth.Post("/register", r.authController.RegisterUser)
 	auth.Post("/login", r.authController.LoginUser)
 	auth.Post("/logout", r.accessTokenMiddleware, r.authController.LogoutUser)
+	auth.Post("/refresh", r.authController.RefreshToken)
 }
 
 func ping(c *fiber.Ctx) error {

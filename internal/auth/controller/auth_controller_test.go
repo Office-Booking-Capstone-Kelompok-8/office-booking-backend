@@ -10,6 +10,7 @@ import (
 	mockService "office-booking-backend/internal/auth/service/mock"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
+	"office-booking-backend/pkg/utils/validator"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
@@ -20,13 +21,15 @@ import (
 type TestSuiteAuthController struct {
 	suite.Suite
 	mockAuthService *mockService.AuthServiceMock
+	mockValidator   *validator.ValidatorMock
 	authController  *AuthController
 	fiberApp        *fiber.App
 }
 
 func (s *TestSuiteAuthController) SetupTest() {
 	s.mockAuthService = new(mockService.AuthServiceMock)
-	s.authController = NewAuthController(s.mockAuthService)
+	s.mockValidator = new(validator.ValidatorMock)
+	s.authController = NewAuthController(s.mockAuthService, s.mockValidator)
 	s.fiberApp = fiber.New(fiber.Config{
 		ErrorHandler: response.DefaultErrorHandler,
 	})
@@ -47,13 +50,14 @@ func (s *TestSuiteAuthController) TestRegisterUser() {
 	}
 
 	for _, tc := range []struct {
-		Name           string
-		MimeType       string
-		RequestBody    interface{}
-		ServiceErr     error
-		ExpectedStatus int
-		ExpectedBody   response.BaseResponse
-		ExpectedErr    error
+		Name            string
+		MimeType        string
+		RequestBody     interface{}
+		ValidatorReturn *validator.ErrorsResponse
+		ServiceErr      error
+		ExpectedStatus  int
+		ExpectedBody    response.BaseResponse
+		ExpectedErr     error
 	}{
 		{
 			Name:           "Success registering user",
@@ -71,6 +75,25 @@ func (s *TestSuiteAuthController) TestRegisterUser() {
 			ExpectedStatus: fiber.StatusBadRequest,
 			ExpectedBody: response.BaseResponse{
 				Message: err2.ErrInvalidRequestBody.Error(),
+			},
+		},
+		{
+			Name:        "Failed registering user: validation error",
+			MimeType:    fiber.MIMEApplicationJSON,
+			RequestBody: signupReq,
+			ValidatorReturn: &validator.ErrorsResponse{{
+				Field:  "email",
+				Reason: "must be a valid email",
+			}},
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
+				Data: []interface{}{
+					map[string]interface{}{
+						"field":  "email",
+						"reason": "must be a valid email",
+					},
+				},
 			},
 		},
 		{
@@ -100,6 +123,7 @@ func (s *TestSuiteAuthController) TestRegisterUser() {
 			s.NoError(err)
 
 			s.mockAuthService.On("RegisterUser", mock.Anything, mock.Anything).Return(tc.ServiceErr)
+			s.mockValidator.On("Validate", mock.Anything).Return(tc.ValidatorReturn)
 
 			s.fiberApp.Post("/register", s.authController.RegisterUser)
 			r := httptest.NewRequest("POST", "/register", bytes.NewBuffer(jsonBody))
@@ -133,6 +157,7 @@ func (s *TestSuiteAuthController) TestLoginUser() {
 		Name           string
 		MimeType       string
 		RequestBody    interface{}
+		ValidatorError *validator.ErrorsResponse
 		ServiceReturn  *dto.TokenPair
 		ServiceErr     error
 		ExpectedStatus int
@@ -163,6 +188,25 @@ func (s *TestSuiteAuthController) TestLoginUser() {
 			},
 		},
 		{
+			Name:        "Failed logging in user: validation error",
+			MimeType:    fiber.MIMEApplicationJSON,
+			RequestBody: loginReq,
+			ValidatorError: &validator.ErrorsResponse{{
+				Field:  "email",
+				Reason: "must be a valid email",
+			}},
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
+				Data: []interface{}{
+					map[string]interface{}{
+						"field":  "email",
+						"reason": "must be a valid email",
+					},
+				},
+			},
+		},
+		{
 			Name:           "Failed logging in user: invalid credentials",
 			MimeType:       fiber.MIMEApplicationJSON,
 			RequestBody:    loginReq,
@@ -189,6 +233,7 @@ func (s *TestSuiteAuthController) TestLoginUser() {
 			s.NoError(err)
 
 			s.mockAuthService.On("LoginUser", mock.Anything, mock.Anything).Return(tc.ServiceReturn, tc.ServiceErr)
+			s.mockValidator.On("Validate", mock.Anything).Return(tc.ValidatorError)
 
 			s.fiberApp.Post("/", s.authController.LoginUser)
 			r := httptest.NewRequest("POST", "/", bytes.NewBuffer(jsonBody))
@@ -248,6 +293,118 @@ func (s *TestSuiteAuthController) TestLogoutUser() {
 				return s.authController.LogoutUser(ctx)
 			})
 			r := httptest.NewRequest("POST", "/", nil)
+			resp, err := s.fiberApp.Test(r)
+			s.NoError(err)
+
+			var body response.BaseResponse
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			s.NoError(err)
+
+			s.Equal(tc.ExpectedStatus, resp.StatusCode)
+			s.Equal(tc.ExpectedBody, body)
+		})
+		s.TearDownTest()
+	}
+}
+
+func (s *TestSuiteAuthController) TestRefreshToken() {
+	token := &dto.TokenPair{
+		AccessToken:  "some_access_token",
+		RefreshToken: "some_refresh_token",
+	}
+
+	reqBody := &dto.RefreshTokenRequest{
+		RefreshToken: "some_refresh_token",
+	}
+
+	for _, tc := range []struct {
+		Name           string
+		MimeType       string
+		RequestBody    interface{}
+		ValidatorError *validator.ErrorsResponse
+		ServiceReturn  *dto.TokenPair
+		ServiceErr     error
+		ExpectedStatus int
+		ExpectedBody   response.BaseResponse
+		ExpectedErr    error
+	}{
+		{
+			Name:           "Success refreshing token",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    reqBody,
+			ServiceReturn:  token,
+			ExpectedStatus: fiber.StatusOK,
+			ExpectedBody: response.BaseResponse{
+				Message: "token refreshed successfully",
+				Data: map[string]interface{}{
+					"accessToken":  token.AccessToken,
+					"refreshToken": token.RefreshToken,
+				},
+			},
+		},
+		{
+			Name:           "Failed refreshing token: invalid request body",
+			MimeType:       fiber.MIMETextPlain,
+			RequestBody:    []byte("some invalid json"),
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: "invalid request body",
+			},
+		},
+		{
+			Name:        "Failed refreshing token: validation error",
+			MimeType:    fiber.MIMEApplicationJSON,
+			RequestBody: reqBody,
+			ValidatorError: &validator.ErrorsResponse{
+				{
+					Field:  "refreshToken",
+					Reason: "required",
+				},
+			},
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
+				Data: []interface{}{
+					map[string]interface{}{
+						"field":  "refreshToken",
+						"reason": "required",
+					},
+				},
+			},
+		},
+		{
+			Name:           "Failed refreshing token: user not found",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    reqBody,
+			ServiceReturn:  nil,
+			ServiceErr:     err2.ErrUserNotFound,
+			ExpectedStatus: fiber.StatusUnauthorized,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrUserNotFound.Error(),
+			},
+		},
+		{
+			Name:           "Failed refreshing token: service error",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    reqBody,
+			ServiceErr:     errors.New("error"),
+			ExpectedStatus: fiber.StatusInternalServerError,
+			ExpectedBody: response.BaseResponse{
+				Message: "error",
+			},
+		},
+	} {
+		s.SetupTest()
+		s.Run(tc.Name, func() {
+			jsonBody, err := json.Marshal(tc.RequestBody)
+			s.NoError(err)
+
+			s.mockAuthService.On("RefreshToken", mock.Anything, mock.Anything).Return(tc.ServiceReturn, tc.ServiceErr)
+			s.mockValidator.On("Validate", mock.Anything).Return(tc.ValidatorError)
+
+			s.fiberApp.Post("/", s.authController.RefreshToken)
+			r := httptest.NewRequest("POST", "/", bytes.NewBuffer(jsonBody))
+			r.Header.Set(fiber.HeaderContentType, tc.MimeType)
 			resp, err := s.fiberApp.Test(r)
 			s.NoError(err)
 

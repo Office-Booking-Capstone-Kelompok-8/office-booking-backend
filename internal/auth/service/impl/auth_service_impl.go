@@ -73,3 +73,18 @@ func (a *AuthServiceImpl) LoginUser(ctx context.Context, user *dto.LoginRequest)
 func (a *AuthServiceImpl) LogoutUser(ctx context.Context, uid string) error {
 	return a.token.DeleteTokenPair(ctx, uid)
 }
+
+func (a *AuthServiceImpl) RefreshToken(ctx context.Context, token *dto.RefreshTokenRequest) (*dto.TokenPair, error) {
+	claims, err := a.token.ParseRefreshToken(token.RefreshToken)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := a.repository.FindUserByID(ctx, claims.UID)
+	if err != nil {
+		log.Println("Error while finding user by id: ", err)
+		return nil, err
+	}
+
+	return a.token.NewTokenPair(ctx, user)
+}

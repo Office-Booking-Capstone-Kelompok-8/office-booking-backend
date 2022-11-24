@@ -132,6 +132,45 @@ func (s *TestSuiteAuthRepository) TestFindUserByEmail() {
 	}
 }
 
+func (s *TestSuiteAuthRepository) TestFindUserByID() {
+	query := regexp.QuoteMeta("SELECT `users`.`id`,`users`.`email`,`users`.`password`,`users`.`role`,`users`.`is_verified`,`users`.`created_at`,`users`.`updated_at`,`users`.`deleted_at`,`Detail`.`user_id` AS `Detail__user_id`,`Detail`.`name` AS `Detail__name`,`Detail`.`phone` AS `Detail__phone`,`Detail`.`picture_id` AS `Detail__picture_id`,`Detail`.`created_at` AS `Detail__created_at`,`Detail`.`updated_at` AS `Detail__updated_at`,`Detail`.`deleted_at` AS `Detail__deleted_at` FROM `users` LEFT JOIN `user_details` `Detail` ON `users`.`id` = `Detail`.`user_id` AND `Detail`.`deleted_at` IS NULL WHERE id = ? AND `users`.`deleted_at` IS NULL ORDER BY `users`.`id` LIMIT 1")
+	for _, tc := range []struct {
+		Name        string
+		Err         error
+		ExpectedErr error
+	}{
+		{
+			Name:        "Success",
+			Err:         nil,
+			ExpectedErr: nil,
+		},
+		{
+			Name:        "Error: no record found",
+			Err:         gorm.ErrRecordNotFound,
+			ExpectedErr: err2.ErrUserNotFound,
+		},
+		{
+			Name:        "Error: unknown",
+			Err:         errors.New("unknown error"),
+			ExpectedErr: errors.New("unknown error"),
+		},
+	} {
+		s.SetupTest()
+		s.Run(tc.Name, func() {
+			if tc.Err != nil {
+				s.mock.ExpectQuery(query).WillReturnError(tc.Err)
+			} else {
+				s.mock.ExpectQuery(query).WillReturnRows(sqlmock.NewRows([]string{"id", "username", "password", "role"}).AddRow(1, "123", "123", 1))
+			}
+
+			_, err := s.repo.FindUserByID(context.Background(), "123")
+
+			s.Equal(tc.ExpectedErr, err)
+		})
+		s.TearDownTest()
+	}
+}
+
 func TestAuthRepository(t *testing.T) {
 	suite.Run(t, new(TestSuiteAuthRepository))
 }

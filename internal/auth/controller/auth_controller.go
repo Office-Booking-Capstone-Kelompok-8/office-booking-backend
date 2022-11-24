@@ -120,3 +120,88 @@ func (a *AuthController) RefreshToken(c *fiber.Ctx) error {
 		Data:    tokenPair,
 	})
 }
+
+func (a *AuthController) RequestOTP(c *fiber.Ctx) error {
+	otp := new(dto.OTPRequest)
+	if err := c.BodyParser(otp); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	errs := a.validator.Validate(*otp)
+	if errs != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidRequestBody.Error(),
+			Data:    errs,
+		})
+	}
+
+	if err := a.service.RequestOTP(c.Context(), otp.Email); err != nil {
+		if errors.Is(err, err2.ErrUserNotFound) {
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		}
+
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "otp sent successfully",
+	})
+}
+
+func (a *AuthController) VerifyOTP(c *fiber.Ctx) error {
+	otp := new(dto.OTPVerifyRequest)
+	if err := c.BodyParser(otp); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	errs := a.validator.Validate(*otp)
+	if errs != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidRequestBody.Error(),
+			Data:    errs,
+		})
+	}
+
+	token, err := a.service.VerifyOTP(c.Context(), otp)
+	if err != nil {
+		if errors.Is(err, err2.ErrInvalidOTP) {
+			return fiber.NewError(fiber.StatusUnauthorized, err.Error())
+		}
+
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "otp verified successfully",
+		Data: fiber.Map{
+			"token": token,
+		},
+	})
+}
+
+func (a *AuthController) ResetPassword(c *fiber.Ctx) error {
+	password := new(dto.PasswordResetRequest)
+	if err := c.BodyParser(password); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	errs := a.validator.Validate(*password)
+	if errs != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidRequestBody.Error(),
+			Data:    errs,
+		})
+	}
+
+	if err := a.service.ResetPassword(c.Context(), password); err != nil {
+		if errors.Is(err, err2.ErrUserNotFound) {
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		}
+
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "password reset successfully",
+	})
+}

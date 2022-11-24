@@ -16,12 +16,22 @@ func (m *AuthRepositoryMock) RegisterUser(ctx context.Context, user *entity.User
 	return args.Error(0)
 }
 
-func (m *AuthRepositoryMock) FindUserByEmail(ctx context.Context, email string) (*entity.User, error) {
+func (m *AuthRepositoryMock) GetFullUserByEmail(ctx context.Context, email string) (*entity.User, error) {
 	args := m.Called(ctx, email)
 	return args.Get(0).(*entity.User), args.Error(1)
 }
 
-func (m *AuthRepositoryMock) FindUserByID(ctx context.Context, id string) (*entity.User, error) {
+func (m *AuthRepositoryMock) GetFullUserByID(ctx context.Context, id string) (*entity.User, error) {
 	args := m.Called(ctx, id)
 	return args.Get(0).(*entity.User), args.Error(1)
+}
+
+func (m *AuthRepositoryMock) GetUserByEmail(ctx context.Context, email string) (*entity.User, error) {
+	args := m.Called(ctx, email)
+	return args.Get(0).(*entity.User), args.Error(1)
+}
+
+func (m *AuthRepositoryMock) ChangePassword(ctx context.Context, id string, password string) error {
+	args := m.Called(ctx, id, password)
+	return args.Error(0)
 }

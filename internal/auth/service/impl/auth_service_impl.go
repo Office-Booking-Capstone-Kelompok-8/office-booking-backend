@@ -2,28 +2,42 @@ package impl
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
+	"fmt"
+	"github.com/google/uuid"
 	"log"
 	"office-booking-backend/internal/auth/dto"
 	"office-booking-backend/internal/auth/repository"
 	"office-booking-backend/internal/auth/service"
+	"office-booking-backend/pkg/config"
+	"office-booking-backend/pkg/database/redis"
 	err2 "office-booking-backend/pkg/errors"
+	"office-booking-backend/pkg/utils/mail"
 	"office-booking-backend/pkg/utils/password"
+	"office-booking-backend/pkg/utils/random"
 )
 
 const DefaultPasswordCost = 10
 
 type AuthServiceImpl struct {
 	repository repository.AuthRepository
-	password   password.PasswordService
 	token      service.TokenService
+	redisRepo  redis.RedisClient
+	mail       mail.Client
+	password   password.Hash
+	generator  random.Generator
 }
 
-func NewAuthServiceImpl(repository repository.AuthRepository, tokenService service.TokenService, password password.PasswordService) service.AuthService {
+func NewAuthServiceImpl(repository repository.AuthRepository, tokenService service.TokenService, redisRepo redis.RedisClient, mail mail.Client, password password.Hash, generator random.Generator) service.AuthService {
 	return &AuthServiceImpl{
 		repository: repository,
-		password:   password,
 		token:      tokenService,
+		redisRepo:  redisRepo,
+		mail:       mail,
+		password:   password,
+		generator:  generator,
 	}
 }
 
@@ -46,7 +60,7 @@ func (a *AuthServiceImpl) RegisterUser(ctx context.Context, user *dto.SignupRequ
 }
 
 func (a *AuthServiceImpl) LoginUser(ctx context.Context, user *dto.LoginRequest) (*dto.TokenPair, error) {
-	userEntity, err := a.repository.FindUserByEmail(ctx, user.Email)
+	userEntity, err := a.repository.GetFullUserByEmail(ctx, user.Email)
 	if err != nil {
 		if errors.Is(err, err2.ErrUserNotFound) {
 			return nil, err2.ErrInvalidCredentials
@@ -80,11 +94,96 @@ func (a *AuthServiceImpl) RefreshToken(ctx context.Context, token *dto.RefreshTo
 		return nil, err
 	}
 
-	user, err := a.repository.FindUserByID(ctx, claims.UID)
+	user, err := a.repository.GetFullUserByID(ctx, claims.UID)
 	if err != nil {
 		log.Println("Error while finding user by id: ", err)
 		return nil, err
 	}
 
 	return a.token.NewTokenPair(ctx, user)
+}
+
+func createKey(email string, code string) string {
+	hasher := md5.New()
+	hasher.Write([]byte(fmt.Sprintf("%s:%s", email, code)))
+	return hex.EncodeToString(hasher.Sum(nil))
+}
+
+func (a *AuthServiceImpl) createOTP(ctx context.Context, email string) (*string, error) {
+	user, err := a.repository.GetUserByEmail(ctx, email)
+	if err != nil {
+		log.Println("Error while finding user by email: ", err)
+		return nil, err
+	}
+
+	otp, err := a.generator.GenerateRandomIntString(config.OTP_LENGTH)
+	if err != nil {
+		log.Println("Error while generating random string: ", err)
+		return nil, err
+	}
+	token := uuid.New().String()
+	key := createKey(email, otp)
+
+	err = a.redisRepo.Set(ctx, key, token, config.OTP_EXPIRATION_TIME)
+	if err != nil {
+		log.Println("Error while setting key in redis: ", err)
+		return nil, err
+	}
+
+	err = a.redisRepo.Set(ctx, token, user.ID, config.OTP_EXPIRATION_TIME)
+
+	return &otp, nil
+}
+
+func (a *AuthServiceImpl) RequestOTP(ctx context.Context, email string) error {
+	otp, err := a.createOTP(ctx, email)
+	if err != nil {
+		log.Println("Error while creating otp: ", err)
+		return err
+	}
+	msg := &mail.Mail{
+		Subject:   "Atur Ulang Kata Sandi",
+		Body:      "Kode OTP Anda adalah " + *otp,
+		Recipient: email,
+	}
+
+	err = a.mail.SendMail(ctx, msg)
+	if err != nil {
+		log.Println("Error while sending email: ", err)
+		return err
+	}
+
+	return nil
+}
+
+func (a *AuthServiceImpl) VerifyOTP(ctx context.Context, otp *dto.OTPVerifyRequest) (*string, error) {
+	key := createKey(otp.Email, otp.Code)
+	token, err := a.redisRepo.Get(ctx, key)
+	if err != nil {
+		log.Println("Error while getting key from redis: ", err)
+		return nil, err
+	}
+
+	return &token, nil
+}
+
+func (a *AuthServiceImpl) ResetPassword(ctx context.Context, password *dto.PasswordResetRequest) error {
+	uid, err := a.redisRepo.Get(ctx, password.Token)
+	if err != nil {
+		log.Println("Error while getting key from redis: ", err)
+		return err
+	}
+
+	hashedPassword, err := a.password.GenerateFromPassword([]byte(password.Password), DefaultPasswordCost)
+	if err != nil {
+		return err
+	}
+
+	err = a.repository.ChangePassword(ctx, uid, string(hashedPassword))
+	if err != nil {
+		log.Println("Error while changing password: ", err)
+		return err
+	}
+
+	return nil
 }

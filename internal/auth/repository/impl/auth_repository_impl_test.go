@@ -124,7 +124,7 @@ func (s *TestSuiteAuthRepository) TestFindUserByEmail() {
 				s.mock.ExpectQuery(query).WillReturnRows(sqlmock.NewRows([]string{"id", "username", "password", "role"}).AddRow(1, "123", "123", 1))
 			}
 
-			_, err := s.repo.FindUserByEmail(context.Background(), "123")
+			_, err := s.repo.GetFullUserByEmail(context.Background(), "123")
 
 			s.Equal(tc.ExpectedErr, err)
 		})
@@ -163,7 +163,7 @@ func (s *TestSuiteAuthRepository) TestFindUserByID() {
 				s.mock.ExpectQuery(query).WillReturnRows(sqlmock.NewRows([]string{"id", "username", "password", "role"}).AddRow(1, "123", "123", 1))
 			}
 
-			_, err := s.repo.FindUserByID(context.Background(), "123")
+			_, err := s.repo.GetFullUserByID(context.Background(), "123")
 
 			s.Equal(tc.ExpectedErr, err)
 		})

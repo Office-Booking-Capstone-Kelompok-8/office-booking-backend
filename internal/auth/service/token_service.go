@@ -10,5 +10,6 @@ import (
 type TokenService interface {
 	NewTokenPair(ctx context.Context, user *entity.User) (*dto.TokenPair, error)
 	DeleteTokenPair(ctx context.Context, uid string) error
-	CheckAccessToken(ctx context.Context, token *jwt.MapClaims) (bool, error)
+	CheckToken(ctx context.Context, token *jwt.MapClaims) (bool, error)
+	ParseRefreshToken(token string) (*dto.RefreshToken, error)
 }

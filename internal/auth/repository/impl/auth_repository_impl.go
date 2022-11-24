@@ -46,3 +46,17 @@ func (a *AuthRepositoryImpl) FindUserByEmail(ctx context.Context, email string) 
 
 	return user, nil
 }
+
+func (a *AuthRepositoryImpl) FindUserByID(ctx context.Context, id string) (*entity.User, error) {
+	user := &entity.User{}
+	err := a.db.WithContext(ctx).Model(&entity.User{}).Joins("Detail").Where("id = ?", id).First(user).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, err2.ErrUserNotFound
+		}
+
+		return nil, err
+	}
+
+	return user, nil
+}

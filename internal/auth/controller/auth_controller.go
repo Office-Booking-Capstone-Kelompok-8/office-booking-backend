@@ -72,3 +72,20 @@ func (a *AuthController) LogoutUser(c *fiber.Ctx) error {
 		Message: "user logged out successfully",
 	})
 }
+
+func (a *AuthController) RefreshToken(c *fiber.Ctx) error {
+	var token dto.RefreshTokenRequest
+	if err := c.BodyParser(&token); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	tokenPair, err := a.service.RefreshToken(c.Context(), &token)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "token refreshed successfully",
+		Data:    tokenPair,
+	})
+}

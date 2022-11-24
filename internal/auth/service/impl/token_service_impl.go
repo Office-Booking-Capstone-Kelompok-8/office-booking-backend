@@ -95,7 +95,7 @@ func (t *TokenServiceImpl) DeleteTokenPair(ctx context.Context, uid string) erro
 	return nil
 }
 
-func (t *TokenServiceImpl) CheckAccessToken(ctx context.Context, token *jwt.MapClaims) (bool, error) {
+func (t *TokenServiceImpl) CheckToken(ctx context.Context, token *jwt.MapClaims) (bool, error) {
 	cachedJson, err := t.TokenRepository.GetToken(ctx, (*token)["uid"].(string))
 	if err != nil {
 		if err.Error() == "redis: nil" {
@@ -109,9 +109,28 @@ func (t *TokenServiceImpl) CheckAccessToken(ctx context.Context, token *jwt.MapC
 	cachedToken := new(entity.CachedToken)
 	err = json.Unmarshal([]byte(cachedJson), cachedToken)
 
-	if err != nil || cachedToken.AccessID != (*token)["jti"].(string) {
+	var cachedID string
+	if (*token)["cat"].(string) == "access" {
+		cachedID = cachedToken.AccessID
+	} else {
+		cachedID = cachedToken.RefreshID
+	}
+
+	if err != nil || cachedID != (*token)["jti"].(string) {
 		return false, nil
 	}
 
 	return true, nil
+}
+
+func (t *TokenServiceImpl) ParseRefreshToken(tokenStr string) (*dto.RefreshToken, error) {
+	token, err := jwt.ParseWithClaims(tokenStr, &dto.RefreshToken{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(t.RefreshTokenSecret), nil
+	})
+	if err != nil {
+		log.Println("Error while parsing refresh token:", err)
+		return nil, err
+	}
+
+	return token.Claims.(*dto.RefreshToken), nil
 }

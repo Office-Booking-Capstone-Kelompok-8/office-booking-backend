@@ -7,27 +7,38 @@ import (
 	"office-booking-backend/internal/auth/service"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
+	"office-booking-backend/pkg/utils/validator"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 type AuthController struct {
-	service service.AuthService
+	service   service.AuthService
+	validator validator.Validator
 }
 
-func NewAuthController(AuthService service.AuthService) *AuthController {
+func NewAuthController(AuthService service.AuthService, validator validator.Validator) *AuthController {
 	return &AuthController{
-		service: AuthService,
+		service:   AuthService,
+		validator: validator,
 	}
 }
 
 func (a *AuthController) RegisterUser(c *fiber.Ctx) error {
-	var user dto.SignupRequest
-	if err := c.BodyParser(&user); err != nil {
+	user := new(dto.SignupRequest)
+	if err := c.BodyParser(user); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	if err := a.service.RegisterUser(c.Context(), &user); err != nil {
+	errs := a.validator.Validate(*user)
+	if len(errs) != 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidRequestBody.Error(),
+			Data:    errs,
+		})
+	}
+
+	if err := a.service.RegisterUser(c.Context(), user); err != nil {
 		if errors.Is(err, err2.ErrDuplicateEmail) {
 			return fiber.NewError(fiber.StatusConflict, err.Error())
 		}
@@ -40,12 +51,20 @@ func (a *AuthController) RegisterUser(c *fiber.Ctx) error {
 }
 
 func (a *AuthController) LoginUser(c *fiber.Ctx) error {
-	var user dto.LoginRequest
-	if err := c.BodyParser(&user); err != nil {
+	user := new(dto.LoginRequest)
+	if err := c.BodyParser(user); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	tokenPair, err := a.service.LoginUser(c.Context(), &user)
+	errs := a.validator.Validate(*user)
+	if len(errs) != 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidRequestBody.Error(),
+			Data:    errs,
+		})
+	}
+
+	tokenPair, err := a.service.LoginUser(c.Context(), user)
 	if err != nil {
 		if errors.Is(err, err2.ErrInvalidCredentials) {
 			return fiber.NewError(fiber.StatusUnauthorized, err.Error())
@@ -74,12 +93,20 @@ func (a *AuthController) LogoutUser(c *fiber.Ctx) error {
 }
 
 func (a *AuthController) RefreshToken(c *fiber.Ctx) error {
-	var token dto.RefreshTokenRequest
-	if err := c.BodyParser(&token); err != nil {
+	token := new(dto.RefreshTokenRequest)
+	if err := c.BodyParser(token); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	tokenPair, err := a.service.RefreshToken(c.Context(), &token)
+	errs := a.validator.Validate(*token)
+	if len(errs) != 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidRequestBody.Error(),
+			Data:    errs,
+		})
+	}
+
+	tokenPair, err := a.service.RefreshToken(c.Context(), token)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}

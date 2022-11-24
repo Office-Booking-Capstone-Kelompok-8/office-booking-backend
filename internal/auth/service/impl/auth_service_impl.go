@@ -16,7 +16,6 @@ import (
 	"office-booking-backend/pkg/config"
 	"office-booking-backend/pkg/database/redis"
 	"office-booking-backend/pkg/entity"
-
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/utils/mail"
 	"office-booking-backend/pkg/utils/password"
@@ -153,10 +152,12 @@ func (a *AuthServiceImpl) RequestOTP(ctx context.Context, email string) error {
 		return err
 	}
 
-	// TODO: add template
 	msg := &mail.Mail{
-		Subject:   "Atur Ulang Kata Sandi",
-		Body:      "Kode OTP Anda adalah " + *otp,
+		Subject:  "Reset Password OTP",
+		Template: "password-reset",
+		Variable: map[string]string{
+			"otp": *otp,
+		},
 		Recipient: email,
 	}
 

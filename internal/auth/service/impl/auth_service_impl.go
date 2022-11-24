@@ -4,8 +4,10 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
+	redis2 "github.com/go-redis/redis/v9"
 	"github.com/google/uuid"
 	"log"
 	"office-booking-backend/internal/auth/dto"
@@ -13,6 +15,8 @@ import (
 	"office-booking-backend/internal/auth/service"
 	"office-booking-backend/pkg/config"
 	"office-booking-backend/pkg/database/redis"
+	"office-booking-backend/pkg/entity"
+
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/utils/mail"
 	"office-booking-backend/pkg/utils/password"
@@ -103,9 +107,9 @@ func (a *AuthServiceImpl) RefreshToken(ctx context.Context, token *dto.RefreshTo
 	return a.token.NewTokenPair(ctx, user)
 }
 
-func createKey(email string, code string) string {
+func createKey(email string) string {
 	hasher := md5.New()
-	hasher.Write([]byte(fmt.Sprintf("%s:%s", email, code)))
+	hasher.Write([]byte(fmt.Sprintf("%s", email)))
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
@@ -121,16 +125,30 @@ func (a *AuthServiceImpl) createOTP(ctx context.Context, email string) (*string,
 		log.Println("Error while generating random string: ", err)
 		return nil, err
 	}
-	token := uuid.New().String()
-	key := createKey(email, otp)
 
-	err = a.redisRepo.Set(ctx, key, token, config.OTP_EXPIRATION_TIME)
+	token := uuid.New().String()
+	otpTokenPair, err := json.Marshal(entity.CachedOTP{
+		OTP:   otp,
+		Token: token,
+	})
+	if err != nil {
+		log.Println("Error while marshalling otp token pair: ", err)
+		return nil, err
+	}
+
+	key := createKey(email)
+
+	err = a.redisRepo.Set(ctx, key, string(otpTokenPair), config.OTP_EXPIRATION_TIME)
 	if err != nil {
 		log.Println("Error while setting key in redis: ", err)
 		return nil, err
 	}
 
 	err = a.redisRepo.Set(ctx, token, user.ID, config.OTP_EXPIRATION_TIME)
+	if err != nil {
+		log.Println("Error while setting key in redis: ", err)
+		return nil, err
+	}
 
 	return &otp, nil
 }
@@ -141,6 +159,8 @@ func (a *AuthServiceImpl) RequestOTP(ctx context.Context, email string) error {
 		log.Println("Error while creating otp: ", err)
 		return err
 	}
+
+	// TODO: add template
 	msg := &mail.Mail{
 		Subject:   "Atur Ulang Kata Sandi",
 		Body:      "Kode OTP Anda adalah " + *otp,
@@ -157,20 +177,45 @@ func (a *AuthServiceImpl) RequestOTP(ctx context.Context, email string) error {
 }
 
 func (a *AuthServiceImpl) VerifyOTP(ctx context.Context, otp *dto.OTPVerifyRequest) (*string, error) {
-	key := createKey(otp.Email, otp.Code)
-	token, err := a.redisRepo.Get(ctx, key)
+	key := createKey(otp.Email)
+	jsonToken, err := a.redisRepo.Get(ctx, key)
 	if err != nil {
+		if errors.Is(err, redis2.Nil) {
+			return nil, err2.ErrInvalidOTP
+		}
+
 		log.Println("Error while getting key from redis: ", err)
 		return nil, err
 	}
 
-	return &token, nil
+	token := new(entity.CachedOTP)
+	err = json.Unmarshal([]byte(jsonToken), token)
+	if err != nil {
+		log.Println("Error while unmarshalling json token: ", err)
+		return nil, err
+	}
+
+	if token.OTP != otp.Code {
+		return nil, err2.ErrInvalidOTP
+	}
+
+	return &token.Token, nil
 }
 
 func (a *AuthServiceImpl) ResetPassword(ctx context.Context, password *dto.PasswordResetRequest) error {
 	uid, err := a.redisRepo.Get(ctx, password.Token)
 	if err != nil {
+		if errors.Is(err, redis2.Nil) {
+			return err2.ErrInvalidOTPToken
+		}
+
 		log.Println("Error while getting key from redis: ", err)
+		return err
+	}
+
+	err = a.redisRepo.Del(ctx, password.Token)
+	if err != nil {
+		log.Println("Error while deleting key from redis: ", err)
 		return err
 	}
 

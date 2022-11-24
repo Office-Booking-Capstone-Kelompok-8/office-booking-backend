@@ -2,14 +2,13 @@ package controller
 
 import (
 	"errors"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
 	"office-booking-backend/internal/auth/dto"
 	"office-booking-backend/internal/auth/service"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
 	"office-booking-backend/pkg/utils/validator"
-
-	"github.com/gofiber/fiber/v2"
 )
 
 type AuthController struct {
@@ -196,6 +195,8 @@ func (a *AuthController) ResetPassword(c *fiber.Ctx) error {
 	if err := a.service.ResetPassword(c.Context(), password); err != nil {
 		if errors.Is(err, err2.ErrUserNotFound) {
 			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		} else if errors.Is(err, err2.ErrInvalidOTPToken) {
+			return fiber.NewError(fiber.StatusUnauthorized, err.Error())
 		}
 
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())

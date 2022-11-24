@@ -31,7 +31,7 @@ func (a *AuthController) RegisterUser(c *fiber.Ctx) error {
 	}
 
 	errs := a.validator.Validate(*user)
-	if len(errs) != 0 {
+	if errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
 			Message: err2.ErrInvalidRequestBody.Error(),
 			Data:    errs,
@@ -57,7 +57,7 @@ func (a *AuthController) LoginUser(c *fiber.Ctx) error {
 	}
 
 	errs := a.validator.Validate(*user)
-	if len(errs) != 0 {
+	if errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
 			Message: err2.ErrInvalidRequestBody.Error(),
 			Data:    errs,
@@ -99,7 +99,7 @@ func (a *AuthController) RefreshToken(c *fiber.Ctx) error {
 	}
 
 	errs := a.validator.Validate(*token)
-	if len(errs) != 0 {
+	if errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
 			Message: err2.ErrInvalidRequestBody.Error(),
 			Data:    errs,

@@ -7,7 +7,7 @@ import (
 )
 
 type Validator interface {
-	Validate(s interface{}) []ErrorResponse
+	Validate(s interface{}) *ErrorsResponse
 }
 
 type CustomValidator struct {
@@ -18,6 +18,8 @@ type ErrorResponse struct {
 	Field  string `json:"field"`
 	Reason string `json:"reason"`
 }
+
+type ErrorsResponse []ErrorResponse
 
 func NewValidator() Validator {
 	validate := validation.New()
@@ -32,8 +34,8 @@ func NewValidator() Validator {
 	return &CustomValidator{validate: validate}
 }
 
-func (c *CustomValidator) Validate(s interface{}) []ErrorResponse {
-	var errors []ErrorResponse
+func (c *CustomValidator) Validate(s interface{}) *ErrorsResponse {
+	var errors ErrorsResponse
 
 	err := c.validate.Struct(s)
 	if err != nil {
@@ -43,7 +45,7 @@ func (c *CustomValidator) Validate(s interface{}) []ErrorResponse {
 			case "required":
 				message = "required"
 			case "email":
-				message = "must be email"
+				message = "must be a valid email"
 			case "min":
 				message = "must be at least " + err.Param() + " characters"
 			}
@@ -53,5 +55,5 @@ func (c *CustomValidator) Validate(s interface{}) []ErrorResponse {
 			})
 		}
 	}
-	return errors
+	return &errors
 }

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"log"
 	"office-booking-backend/internal/auth/dto"
-	"office-booking-backend/internal/auth/repository"
 	"office-booking-backend/internal/auth/service"
+	"office-booking-backend/pkg/database/redis"
 	"office-booking-backend/pkg/entity"
 	"time"
 
@@ -19,16 +19,16 @@ type TokenServiceImpl struct {
 	AccessTokenExp     time.Duration
 	RefreshTokenSecret string
 	RefreshTokenExp    time.Duration
-	TokenRepository    repository.TokenRepository
+	RedisRepository    redis.RedisClient
 }
 
-func NewTokenServiceImpl(accessTokenSecret string, refreshTokenSecret string, accessTokenExp time.Duration, refreshTokenExp time.Duration, TokenRepository repository.TokenRepository) service.TokenService {
+func NewTokenServiceImpl(accessTokenSecret string, refreshTokenSecret string, accessTokenExp time.Duration, refreshTokenExp time.Duration, RedisRepository redis.RedisClient) service.TokenService {
 	return &TokenServiceImpl{
 		AccessTokenSecret:  accessTokenSecret,
 		RefreshTokenSecret: refreshTokenSecret,
 		AccessTokenExp:     accessTokenExp,
 		RefreshTokenExp:    refreshTokenExp,
-		TokenRepository:    TokenRepository,
+		RedisRepository:    RedisRepository,
 	}
 }
 
@@ -73,7 +73,7 @@ func (t *TokenServiceImpl) NewTokenPair(ctx context.Context, user *entity.User) 
 		return nil, err
 	}
 
-	err = t.TokenRepository.SaveToken(ctx, string(serializedTokenPair), user.ID, t.RefreshTokenExp)
+	err = t.RedisRepository.Set(ctx, user.ID, string(serializedTokenPair), t.RefreshTokenExp)
 	if err != nil {
 		log.Println("Error while saving token pair:", err)
 		return nil, err
@@ -87,7 +87,7 @@ func (t *TokenServiceImpl) NewTokenPair(ctx context.Context, user *entity.User) 
 }
 
 func (t *TokenServiceImpl) DeleteTokenPair(ctx context.Context, uid string) error {
-	err := t.TokenRepository.DeleteToken(ctx, uid)
+	err := t.RedisRepository.Del(ctx, uid)
 	if err != nil {
 		log.Println("Error while deleting token pair:", err)
 		return err
@@ -96,7 +96,7 @@ func (t *TokenServiceImpl) DeleteTokenPair(ctx context.Context, uid string) erro
 }
 
 func (t *TokenServiceImpl) CheckToken(ctx context.Context, token *jwt.MapClaims) (bool, error) {
-	cachedJson, err := t.TokenRepository.GetToken(ctx, (*token)["uid"].(string))
+	cachedJson, err := t.RedisRepository.Get(ctx, (*token)["uid"].(string))
 	if err != nil {
 		if err.Error() == "redis: nil" {
 			return false, nil

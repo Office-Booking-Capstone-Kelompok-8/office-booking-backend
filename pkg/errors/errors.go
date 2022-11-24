@@ -17,4 +17,10 @@ var (
 
 	// ErrInvalidToken is returned when the token is invalid or expired
 	ErrInvalidToken = errors.New("invalid or expired JWT")
+
+	// ErrInvalidOTP is returned when the OTP is invalid
+	ErrInvalidOTP = errors.New("invalid OTP")
+
+	//	ErrInvalidOTPToken is returned when the OTP token is invalid
+	ErrInvalidOTPToken = errors.New("invalid OTP token")
 )

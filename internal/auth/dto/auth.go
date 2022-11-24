@@ -24,3 +24,24 @@ type LoginRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=8"`
 }
+
+type OTPRequest struct {
+	Email string `json:"email" validate:"required,email"`
+}
+
+type OTPVerifyRequest struct {
+	Email string `json:"email" validate:"required,email"`
+	Code  string `json:"code" validate:"required"`
+}
+
+type PasswordResetRequest struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=8"`
+	Key      string `json:"key" validate:"required"`
+}
+
+func (p *PasswordResetRequest) ToEntity() *entity.User {
+	return &entity.User{
+		Password: p.Password,
+	}
+}

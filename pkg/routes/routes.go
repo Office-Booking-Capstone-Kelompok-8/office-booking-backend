@@ -5,9 +5,6 @@ import (
 	"office-booking-backend/pkg/middlewares"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/fiber/v2/middleware/recover"
 )
 
 type Routes struct {
@@ -23,9 +20,9 @@ func NewRoutes(authController *ac.AuthController, accessTokenMiddleware fiber.Ha
 }
 
 func (r *Routes) Init(app *fiber.App) {
-	app.Use(recover.New(middlewares.RecoverConfig))
-	app.Use(logger.New(middlewares.LoggerConfig))
-	app.Use(cors.New(middlewares.CorsConfig))
+	app.Use(middlewares.Recover)
+	app.Use(middlewares.Logger)
+	app.Use(middlewares.Cors)
 
 	v1 := app.Group("/v1")
 	v1.Get("/ping", ping)
@@ -35,6 +32,9 @@ func (r *Routes) Init(app *fiber.App) {
 	auth.Post("/login", r.authController.LoginUser)
 	auth.Post("/logout", r.accessTokenMiddleware, r.authController.LogoutUser)
 	auth.Post("/refresh", r.authController.RefreshToken)
+	auth.Put("/reset-password", r.authController.ResetPassword)
+	auth.Post("/request-otp", middlewares.OTPLimitter, r.authController.RequestOTP)
+	auth.Post("/verify-otp", r.authController.VerifyOTP)
 }
 
 func ping(c *fiber.Ctx) error {

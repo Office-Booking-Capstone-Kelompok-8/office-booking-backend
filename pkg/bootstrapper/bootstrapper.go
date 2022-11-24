@@ -3,11 +3,14 @@ package bootstrapper
 import (
 	authControllerPkg "office-booking-backend/internal/auth/controller"
 	authRepositoryPkg "office-booking-backend/internal/auth/repository/impl"
-	authServicepkg "office-booking-backend/internal/auth/service/impl"
+	authServicePkg "office-booking-backend/internal/auth/service/impl"
 	"office-booking-backend/pkg/config"
+	redisRepoPkg "office-booking-backend/pkg/database/redis"
 	"office-booking-backend/pkg/middlewares"
 	"office-booking-backend/pkg/routes"
-	passwordServicePkg "office-booking-backend/pkg/utils/password/impl"
+	"office-booking-backend/pkg/utils/mail"
+	passwordServicePkg "office-booking-backend/pkg/utils/password"
+	"office-booking-backend/pkg/utils/random"
 	"office-booking-backend/pkg/utils/validator"
 
 	"github.com/go-redis/redis/v9"
@@ -19,13 +22,15 @@ func Init(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf map[strin
 	passwordService := passwordServicePkg.NewPasswordFuncImpl()
 
 	validation := validator.NewValidator()
+	generator := random.NewGenerator()
+	redisRepo := redisRepoPkg.NewRedisClient(redisClient)
+	mailService := mail.NewClient(conf["MAIL_DOMAIN"], conf["MAIL_API_KEY"], conf["MAIL_SENDER"], conf["MAIL_SENDER_NAME"])
 
 	authRepository := authRepositoryPkg.NewAuthRepositoryImpl(db)
-	tokenRepository := authRepositoryPkg.NewTokenRepositoryImpl(redisClient)
-	tokenService := authServicepkg.NewTokenServiceImpl(conf["ACCESS_SECRET"], conf["REFRESH_SECRET"], config.ACCESS_TOKEN_DURATION, config.REFRESH_TOKEN_DURATION, tokenRepository)
+	tokenService := authServicePkg.NewTokenServiceImpl(conf["ACCESS_SECRET"], conf["REFRESH_SECRET"], config.ACCESS_TOKEN_DURATION, config.REFRESH_TOKEN_DURATION, redisRepo)
 	accessTokenMiddleware := middlewares.NewJWTMiddleware(conf["ACCESS_SECRET"], middlewares.ValidateAccessToken(tokenService))
 
-	authService := authServicepkg.NewAuthServiceImpl(authRepository, tokenService, passwordService)
+	authService := authServicePkg.NewAuthServiceImpl(authRepository, tokenService, redisRepo, mailService, passwordService, generator)
 	authController := authControllerPkg.NewAuthController(authService, validation)
 
 	// init routes

@@ -378,7 +378,7 @@ func (s *TestSuiteAuthController) TestRefreshToken() {
 			RequestBody:    reqBody,
 			ServiceReturn:  nil,
 			ServiceErr:     err2.ErrUserNotFound,
-			ExpectedStatus: fiber.StatusNotFound,
+			ExpectedStatus: fiber.StatusUnauthorized,
 			ExpectedBody: response.BaseResponse{
 				Message: err2.ErrUserNotFound.Error(),
 			},

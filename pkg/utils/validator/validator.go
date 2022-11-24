@@ -35,25 +35,27 @@ func NewValidator() Validator {
 }
 
 func (c *CustomValidator) Validate(s interface{}) *ErrorsResponse {
-	var errors ErrorsResponse
-
 	err := c.validate.Struct(s)
-	if err != nil {
-		for _, err := range err.(validation.ValidationErrors) {
-			var message string
-			switch err.Tag() {
-			case "required":
-				message = "required"
-			case "email":
-				message = "must be a valid email"
-			case "min":
-				message = "must be at least " + err.Param() + " characters"
-			}
-			errors = append(errors, ErrorResponse{
-				Field:  err.Field(),
-				Reason: message,
-			})
-		}
+	if err == nil {
+		return nil
 	}
+
+	var errors ErrorsResponse
+	for _, err := range err.(validation.ValidationErrors) {
+		var message string
+		switch err.Tag() {
+		case "required":
+			message = "required"
+		case "email":
+			message = "must be a valid email"
+		case "min":
+			message = "must be at least " + err.Param() + " characters"
+		}
+		errors = append(errors, ErrorResponse{
+			Field:  err.Field(),
+			Reason: message,
+		})
+	}
+
 	return &errors
 }

@@ -222,6 +222,193 @@ paths:
           $ref: '#/components/responses/InvalidOrMissingToken'
         500:
           $ref: '#/components/responses/InternalServerError'
+  /auth/request-otp:
+    post:
+      summary: Request OTP
+      operationId: requestOTP
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: a@a.com
+        required: true
+      responses:
+        200:
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: otp sent successfully
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidEmail:
+                  $ref: '#/components/examples/InvalidEmail'
+        404:
+          description: User not found with the given email
+          $ref: '#/components/responses/UserNotFound'
+        429:
+          description: Too many requests sent in a short period of time. OTP can be requested only once every 60 seconds
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: too many requests
+                
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /auth/verify-otp:
+    post:
+      summary: Verify OTP
+      operationId: verifyOTP
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - code
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: a@a.com
+                code:
+                  type: string
+                  example: 123456
+        required: true
+      responses:
+        200:
+          description: OTP verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: otp verified successfully
+                  data:
+                    type: object
+                    properties:
+                      key:
+                        type: string
+                        example: 12345adaasdadd6   
+                  
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidEmail:
+                  $ref: '#/components/examples/InvalidEmail'
+        401:
+          description: Invalid OTP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidOTP:
+                  $ref: '#/components/examples/InvalidOTP'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /auth/reset-password:
+    put:
+      summary: Reset password
+      operationId: resetPassword
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - key
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: a@a.com
+                key:
+                  type: string
+                  example: 12345adaasdadd6
+                password:
+                  type: string
+                  example: 123456789
+        required: true
+      responses:
+        200:
+          description: Password reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: password reset successfully
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidEmail:
+                  $ref: '#/components/examples/InvalidEmail'
+                InvalidPassword:
+                  $ref: '#/components/examples/InvalidPassword'
+        401:
+          description: Invalid OTP Token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: invalid OTP token
+        404:
+          description: User not found with the given email, can happen if in the meantime the user has been deleted
+          $ref: '#/components/responses/UserNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+                
   /users:
     get:
       summary: Get logged in user detail
@@ -2328,6 +2515,11 @@ components:
         data:
           - field: password
             message: must be at least 8 characters
+    InvalidOTP:
+      description: invalid OTP, either expired or not found
+      value:
+        message: invalid OTP
+
     InvalidPictureID:
       description: picture id is invalid either because it is not a valid uuid or it does not exist in the database
       value:

@@ -161,7 +161,7 @@ func (a *AuthController) VerifyOTP(c *fiber.Ctx) error {
 		})
 	}
 
-	token, err := a.service.VerifyOTP(c.Context(), otp)
+	key, err := a.service.VerifyOTP(c.Context(), otp)
 	if err != nil {
 		if errors.Is(err, err2.ErrInvalidOTP) {
 			return fiber.NewError(fiber.StatusUnauthorized, err.Error())
@@ -173,7 +173,7 @@ func (a *AuthController) VerifyOTP(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
 		Message: "otp verified successfully",
 		Data: fiber.Map{
-			"token": token,
+			"key": key,
 		},
 	})
 }

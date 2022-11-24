@@ -6,6 +6,7 @@ type CachedToken struct {
 }
 
 type CachedOTP struct {
-	OTP   string `json:"otp"`
-	Token string `json:"tid"`
+	OTP    string `json:"otp"`
+	Key    string `json:"tid"`
+	UserID string `json:"uid"`
 }

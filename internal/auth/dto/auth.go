@@ -35,8 +35,9 @@ type OTPVerifyRequest struct {
 }
 
 type PasswordResetRequest struct {
-	Token    string `json:"token" validate:"required"`
+	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=8"`
+	Key      string `json:"key" validate:"required"`
 }
 
 func (p *PasswordResetRequest) ToEntity() *entity.User {

@@ -126,25 +126,18 @@ func (a *AuthServiceImpl) createOTP(ctx context.Context, email string) (*string,
 		return nil, err
 	}
 
-	token := uuid.New().String()
 	otpTokenPair, err := json.Marshal(entity.CachedOTP{
-		OTP:   otp,
-		Token: token,
+		OTP:    otp,
+		Key:    uuid.New().String(),
+		UserID: user.ID,
 	})
 	if err != nil {
 		log.Println("Error while marshalling otp token pair: ", err)
 		return nil, err
 	}
-
 	key := createKey(email)
 
 	err = a.redisRepo.Set(ctx, key, string(otpTokenPair), config.OTP_EXPIRATION_TIME)
-	if err != nil {
-		log.Println("Error while setting key in redis: ", err)
-		return nil, err
-	}
-
-	err = a.redisRepo.Set(ctx, token, user.ID, config.OTP_EXPIRATION_TIME)
 	if err != nil {
 		log.Println("Error while setting key in redis: ", err)
 		return nil, err
@@ -199,11 +192,12 @@ func (a *AuthServiceImpl) VerifyOTP(ctx context.Context, otp *dto.OTPVerifyReque
 		return nil, err2.ErrInvalidOTP
 	}
 
-	return &token.Token, nil
+	return &token.Key, nil
 }
 
 func (a *AuthServiceImpl) ResetPassword(ctx context.Context, password *dto.PasswordResetRequest) error {
-	uid, err := a.redisRepo.Get(ctx, password.Token)
+	key := createKey(password.Email)
+	jsonOTP, err := a.redisRepo.Get(ctx, key)
 	if err != nil {
 		if errors.Is(err, redis2.Nil) {
 			return err2.ErrInvalidOTPToken
@@ -213,7 +207,18 @@ func (a *AuthServiceImpl) ResetPassword(ctx context.Context, password *dto.Passw
 		return err
 	}
 
-	err = a.redisRepo.Del(ctx, password.Token)
+	otp := new(entity.CachedOTP)
+	err = json.Unmarshal([]byte(jsonOTP), otp)
+	if err != nil {
+		log.Println("Error while unmarshalling json token: ", err)
+		return err
+	}
+
+	if otp.Key != password.Key {
+		return err2.ErrInvalidOTPToken
+	}
+
+	err = a.redisRepo.Del(ctx, key)
 	if err != nil {
 		log.Println("Error while deleting key from redis: ", err)
 		return err
@@ -224,7 +229,7 @@ func (a *AuthServiceImpl) ResetPassword(ctx context.Context, password *dto.Passw
 		return err
 	}
 
-	err = a.repository.ChangePassword(ctx, uid, string(hashedPassword))
+	err = a.repository.ChangePassword(ctx, otp.UserID, string(hashedPassword))
 	if err != nil {
 		log.Println("Error while changing password: ", err)
 		return err

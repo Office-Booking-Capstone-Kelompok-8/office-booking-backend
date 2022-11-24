@@ -373,6 +373,17 @@ func (s *TestSuiteAuthController) TestRefreshToken() {
 			},
 		},
 		{
+			Name:           "Failed refreshing token: user not found",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    reqBody,
+			ServiceReturn:  nil,
+			ServiceErr:     err2.ErrUserNotFound,
+			ExpectedStatus: fiber.StatusNotFound,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrUserNotFound.Error(),
+			},
+		},
+		{
 			Name:           "Failed refreshing token: service error",
 			MimeType:       fiber.MIMEApplicationJSON,
 			RequestBody:    reqBody,

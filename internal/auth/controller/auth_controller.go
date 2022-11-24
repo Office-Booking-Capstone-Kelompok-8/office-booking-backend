@@ -108,6 +108,10 @@ func (a *AuthController) RefreshToken(c *fiber.Ctx) error {
 
 	tokenPair, err := a.service.RefreshToken(c.Context(), token)
 	if err != nil {
+		if errors.Is(err, err2.ErrUserNotFound) {
+			return fiber.NewError(fiber.StatusUnauthorized, err.Error())
+		}
+
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 

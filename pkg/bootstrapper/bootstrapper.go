@@ -31,6 +31,7 @@ func Init(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf map[strin
 	tokenService := authServicePkg.NewTokenServiceImpl(conf["ACCESS_SECRET"], conf["REFRESH_SECRET"], config.ACCESS_TOKEN_DURATION, config.REFRESH_TOKEN_DURATION, redisRepo)
 
 	accessTokenMiddleware := middlewares.NewJWTMiddleware(conf["ACCESS_SECRET"], middlewares.ValidateAccessToken(tokenService))
+	adminAccessTokenMiddleware := middlewares.NewJWTMiddleware(conf["ACCESS_SECRET"], middlewares.ValidateAdminAccessToken(tokenService))
 
 	userRepository := userRepositoryPkg.NewUserRepositoryImpl(db)
 	userService := userServicePkg.NewUserServiceImpl(userRepository)
@@ -41,6 +42,6 @@ func Init(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf map[strin
 	authController := authControllerPkg.NewAuthController(authService, validation)
 
 	// init routes
-	route := routes.NewRoutes(authController, userController, accessTokenMiddleware)
+	route := routes.NewRoutes(authController, userController, accessTokenMiddleware, adminAccessTokenMiddleware)
 	route.Init(app)
 }

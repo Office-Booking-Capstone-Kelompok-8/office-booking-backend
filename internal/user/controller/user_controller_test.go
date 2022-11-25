@@ -40,7 +40,7 @@ func (s *TestSuiteUserController) TearDownTest() {
 	s.fiberApp = nil
 }
 
-func (s *TestSuiteUserController) TestGetFullUserByID() {
+func (s *TestSuiteUserController) TestGetLoggedFullUserByID() {
 	token := &jwt.Token{
 		Claims: jwt.MapClaims{
 			"uid": "some_uid",
@@ -98,9 +98,84 @@ func (s *TestSuiteUserController) TestGetFullUserByID() {
 
 			s.fiberApp.Post("/", func(ctx *fiber.Ctx) error {
 				ctx.Locals("user", token) // set token to context
-				return s.userController.GetFullUserByID(ctx)
+				return s.userController.GetLoggedFullUserByID(ctx)
 			})
 			r := httptest.NewRequest("POST", "/", nil)
+			resp, err := s.fiberApp.Test(r)
+			s.NoError(err)
+
+			var body response.BaseResponse
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			s.NoError(err)
+
+			s.Equal(tc.ExpectedStatus, resp.StatusCode)
+			s.Equal(tc.ExpectedBody, body)
+		})
+		s.TearDownTest()
+	}
+}
+
+func (s *TestSuiteUserController) TestGetFullUserByID() {
+	token := &jwt.Token{
+		Claims: jwt.MapClaims{
+			"uid": "some_uid",
+		},
+	}
+
+	for _, tc := range []struct {
+		Name           string
+		ServiceReturns *dto.UserResponse
+		ServiceErr     error
+		ExpectedStatus int
+		ExpectedBody   response.BaseResponse
+		ExpectedErr    error
+	}{
+		{
+			Name: "success",
+			ServiceReturns: &dto.UserResponse{
+				ID: "some_uid",
+			},
+			ExpectedStatus: fiber.StatusOK,
+			ExpectedBody: response.BaseResponse{
+				Message: "user fetched successfully",
+				Data: map[string]interface{}{
+					"email":   "",
+					"id":      "some_uid",
+					"name":    "",
+					"phone":   "",
+					"picture": "",
+					"role":    float64(0),
+				},
+			},
+		},
+		{
+			Name:           "Fail: User not found",
+			ServiceReturns: nil,
+			ServiceErr:     err2.ErrUserNotFound,
+			ExpectedStatus: fiber.StatusNotFound,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrUserNotFound.Error(),
+			},
+		},
+		{
+			Name:           "Fail: Unknown error",
+			ServiceReturns: nil,
+			ServiceErr:     errors.New("some error"),
+			ExpectedStatus: fiber.StatusInternalServerError,
+			ExpectedBody: response.BaseResponse{
+				Message: "some error",
+			},
+		},
+	} {
+		s.SetupTest()
+		s.Run(tc.Name, func() {
+			s.mockService.On("GetFullUserByID", mock.Anything, mock.Anything).Return(tc.ServiceReturns, tc.ServiceErr)
+
+			s.fiberApp.Post("/:userID", func(ctx *fiber.Ctx) error {
+				ctx.Locals("user", token) // set token to context
+				return s.userController.GetFullUserByID(ctx)
+			})
+			r := httptest.NewRequest("POST", "/some_uid", nil)
 			resp, err := s.fiberApp.Test(r)
 			s.NoError(err)
 

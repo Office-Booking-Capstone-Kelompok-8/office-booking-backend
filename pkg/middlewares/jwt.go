@@ -40,3 +40,25 @@ func ValidateAccessToken(validator AccessTokenValidator) fiber.Handler {
 		return c.Next()
 	}
 }
+
+func ValidateAdminAccessToken(validator AccessTokenValidator) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		user := c.Locals("user").(*jwt.Token)
+		claims := user.Claims.(jwt.MapClaims)
+
+		if claims["role"] == 1 {
+			return fiber.NewError(fiber.StatusForbidden, err2.ErrNoPermission.Error())
+		}
+
+		valid, err := validator.CheckToken(c.Context(), &claims)
+		if err != nil {
+			return fiber.NewError(fiber.StatusInternalServerError, "Internal server error")
+		}
+
+		if !valid {
+			return fiber.NewError(fiber.StatusUnauthorized, err2.ErrInvalidToken.Error())
+		}
+
+		return c.Next()
+	}
+}

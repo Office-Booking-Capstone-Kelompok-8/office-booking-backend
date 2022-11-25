@@ -9,16 +9,18 @@ import (
 )
 
 type Routes struct {
-	authController        *ac.AuthController
-	userControllerPkg     *uc.UserController
-	accessTokenMiddleware fiber.Handler
+	authController             *ac.AuthController
+	userControllerPkg          *uc.UserController
+	accessTokenMiddleware      fiber.Handler
+	adminAccessTokenMiddleware fiber.Handler
 }
 
-func NewRoutes(authController *ac.AuthController, userControllerPkg *uc.UserController, accessTokenMiddleware fiber.Handler) *Routes {
+func NewRoutes(authController *ac.AuthController, userControllerPkg *uc.UserController, accessTokenMiddleware fiber.Handler, adminAccessTokenMiddleware fiber.Handler) *Routes {
 	return &Routes{
-		authController:        authController,
-		userControllerPkg:     userControllerPkg,
-		accessTokenMiddleware: accessTokenMiddleware,
+		authController:             authController,
+		userControllerPkg:          userControllerPkg,
+		accessTokenMiddleware:      accessTokenMiddleware,
+		adminAccessTokenMiddleware: adminAccessTokenMiddleware,
 	}
 }
 
@@ -30,6 +32,7 @@ func (r *Routes) Init(app *fiber.App) {
 	v1 := app.Group("/v1")
 	v1.Get("/ping", ping)
 
+	// Auth routes
 	auth := v1.Group("/auth")
 	auth.Post("/register", r.authController.RegisterUser)
 	auth.Post("/login", r.authController.LoginUser)
@@ -39,8 +42,16 @@ func (r *Routes) Init(app *fiber.App) {
 	auth.Post("/request-otp", middlewares.OTPLimitter, r.authController.RequestOTP)
 	auth.Post("/verify-otp", r.authController.VerifyOTP)
 
-	user := v1.Group("/users")
-	user.Get("/", r.accessTokenMiddleware, r.userControllerPkg.GetFullUserByID)
+	// Enduser.User routes
+	user := v1.Group("/users", r.accessTokenMiddleware)
+	user.Get("/", r.userControllerPkg.GetLoggedFullUserByID)
+
+	// Admin routes
+	admin := v1.Group("/admin", r.adminAccessTokenMiddleware)
+
+	// Admin.User routes
+	aUser := admin.Group("/users")
+	aUser.Get("/:userID", r.userControllerPkg.GetFullUserByID)
 }
 
 func ping(c *fiber.Ctx) error {

@@ -7,6 +7,7 @@ import (
 	"office-booking-backend/internal/user/service"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
+	"strconv"
 )
 
 type UserController struct {
@@ -54,5 +55,36 @@ func (u *UserController) GetFullUserByID(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
 		Message: "user fetched successfully",
 		Data:    user,
+	})
+}
+
+func (u *UserController) GetAllUsers(c *fiber.Ctx) error {
+	q := c.Query("q")
+	limit := c.Query("limit", "20")
+	page := c.Query("page", "1")
+
+	limitInt, err := strconv.Atoi(limit)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
+	}
+
+	pageInt, err := strconv.Atoi(page)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
+	}
+
+	users, total, err := u.userService.GetAllUsers(c.Context(), q, limitInt, pageInt)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "users fetched successfully",
+		Data:    users,
+		Meta: fiber.Map{
+			"limit": limitInt,
+			"page":  pageInt,
+			"total": total,
+		},
 	})
 }

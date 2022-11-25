@@ -5,6 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	jwtware "github.com/gofiber/jwt/v3"
 	"github.com/golang-jwt/jwt/v4"
+	"office-booking-backend/pkg/config"
 	err2 "office-booking-backend/pkg/errors"
 )
 
@@ -46,7 +47,7 @@ func ValidateAdminAccessToken(validator AccessTokenValidator) fiber.Handler {
 		user := c.Locals("user").(*jwt.Token)
 		claims := user.Claims.(jwt.MapClaims)
 
-		if claims["role"] == 1 {
+		if claims["role"] == float64(config.USER_ROLE) {
 			return fiber.NewError(fiber.StatusForbidden, err2.ErrNoPermission.Error())
 		}
 

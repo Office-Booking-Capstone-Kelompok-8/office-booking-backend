@@ -26,6 +26,11 @@ const (
 	OTP_RESEND_TIME     = 1 * time.Minute
 )
 
+const (
+	USER_ROLE  = 1
+	ADMIN_ROLE = 2
+)
+
 func LoadConfig() map[string]string {
 	env := make(map[string]string)
 

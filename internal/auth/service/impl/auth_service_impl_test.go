@@ -8,6 +8,7 @@ import (
 	mockRepo "office-booking-backend/internal/auth/repository/mock"
 	"office-booking-backend/internal/auth/service"
 	mockToken "office-booking-backend/internal/auth/service/mock"
+	mockRepo2 "office-booking-backend/internal/user/repository/mock"
 	mockRedis "office-booking-backend/pkg/database/redis"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
@@ -22,29 +23,35 @@ import (
 
 type TestSuiteAuthService struct {
 	suite.Suite
-	mockRepo    *mockRepo.AuthRepositoryMock
-	mockToken   *mockToken.TokenServiceMock
-	mockRedis   *mockRedis.RedisClientMock
-	mockMail    *mockMail.ClientMock
-	mockPass    *mockPass.PasswordHashService
-	mockRand    *mockRand.GeneratorMock
-	authService service.AuthService
+	mockRepo     *mockRepo.AuthRepositoryMock
+	mockUserRepo *mockRepo2.UserRepositoryMock
+	mockToken    *mockToken.TokenServiceMock
+	mockRedis    *mockRedis.RedisClientMock
+	mockMail     *mockMail.ClientMock
+	mockPass     *mockPass.PasswordHashService
+	mockRand     *mockRand.GeneratorMock
+	authService  service.AuthService
 }
 
 func (s *TestSuiteAuthService) SetupTest() {
 	s.mockRepo = new(mockRepo.AuthRepositoryMock)
+	s.mockUserRepo = new(mockRepo2.UserRepositoryMock)
 	s.mockToken = new(mockToken.TokenServiceMock)
 	s.mockRedis = new(mockRedis.RedisClientMock)
 	s.mockMail = new(mockMail.ClientMock)
 	s.mockPass = new(mockPass.PasswordHashService)
 	s.mockRand = new(mockRand.GeneratorMock)
-	s.authService = NewAuthServiceImpl(s.mockRepo, s.mockToken, s.mockRedis, s.mockMail, s.mockPass, s.mockRand)
+	s.authService = NewAuthServiceImpl(s.mockRepo, s.mockUserRepo, s.mockToken, s.mockRedis, s.mockMail, s.mockPass, s.mockRand)
 }
 
 func (s *TestSuiteAuthService) TearDownTest() {
 	s.mockRepo = nil
+	s.mockUserRepo = nil
 	s.mockToken = nil
+	s.mockRedis = nil
+	s.mockMail = nil
 	s.mockPass = nil
+	s.mockRand = nil
 	s.authService = nil
 }
 
@@ -166,7 +173,7 @@ func (s *TestSuiteAuthService) TestLoginUser() {
 	} {
 		s.SetupTest()
 		s.Run(tc.Name, func() {
-			s.mockRepo.On("GetFullUserByEmail", mock.Anything, user.Email).Return(tc.RepoReturn, tc.RepoError)
+			s.mockUserRepo.On("GetFullUserByEmail", mock.Anything, user.Email).Return(tc.RepoReturn, tc.RepoError)
 			s.mockPass.On("CompareHashAndPassword", mock.Anything, mock.Anything).Return(tc.HashReturn)
 			s.mockToken.On("NewTokenPair", mock.Anything, tc.RepoReturn).Return(tc.TokenReturn, tc.TokenError)
 
@@ -245,7 +252,7 @@ func (s *TestSuiteAuthService) TestRefreshToken() {
 		s.SetupTest()
 		s.Run(tc.Name, func() {
 			s.mockToken.On("ParseRefreshToken", mock.Anything).Return(tc.TokenReturn, tc.TokenError)
-			s.mockRepo.On("GetFullUserByID", mock.Anything, mock.Anything).Return(tc.RepoReturn, tc.RepoError)
+			s.mockUserRepo.On("GetFullUserByID", mock.Anything, mock.Anything).Return(tc.RepoReturn, tc.RepoError)
 			s.mockToken.On("NewTokenPair", mock.Anything, tc.RepoReturn).Return(tc.GenerateReturn, tc.GenerateError)
 
 			token, err := s.authService.RefreshToken(context.Background(), &dto.RefreshTokenRequest{

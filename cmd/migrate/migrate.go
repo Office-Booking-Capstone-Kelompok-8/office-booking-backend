@@ -27,7 +27,12 @@ func main() {
 
 	db := mysql.InitDatabase(env["DB_HOST"], env["DB_PORT"], env["DB_USER"], env["DB_PASS"], env["DB_NAME"])
 
-	err := db.AutoMigrate(&entity.User{}, &entity.UserDetail{})
+	err := db.AutoMigrate(
+		&entity.User{},
+		&entity.UserDetail{},
+		&entity.ProfilePicture{},
+	)
+
 	if err != nil {
 		log.Fatalf("Error migrating database: %v", err)
 	}

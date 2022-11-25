@@ -4,6 +4,9 @@ import (
 	authControllerPkg "office-booking-backend/internal/auth/controller"
 	authRepositoryPkg "office-booking-backend/internal/auth/repository/impl"
 	authServicePkg "office-booking-backend/internal/auth/service/impl"
+	userControllerPkg "office-booking-backend/internal/user/controller"
+	userRepositoryPkg "office-booking-backend/internal/user/repository/impl"
+	userServicePkg "office-booking-backend/internal/user/service/impl"
 	"office-booking-backend/pkg/config"
 	redisRepoPkg "office-booking-backend/pkg/database/redis"
 	"office-booking-backend/pkg/middlewares"
@@ -25,15 +28,19 @@ func Init(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf map[strin
 	generator := random.NewGenerator()
 	redisRepo := redisRepoPkg.NewRedisClient(redisClient)
 	mailService := mail.NewClient(conf["MAIL_DOMAIN"], conf["MAIL_API_KEY"], conf["MAIL_SENDER"], conf["MAIL_SENDER_NAME"])
-
-	authRepository := authRepositoryPkg.NewAuthRepositoryImpl(db)
 	tokenService := authServicePkg.NewTokenServiceImpl(conf["ACCESS_SECRET"], conf["REFRESH_SECRET"], config.ACCESS_TOKEN_DURATION, config.REFRESH_TOKEN_DURATION, redisRepo)
+
 	accessTokenMiddleware := middlewares.NewJWTMiddleware(conf["ACCESS_SECRET"], middlewares.ValidateAccessToken(tokenService))
 
-	authService := authServicePkg.NewAuthServiceImpl(authRepository, tokenService, redisRepo, mailService, passwordService, generator)
+	userRepository := userRepositoryPkg.NewUserRepositoryImpl(db)
+	userService := userServicePkg.NewUserServiceImpl(userRepository)
+	userController := userControllerPkg.NewUserController(userService)
+
+	authRepository := authRepositoryPkg.NewAuthRepositoryImpl(db)
+	authService := authServicePkg.NewAuthServiceImpl(authRepository, userRepository, tokenService, redisRepo, mailService, passwordService, generator)
 	authController := authControllerPkg.NewAuthController(authService, validation)
 
 	// init routes
-	route := routes.NewRoutes(authController, accessTokenMiddleware)
+	route := routes.NewRoutes(authController, userController, accessTokenMiddleware)
 	route.Init(app)
 }

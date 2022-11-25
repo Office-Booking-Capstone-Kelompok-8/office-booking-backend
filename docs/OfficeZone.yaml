@@ -264,7 +264,6 @@ paths:
                 InvalidEmail:
                   $ref: '#/components/examples/InvalidEmail'
         404:
-          description: User not found with the given email
           $ref: '#/components/responses/UserNotFound'
         429:
           description: Too many requests sent in a short period of time. OTP can be requested only once every 60 seconds
@@ -404,7 +403,6 @@ paths:
                     type: string
                     example: invalid OTP token
         404:
-          description: User not found with the given email, can happen if in the meantime the user has been deleted
           $ref: '#/components/responses/UserNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
@@ -431,15 +429,25 @@ paths:
                   data:
                     type: object
                     properties:
-                      name:
+                      id:
                         type: string
-                        example: John Doe
+                        example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
                       email:
                         type: string
                         example: of@mail.com
+                      name:
+                        type: string
+                        example: John Doe
                       phone:
                         type: string
                         example: +1 234 567 890
+                      picture:
+                        type: string
+                        format: uri
+                        example: https://example.com/picture.jpg
+                      role:
+                        type: integer
+                        example: 1
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         404:

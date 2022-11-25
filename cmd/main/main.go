@@ -5,7 +5,9 @@ import (
 	"log"
 	"office-booking-backend/pkg/bootstrapper"
 	"office-booking-backend/pkg/config"
-	"office-booking-backend/pkg/database"
+	"office-booking-backend/pkg/database/mysql"
+	"office-booking-backend/pkg/database/redis"
+	"office-booking-backend/pkg/response"
 	"os"
 	"os/signal"
 	"sync"
@@ -83,18 +85,18 @@ func gracefulShutdown(ctx context.Context, timeout time.Duration, ops map[string
 func main() {
 	env := config.LoadConfig()
 
-	redis := database.InitRedis(env["REDIS_HOST"], env["REDIS_PORT"], env["REDIS_PASS"], env["REDIS_DB"])
-	db := database.InitDatabase(env["DB_HOST"], env["DB_PORT"], env["DB_USER"], env["DB_PASS"], env["DB_NAME"])
+	redis := redis.InitRedis(env["REDIS_HOST"], env["REDIS_PORT"], env["REDIS_PASS"], env["REDIS_DB"])
+	db := mysql.InitDatabase(env["DB_HOST"], env["DB_PORT"], env["DB_USER"], env["DB_PASS"], env["DB_NAME"])
 
 	app := fiber.New(fiber.Config{
 		AppName:      config.APP_NAME,
 		ServerHeader: config.SERVER_HEADER,
 		Prefork:      env["PREFORK"] == "true",
 		ReadTimeout:  time.Second * config.READ_TIMEOUT_SECONDS,
-		ErrorHandler: config.DefaultErrorHandler,
+		ErrorHandler: response.DefaultErrorHandler,
 	})
 
-	bootstrapper.Init(app, db, redis)
+	bootstrapper.Init(app, db, redis, env)
 
 	wait := gracefulShutdown(context.Background(), config.SHUTDOWN_TIMEOUT*time.Second, map[string]operation{
 		"fiber": func(ctx context.Context) error {

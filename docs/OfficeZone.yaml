@@ -176,15 +176,7 @@ paths:
                     type: string
                     example: Logout successful
         401:
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Unauthorized
+          $ref: '#/components/responses/InvalidOrMissingToken'
         500:
           $ref: '#/components/responses/InternalServerError'
 
@@ -194,8 +186,18 @@ paths:
       operationId: refreshAccessToken
       tags:
         - Auth
-      security:
-        - refresh_token: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzA0NTgwNDksImp0aSI6IjBiNGFmZmY5LTg0NzAtNDkxNi04NDEyLTllNjY3M2RhMmU0NyIsInVpZCI6IjY4ZjA2M2M0LTBjZGItNDJlNi1hNjFiLTg4NTg3MzkwMmJmZCIsImNhdCI6InJlZnJlc2gifQ.X0a_rKDJzQVSbgtN2BahhhVgJThemckCuImo6Axp0vg
+        required: true
       responses:
         200:
           description: Successfully refreshed access token
@@ -217,7 +219,31 @@ paths:
                         type: string
                         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiI3MTg1OGNmMS1lNDhkLTQzYmQtOGU0YS1jZDNkNGE1YjIwMDMiLCJyb2xlIjoxLCJleHAiOjB9.G0PITHn6gz-fu6kqrZYwBc_bAca1YCZvMNGFvKHDytk
         401:
-          description: Unauthorized
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /auth/request-otp:
+    post:
+      summary: Request OTP
+      operationId: requestOTP
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: a@a.com
+        required: true
+      responses:
+        200:
+          description: OTP sent successfully
           content:
             application/json:
               schema:
@@ -225,9 +251,162 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: Unauthorized
+                    example: otp sent successfully
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidEmail:
+                  $ref: '#/components/examples/InvalidEmail'
+        404:
+          $ref: '#/components/responses/UserNotFound'
+        429:
+          description: Too many requests sent in a short period of time. OTP can be requested only once every 60 seconds
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: too many requests
+                
         500:
           $ref: '#/components/responses/InternalServerError'
+  /auth/verify-otp:
+    post:
+      summary: Verify OTP
+      operationId: verifyOTP
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - code
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: a@a.com
+                code:
+                  type: string
+                  example: 123456
+        required: true
+      responses:
+        200:
+          description: OTP verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: otp verified successfully
+                  data:
+                    type: object
+                    properties:
+                      key:
+                        type: string
+                        example: 12345adaasdadd6   
+                  
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidEmail:
+                  $ref: '#/components/examples/InvalidEmail'
+        401:
+          description: Invalid OTP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidOTP:
+                  $ref: '#/components/examples/InvalidOTP'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /auth/reset-password:
+    put:
+      summary: Reset password
+      operationId: resetPassword
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - key
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: a@a.com
+                key:
+                  type: string
+                  example: 12345adaasdadd6
+                password:
+                  type: string
+                  example: 123456789
+        required: true
+      responses:
+        200:
+          description: Password reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: password reset successfully
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidEmail:
+                  $ref: '#/components/examples/InvalidEmail'
+                InvalidPassword:
+                  $ref: '#/components/examples/InvalidPassword'
+        401:
+          description: Invalid OTP Token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: invalid OTP token
+        404:
+          $ref: '#/components/responses/UserNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+                
   /users:
     get:
       summary: Get logged in user detail
@@ -250,15 +429,25 @@ paths:
                   data:
                     type: object
                     properties:
-                      name:
+                      id:
                         type: string
-                        example: John Doe
+                        example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
                       email:
                         type: string
                         example: of@mail.com
+                      name:
+                        type: string
+                        example: John Doe
                       phone:
                         type: string
                         example: +1 234 567 890
+                      picture:
+                        type: string
+                        format: uri
+                        example: https://example.com/picture.jpg
+                      role:
+                        type: integer
+                        example: 1
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         404:
@@ -2323,11 +2512,22 @@ components:
     InvalidEmail:
       description: Invalid email format
       value:
-        message: invalid email format
+        message: invalid request body
+        data:
+          - field: email
+            message: must be email
     InvalidPassword:
-      description: Invalid password format
+      description: invalid request body
       value:
         message: invalid password format
+        data:
+          - field: password
+            message: must be at least 8 characters
+    InvalidOTP:
+      description: invalid OTP, either expired or not found
+      value:
+        message: invalid OTP
+
     InvalidPictureID:
       description: picture id is invalid either because it is not a valid uuid or it does not exist in the database
       value:

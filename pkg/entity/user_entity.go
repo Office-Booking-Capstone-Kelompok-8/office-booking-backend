@@ -19,17 +19,25 @@ type User struct {
 	DeletedAt  gorm.DeletedAt `gorm:"index"`
 }
 
-func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
+func (u *User) BeforeCreate(*gorm.DB) (err error) {
 	u.ID = uuid.New().String()
 	return
 }
 
 type UserDetail struct {
-	UserID    string `gorm:"primaryKey; type:varchar(36)"`
-	Name      string
-	Phone     string
-	PictureID string         `gorm:"type:varchar(36)"`
+	UserID           string `gorm:"primaryKey; type:varchar(36)"`
+	Name             string
+	Phone            string
+	ProfilePictureID string `gorm:"type:varchar(36)"`
+	ProfilePicture   ProfilePicture
+	CreatedAt        time.Time      `gorm:"autoCreateTime"`
+	UpdatedAt        time.Time      `gorm:"autoUpdateTime"`
+	DeletedAt        gorm.DeletedAt `gorm:"index"`
+}
+
+type ProfilePicture struct {
+	ID        string `gorm:"primaryKey; type:varchar(36); not null" `
+	Url       string
 	CreatedAt time.Time      `gorm:"autoCreateTime"`
-	UpdatedAt time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }

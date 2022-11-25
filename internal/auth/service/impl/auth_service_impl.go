@@ -13,6 +13,7 @@ import (
 	"office-booking-backend/internal/auth/dto"
 	"office-booking-backend/internal/auth/repository"
 	"office-booking-backend/internal/auth/service"
+	repository2 "office-booking-backend/internal/user/repository"
 	"office-booking-backend/pkg/config"
 	"office-booking-backend/pkg/database/redis"
 	"office-booking-backend/pkg/entity"
@@ -26,6 +27,7 @@ const DefaultPasswordCost = 10
 
 type AuthServiceImpl struct {
 	repository repository.AuthRepository
+	userRepo   repository2.UserRepository
 	token      service.TokenService
 	redisRepo  redis.RedisClient
 	mail       mail.Client
@@ -33,9 +35,10 @@ type AuthServiceImpl struct {
 	generator  random.Generator
 }
 
-func NewAuthServiceImpl(repository repository.AuthRepository, tokenService service.TokenService, redisRepo redis.RedisClient, mail mail.Client, password password.Hash, generator random.Generator) service.AuthService {
+func NewAuthServiceImpl(repository repository.AuthRepository, userRepo repository2.UserRepository, tokenService service.TokenService, redisRepo redis.RedisClient, mail mail.Client, password password.Hash, generator random.Generator) service.AuthService {
 	return &AuthServiceImpl{
 		repository: repository,
+		userRepo:   userRepo,
 		token:      tokenService,
 		redisRepo:  redisRepo,
 		mail:       mail,
@@ -63,7 +66,7 @@ func (a *AuthServiceImpl) RegisterUser(ctx context.Context, user *dto.SignupRequ
 }
 
 func (a *AuthServiceImpl) LoginUser(ctx context.Context, user *dto.LoginRequest) (*dto.TokenPair, error) {
-	userEntity, err := a.repository.GetFullUserByEmail(ctx, user.Email)
+	userEntity, err := a.userRepo.GetFullUserByEmail(ctx, user.Email)
 	if err != nil {
 		if errors.Is(err, err2.ErrUserNotFound) {
 			return nil, err2.ErrInvalidCredentials
@@ -97,7 +100,7 @@ func (a *AuthServiceImpl) RefreshToken(ctx context.Context, token *dto.RefreshTo
 		return nil, err
 	}
 
-	user, err := a.repository.GetFullUserByID(ctx, claims.UID)
+	user, err := a.userRepo.GetFullUserByID(ctx, claims.UID)
 	if err != nil {
 		log.Println("Error while finding user by id: ", err)
 		return nil, err

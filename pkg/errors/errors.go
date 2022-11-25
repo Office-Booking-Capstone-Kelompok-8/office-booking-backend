@@ -26,4 +26,7 @@ var (
 
 	// ErrNoPermission is returned when the user doesn't have permission to access the resource
 	ErrNoPermission = errors.New("you don't have permission to access this resource")
+
+	//	ErrInvalidQueryParams is returned when the query params is invalid
+	ErrInvalidQueryParams = errors.New("invalid query params")
 )

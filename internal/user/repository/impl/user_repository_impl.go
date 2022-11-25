@@ -46,3 +46,20 @@ func (u *UserRepositoryImpl) GetFullUserByID(ctx context.Context, id string) (*e
 
 	return user, nil
 }
+
+func (a *UserRepositoryImpl) GetAllUsers(ctx context.Context, q string, limit int, offset int) (*entity.Users, int64, error) {
+	users := &entity.Users{}
+	var count int64
+
+	query := a.db.WithContext(ctx).Joins("Detail").Model(&entity.User{})
+	if q != "" {
+		query = query.Where("`Detail`.`name` LIKE ?", "%"+q+"%")
+	}
+
+	err := query.Limit(limit).Offset(offset).Find(users).Count(&count).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return users, count, nil
+}

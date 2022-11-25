@@ -21,3 +21,29 @@ func NewUserResponse(user *entity.User) *UserResponse {
 		Role:       user.Role,
 	}
 }
+
+type BriefUserResponse struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	Phone string `json:"phone"`
+}
+
+func NewBriefUserResponse(user *entity.User) *BriefUserResponse {
+	return &BriefUserResponse{
+		ID:    user.ID,
+		Name:  user.Detail.Name,
+		Email: user.Email,
+		Phone: user.Detail.Phone,
+	}
+}
+
+type BriefUsersResponse []BriefUserResponse
+
+func NewBriefUsersResponse(users *entity.Users) *BriefUsersResponse {
+	var briefUsers BriefUsersResponse
+	for _, user := range *users {
+		briefUsers = append(briefUsers, *NewBriefUserResponse(&user))
+	}
+	return &briefUsers
+}

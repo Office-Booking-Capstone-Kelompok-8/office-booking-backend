@@ -19,6 +19,8 @@ type User struct {
 	DeletedAt  gorm.DeletedAt `gorm:"index"`
 }
 
+type Users []User
+
 func (u *User) BeforeCreate(*gorm.DB) (err error) {
 	u.ID = uuid.New().String()
 	return

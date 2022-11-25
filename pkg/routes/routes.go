@@ -52,6 +52,7 @@ func (r *Routes) Init(app *fiber.App) {
 	// Admin.User routes
 	aUser := admin.Group("/users")
 	aUser.Get("/:userID", r.userControllerPkg.GetFullUserByID)
+	aUser.Get("/", r.userControllerPkg.GetAllUsers)
 }
 
 func ping(c *fiber.Ctx) error {

@@ -19,3 +19,8 @@ func (u *UserRepositoryMock) GetFullUserByID(ctx context.Context, id string) (*e
 	args := u.Called(ctx, id)
 	return args.Get(0).(*entity.User), args.Error(1)
 }
+
+func (u *UserRepositoryMock) GetAllUsers(ctx context.Context, q string, limit int, offset int) (*entity.Users, int64, error) {
+	args := u.Called(ctx, q, limit, offset)
+	return args.Get(0).(*entity.Users), args.Get(1).(int64), args.Error(2)
+}

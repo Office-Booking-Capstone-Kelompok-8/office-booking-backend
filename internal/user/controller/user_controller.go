@@ -79,7 +79,7 @@ func (u *UserController) GetAllUsers(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
-		Message: "users fetched successfully",
+		Message: "user fetched successfully",
 		Data:    users,
 		Meta: fiber.Map{
 			"limit": limitInt,

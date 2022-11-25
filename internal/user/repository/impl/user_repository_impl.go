@@ -51,9 +51,9 @@ func (a *UserRepositoryImpl) GetAllUsers(ctx context.Context, q string, limit in
 	users := &entity.Users{}
 	var count int64
 
-	query := a.db.WithContext(ctx).Model(&entity.User{})
+	query := a.db.WithContext(ctx).Joins("Detail").Model(&entity.User{})
 	if q != "" {
-		query = query.Where("name LIKE ?", "%"+q+"%")
+		query = query.Where("`Detail`.`name` LIKE ?", "%"+q+"%")
 	}
 
 	err := query.Limit(limit).Offset(offset).Find(users).Count(&count).Error

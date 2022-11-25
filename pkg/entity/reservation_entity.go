@@ -14,7 +14,7 @@ type Reservation struct {
 	StartDate   time.Time `gorm:"type:datetime"`
 	EndDate     time.Time `gorm:"type:datetime"`
 	UserID      User
-	StatusID    Stutus
+	StatusID    Status
 }
 
 func (r *Reservation) BeforeCreate(tx *gorm.DB) (err error) {
@@ -22,7 +22,7 @@ func (r *Reservation) BeforeCreate(tx *gorm.DB) (err error) {
 	return
 }
 
-type Stutus struct {
+type Status struct {
 	ID      int `gorm:"primaryKey; type:int; not null"`
 	Message string
 }

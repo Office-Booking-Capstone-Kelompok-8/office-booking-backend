@@ -11,7 +11,7 @@ type Building struct {
 	ID           string `gorm:"primaryKey; type:varchar(36); not null" `
 	Name         string
 	Description  string
-	Capatity     int
+	Capacity     int
 	AnnualPrice  int
 	MonthlyPrice int
 	Owner        string
@@ -19,8 +19,8 @@ type Building struct {
 	CityID       City
 	DistrictID   District
 	Address      string
-	Logitude     float64
-	Lalitude     float64
+	Longitude    float64
+	Latitude     float64
 	CreatedAt    time.Time      `gorm:"autoCreateTime"`
 	UpdatedAt    time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
@@ -48,11 +48,6 @@ type Picture struct {
 	Url          string
 	ThumbnailUrl string
 	Alt          string
-}
-
-func (p *Picture) BeforeCreate(tx *gorm.DB) (err error) {
-	p.ID = uuid.New().String()
-	return
 }
 
 type Category struct {

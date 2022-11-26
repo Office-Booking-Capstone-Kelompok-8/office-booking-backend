@@ -29,7 +29,7 @@ type Building struct {
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
 }
 
-func (b *Building) BeforeCreate(tx *gorm.DB) (err error) {
+func (b *Building) BeforeCreate(*gorm.DB) (err error) {
 	b.ID = uuid.New().String()
 	return
 }

@@ -17,11 +17,10 @@ type Routes struct {
 	adminAccessTokenMiddleware fiber.Handler
 }
 
-func NewRoutes(authController *ac.AuthController, userControllerPkg *uc.UserController, buildingControllerPkg *bc.BuildingController, accessTokenMiddleware fiber.Handler, adminAccessTokenMiddleware fiber.Handler) *Routes {
+func NewRoutes(authController *ac.AuthController, userControllerPkg *uc.UserController, accessTokenMiddleware fiber.Handler, adminAccessTokenMiddleware fiber.Handler) *Routes {
 	return &Routes{
 		authController:             authController,
 		userControllerPkg:          userControllerPkg,
-		buildingControllerPkg:      buildingControllerPkg,
 		accessTokenMiddleware:      accessTokenMiddleware,
 		adminAccessTokenMiddleware: adminAccessTokenMiddleware,
 	}

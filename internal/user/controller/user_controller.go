@@ -110,3 +110,26 @@ func (u *UserController) UpdateUserByID(c *fiber.Ctx) error {
 		Message: "user updated successfully",
 	})
 }
+
+func (u *UserController) UpdateLoggedUser(c *fiber.Ctx) error {
+	token := c.Locals("user").(*jwt.Token)
+	claims := token.Claims.(jwt.MapClaims)
+	uid := claims["uid"].(string)
+
+	user := new(dto.UserUpdateRequest)
+	if err := c.BodyParser(user); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	if err := u.userService.UpdateUserByID(c.Context(), uid, user); err != nil {
+		if errors.Is(err, err2.ErrUserNotFound) {
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		}
+
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "user updated successfully",
+	})
+}

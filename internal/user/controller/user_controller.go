@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
+	"office-booking-backend/internal/user/dto"
 	"office-booking-backend/internal/user/service"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
@@ -86,5 +87,26 @@ func (u *UserController) GetAllUsers(c *fiber.Ctx) error {
 			"page":  pageInt,
 			"total": total,
 		},
+	})
+}
+
+func (u *UserController) UpdateUserByID(c *fiber.Ctx) error {
+	uid := c.Params("userID")
+
+	user := new(dto.UserUpdateRequest)
+	if err := c.BodyParser(user); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	if err := u.userService.UpdateUserByID(c.Context(), uid, user); err != nil {
+		if errors.Is(err, err2.ErrUserNotFound) {
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		}
+
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "user updated successfully",
 	})
 }

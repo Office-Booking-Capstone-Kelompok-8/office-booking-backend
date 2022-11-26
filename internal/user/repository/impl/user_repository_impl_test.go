@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"office-booking-backend/internal/user/repository"
+	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"regexp"
 	"testing"
@@ -42,6 +44,13 @@ func (s *TestSuiteUserRepository) SetupTest() {
 func (s *TestSuiteUserRepository) TearDownTest() {
 	s.mock = nil
 	s.repo = nil
+}
+
+func (s *TestSuiteUserRepository) TestNewUserRepositoryImpl() {
+	s.Run("Success", func() {
+		repo := NewUserRepositoryImpl(s.DB)
+		s.Implements((*repository.UserRepository)(nil), repo)
+	})
 }
 
 func (s *TestSuiteUserRepository) TestGetFullUserByEmail() {
@@ -152,6 +161,92 @@ func (s *TestSuiteUserRepository) TestGetAllUsers() {
 			}
 
 			_, _, err := s.repo.GetAllUsers(context.Background(), "123", 1, 1)
+
+			s.Equal(tc.ExpectedErr, err)
+		})
+		s.TearDownTest()
+	}
+}
+
+func (s *TestSuiteUserRepository) TestUpdateUserByID() {
+	query := regexp.QuoteMeta("UPDATE `users` SET `updated_at`=? WHERE id = ? AND `users`.`deleted_at` IS NULL")
+	for _, tc := range []struct {
+		Name         string
+		Err          error
+		ExpectedErr  error
+		RowsAffrcted int64
+	}{
+		{
+			Name:         "Success",
+			Err:          nil,
+			ExpectedErr:  nil,
+			RowsAffrcted: 1,
+		},
+		{
+			Name:         "Error: no record found",
+			Err:          nil,
+			ExpectedErr:  err2.ErrUserNotFound,
+			RowsAffrcted: 0,
+		},
+		{
+			Name:         "Error: unknown",
+			Err:          errors.New("unknown error"),
+			ExpectedErr:  errors.New("unknown error"),
+			RowsAffrcted: 0,
+		},
+	} {
+		s.SetupTest()
+		s.Run(tc.Name, func() {
+			if tc.Err != nil {
+				s.mock.ExpectExec(query).WillReturnError(tc.Err)
+			} else {
+				s.mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, tc.RowsAffrcted))
+			}
+
+			err := s.repo.UpdateUserByID(context.Background(), &entity.User{})
+
+			s.Equal(tc.ExpectedErr, err)
+		})
+		s.TearDownTest()
+	}
+}
+
+func (s *TestSuiteUserRepository) TestUpdateUserDetailByID() {
+	query := regexp.QuoteMeta("UPDATE `user_details` SET `updated_at`=? WHERE user_id = ? AND `user_details`.`deleted_at` IS NULL")
+	for _, tc := range []struct {
+		Name         string
+		Err          error
+		ExpectedErr  error
+		RowsAffrcted int64
+	}{
+		{
+			Name:         "Success",
+			Err:          nil,
+			ExpectedErr:  nil,
+			RowsAffrcted: 1,
+		},
+		{
+			Name:         "Error: no record found",
+			Err:          nil,
+			ExpectedErr:  err2.ErrUserNotFound,
+			RowsAffrcted: 0,
+		},
+		{
+			Name:         "Error: unknown",
+			Err:          errors.New("unknown error"),
+			ExpectedErr:  errors.New("unknown error"),
+			RowsAffrcted: 0,
+		},
+	} {
+		s.SetupTest()
+		s.Run(tc.Name, func() {
+			if tc.Err != nil {
+				s.mock.ExpectExec(query).WillReturnError(tc.Err)
+			} else {
+				s.mock.ExpectExec(query).WillReturnResult(sqlmock.NewResult(1, tc.RowsAffrcted))
+			}
+
+			err := s.repo.UpdateUserDetailByID(context.Background(), &entity.UserDetail{})
 
 			s.Equal(tc.ExpectedErr, err)
 		})

@@ -8,6 +8,7 @@ import (
 	"office-booking-backend/pkg/config"
 	"office-booking-backend/pkg/database/mysql"
 	"office-booking-backend/pkg/entity"
+	"office-booking-backend/pkg/utils/password"
 	"os"
 )
 
@@ -62,10 +63,16 @@ func main() {
 }
 
 func InitAdmin(db *gorm.DB) error {
+	passFunc := password.NewPasswordFuncImpl()
+	pass, err := passFunc.GenerateFromPassword([]byte("admin123"), 10)
+	if err != nil {
+		return err
+	}
+
 	admin := entity.User{
 		ID:         uuid.New().String(),
 		Email:      "admin@mail.fortyfourvisual.com",
-		Password:   "admin123",
+		Password:   string(pass), // admin123
 		Role:       2,
 		IsVerified: true,
 		Detail: entity.UserDetail{

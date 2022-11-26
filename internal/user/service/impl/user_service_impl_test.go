@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"context"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	mockRepo "office-booking-backend/internal/user/repository/mock"
@@ -31,24 +32,24 @@ func TestUserService(t *testing.T) {
 }
 func (s *TestSuiteUserService) TestGetFullUserByID_Success() {
 	s.mockRepo.On("GetFullUserByID", mock.Anything, mock.Anything).Return(&entity.User{}, nil)
-	_, err := s.userService.GetFullUserByID(nil, "")
+	_, err := s.userService.GetFullUserByID(context.Background(), "")
 	s.NoError(err)
 }
 
 func (s *TestSuiteUserService) TestGetFullUserByID_Fail() {
 	s.mockRepo.On("GetFullUserByID", mock.Anything, mock.Anything).Return((*entity.User)(nil), err2.ErrUserNotFound)
-	_, err := s.userService.GetFullUserByID(nil, "")
+	_, err := s.userService.GetFullUserByID(context.Background(), "")
 	s.Error(err)
 }
 
 func (s *TestSuiteUserService) TestGetAllUsers_Success() {
 	s.mockRepo.On("GetAllUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&entity.Users{}, int64(0), nil)
-	_, _, err := s.userService.GetAllUsers(nil, "", 0, 0)
+	_, _, err := s.userService.GetAllUsers(context.Background(), "", 0, 0)
 	s.NoError(err)
 }
 
 func (s *TestSuiteUserService) TestGetAllUsers_Fail() {
 	s.mockRepo.On("GetAllUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return((*entity.Users)(nil), int64(0), err2.ErrUserNotFound)
-	_, _, err := s.userService.GetAllUsers(nil, "", 0, 0)
+	_, _, err := s.userService.GetAllUsers(context.Background(), "", 0, 0)
 	s.Error(err)
 }

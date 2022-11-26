@@ -45,3 +45,14 @@ func (p *PasswordResetRequest) ToEntity() *entity.User {
 		Password: p.Password,
 	}
 }
+
+type ChangePasswordRequest struct {
+	OldPassword string `json:"oldPassword" validate:"required"`
+	NewPassword string `json:"newPassword" validate:"required,min=8"`
+}
+
+func (c *ChangePasswordRequest) ToEntity() *entity.User {
+	return &entity.User{
+		Password: c.NewPassword,
+	}
+}

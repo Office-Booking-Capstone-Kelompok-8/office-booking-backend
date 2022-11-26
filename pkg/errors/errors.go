@@ -15,6 +15,9 @@ var (
 	// ErrInvalidCredentials is returned when the email or password is incorrect
 	ErrInvalidCredentials = errors.New("invalid email or password")
 
+	// ErrPasswordNotMatch is returned when the old password field are different from the saved one
+	ErrPasswordNotMatch = errors.New("password not match")
+
 	// ErrInvalidToken is returned when the token is invalid or expired
 	ErrInvalidToken = errors.New("invalid or expired JWT")
 

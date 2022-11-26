@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"github.com/gofiber/fiber/v2"
@@ -279,6 +280,92 @@ func (s *TestSuiteUserController) TestGetAllUsers() {
 			r := httptest.NewRequest("GET", "/", nil)
 			resp, err := s.fiberApp.Test(r)
 
+			s.NoError(err)
+
+			var body response.BaseResponse
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			s.NoError(err)
+
+			s.Equal(tc.ExpectedStatus, resp.StatusCode)
+			s.Equal(tc.ExpectedBody, body)
+		})
+		s.TearDownTest()
+	}
+}
+
+func (s *TestSuiteUserController) TestUpdateUser() {
+	for _, tc := range []struct {
+		Name           string
+		Request        interface{}
+		Mime           string
+		ServiceErr     error
+		ExpectedStatus int
+		ExpectedBody   response.BaseResponse
+	}{
+		{
+			Name: "success",
+			Request: dto.UserUpdateRequest{
+				Name:  "some_name",
+				Phone: "some_phone",
+			},
+			Mime:           fiber.MIMEApplicationJSON,
+			ExpectedStatus: fiber.StatusOK,
+			ExpectedBody: response.BaseResponse{
+				Message: "user updated successfully",
+			},
+		},
+		{
+			Name: "Fail: Invalid request",
+			Request: dto.UserUpdateRequest{
+				Name:  "some_name",
+				Phone: "some_phone",
+			},
+			Mime:           fiber.MIMEApplicationXML,
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
+			},
+		},
+		{
+			Name: "Fail: user not found",
+			Request: dto.UserUpdateRequest{
+				Name:  "some_name",
+				Phone: "some_phone",
+			},
+			Mime:           fiber.MIMEApplicationJSON,
+			ServiceErr:     err2.ErrUserNotFound,
+			ExpectedStatus: fiber.StatusNotFound,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrUserNotFound.Error(),
+			},
+		},
+		{
+			Name: "Fail: Unknown error",
+			Request: dto.UserUpdateRequest{
+				Name:  "some_name",
+				Phone: "some_phone",
+			},
+			Mime:           fiber.MIMEApplicationJSON,
+			ServiceErr:     errors.New("some error"),
+			ExpectedStatus: fiber.StatusInternalServerError,
+			ExpectedBody: response.BaseResponse{
+				Message: "some error",
+			},
+		},
+	} {
+		s.SetupTest()
+		s.Run(tc.Name, func() {
+			s.mockService.On("UpdateUserByID", mock.Anything, mock.Anything, mock.Anything).Return(tc.ServiceErr)
+
+			s.fiberApp.Put("/:userID", s.userController.UpdateUserByID)
+
+			jsonBody := new(bytes.Buffer)
+			err := json.NewEncoder(jsonBody).Encode(tc.Request)
+			s.NoError(err)
+
+			r := httptest.NewRequest("PUT", "/some_uid", jsonBody)
+			r.Header.Set("Content-Type", tc.Mime)
+			resp, err := s.fiberApp.Test(r)
 			s.NoError(err)
 
 			var body response.BaseResponse

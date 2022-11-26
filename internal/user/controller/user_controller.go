@@ -95,7 +95,7 @@ func (u *UserController) UpdateUserByID(c *fiber.Ctx) error {
 
 	user := new(dto.UserUpdateRequest)
 	if err := c.BodyParser(user); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
 	if err := u.userService.UpdateUserByID(c.Context(), uid, user); err != nil {

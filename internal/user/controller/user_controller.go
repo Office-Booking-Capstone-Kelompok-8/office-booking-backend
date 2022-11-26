@@ -99,11 +99,14 @@ func (u *UserController) UpdateUserByID(c *fiber.Ctx) error {
 	}
 
 	if err := u.userService.UpdateUserByID(c.Context(), uid, user); err != nil {
-		if errors.Is(err, err2.ErrUserNotFound) {
+		switch err {
+		case err2.ErrUserNotFound:
 			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		case err2.ErrDuplicateEmail:
+			return fiber.NewError(fiber.StatusConflict, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 		}
-
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
@@ -122,11 +125,14 @@ func (u *UserController) UpdateLoggedUser(c *fiber.Ctx) error {
 	}
 
 	if err := u.userService.UpdateUserByID(c.Context(), uid, user); err != nil {
-		if errors.Is(err, err2.ErrUserNotFound) {
+		switch err {
+		case err2.ErrUserNotFound:
 			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		case err2.ErrDuplicateEmail:
+			return fiber.NewError(fiber.StatusConflict, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 		}
-
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{

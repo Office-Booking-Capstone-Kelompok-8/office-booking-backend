@@ -45,6 +45,7 @@ func (r *Routes) Init(app *fiber.App) {
 	// Enduser.User routes
 	user := v1.Group("/users", r.accessTokenMiddleware)
 	user.Get("/", r.userControllerPkg.GetLoggedFullUserByID)
+	user.Put("/", r.userControllerPkg.UpdateLoggedUser)
 
 	// Admin routes
 	admin := v1.Group("/admin", r.adminAccessTokenMiddleware)

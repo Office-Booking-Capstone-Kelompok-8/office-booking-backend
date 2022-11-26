@@ -19,3 +19,8 @@ func (m *UserServiceMock) GetAllUsers(ctx context.Context, q string, limit int, 
 	args := m.Called(ctx, q, limit, offset)
 	return args.Get(0).(*dto.BriefUsersResponse), args.Get(1).(int64), args.Error(2)
 }
+
+func (m *UserServiceMock) UpdateUserByID(ctx context.Context, id string, user *dto.UserUpdateRequest) error {
+	args := m.Called(ctx, id, user)
+	return args.Error(0)
+}

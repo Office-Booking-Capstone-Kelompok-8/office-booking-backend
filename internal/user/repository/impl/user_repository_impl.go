@@ -63,3 +63,29 @@ func (a *UserRepositoryImpl) GetAllUsers(ctx context.Context, q string, limit in
 
 	return users, count, nil
 }
+
+func (u *UserRepositoryImpl) UpdateUserByID(ctx context.Context, user *entity.User) error {
+	res := u.db.WithContext(ctx).Model(&entity.User{}).Where("id = ?", user.ID).Updates(user)
+	if res.Error != nil {
+		return res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return err2.ErrUserNotFound
+	}
+
+	return nil
+}
+
+func (u *UserRepositoryImpl) UpdateUserDetailByID(ctx context.Context, userDetail *entity.UserDetail) error {
+	res := u.db.WithContext(ctx).Model(&entity.UserDetail{}).Where("user_id = ?", userDetail.UserID).Updates(userDetail)
+	if res.Error != nil {
+		return res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return err2.ErrUserNotFound
+	}
+
+	return nil
+}

@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
 	redis2 "github.com/go-redis/redis/v9"
 	"github.com/google/uuid"
 	"log"
@@ -111,7 +110,7 @@ func (a *AuthServiceImpl) RefreshToken(ctx context.Context, token *dto.RefreshTo
 
 func createKey(email string) string {
 	hasher := md5.New()
-	hasher.Write([]byte(fmt.Sprintf("%s", email)))
+	hasher.Write([]byte(email))
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 

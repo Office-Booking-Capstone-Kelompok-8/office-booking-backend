@@ -132,6 +132,45 @@ func (s *TestSuiteAuthRepository) TestGetUserByEmail() {
 	}
 }
 
+func (s *TestSuiteAuthRepository) TestGetUserByID() {
+	query := regexp.QuoteMeta("SELECT * FROM `users` WHERE id = ? AND `users`.`deleted_at` IS NULL ORDER BY `users`.`id` LIMIT 1")
+	for _, tc := range []struct {
+		Name        string
+		Err         error
+		ExpectedErr error
+	}{
+		{
+			Name:        "Success",
+			Err:         nil,
+			ExpectedErr: nil,
+		},
+		{
+			Name:        "Error: no record found",
+			Err:         gorm.ErrRecordNotFound,
+			ExpectedErr: err2.ErrUserNotFound,
+		},
+		{
+			Name:        "Error: unknown",
+			Err:         errors.New("unknown error"),
+			ExpectedErr: errors.New("unknown error"),
+		},
+	} {
+		s.SetupTest()
+		s.Run(tc.Name, func() {
+			if tc.Err != nil {
+				s.mock.ExpectQuery(query).WillReturnError(tc.Err)
+			} else {
+				s.mock.ExpectQuery(query).WillReturnRows(sqlmock.NewRows([]string{"id", "username", "password", "role"}).AddRow(1, "123", "123", 1))
+			}
+
+			_, err := s.repo.GetUserByID(context.Background(), "123")
+
+			s.Equal(tc.ExpectedErr, err)
+		})
+		s.TearDownTest()
+	}
+}
+
 func (s *TestSuiteAuthRepository) TestChangePassword() {
 	query := regexp.QuoteMeta("UPDATE `users` SET `password`=?,`updated_at`=? WHERE id = ? AND `users`.`deleted_at` IS NULL")
 	for _, tc := range []struct {

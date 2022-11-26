@@ -242,7 +242,7 @@ func (a *AuthServiceImpl) ResetPassword(ctx context.Context, password *dto.Passw
 }
 
 func (a *AuthServiceImpl) ChangePassword(ctx context.Context, uid string, password *dto.ChangePasswordRequest) error {
-	user, err := a.userRepo.GetFullUserByID(ctx, uid)
+	user, err := a.repository.GetUserByID(ctx, uid)
 	if err != nil {
 		log.Println("Error while finding user by id: ", err)
 		return err

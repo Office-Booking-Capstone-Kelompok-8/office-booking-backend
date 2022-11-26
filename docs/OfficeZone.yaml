@@ -1592,6 +1592,59 @@ paths:
           $ref: '#/components/responses/RolesNotSupported'
         500:
           $ref: '#/components/responses/InternalServerError'
+  /admin/users:
+    get:
+      summary: Get all users
+      operationId: getAllUsers
+      security:
+        - access_token: []
+      tags:
+        - Admin.Users
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          required: false
+          schema:
+            type: integer
+            example: 1
+        - name: limit
+          in: query
+          description: Number of users per page
+          required: false
+          schema:
+            type: integer
+            example: 10
+        - name: q
+          in: query
+          description: Search user by name 
+          required: false
+          schema:
+            type: string
+            example: John
+      responses:
+        200:
+          description: Successfully get all users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: users retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BriefUserDetails'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        500:
+          $ref: '#/components/responses/InternalServerError'
 
   /admin/users/{userID}:
     get:

@@ -28,3 +28,15 @@ func (u *UserServiceImpl) GetFullUserByID(ctx context.Context, id string) (*dto.
 	fullUser := dto.NewUserResponse(user)
 	return fullUser, nil
 }
+
+func (u *UserServiceImpl) GetAllUsers(ctx context.Context, q string, limit int, page int) (*dto.BriefUsersResponse, int64, error) {
+	offset := (page - 1) * limit
+	users, total, err := u.userRepository.GetAllUsers(ctx, q, limit, offset)
+	if err != nil {
+		log.Println("Error while getting users: ", err)
+		return nil, 0, err
+	}
+
+	briefUsers := dto.NewBriefUsersResponse(users)
+	return briefUsers, total, nil
+}

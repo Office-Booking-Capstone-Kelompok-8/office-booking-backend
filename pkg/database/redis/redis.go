@@ -2,8 +2,8 @@ package redis
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"net"
 	"strconv"
 	"time"
 
@@ -20,7 +20,7 @@ func InitRedis(host string, port string, password string, db string) *redis.Clie
 		log.Fatalf("Error converting redis db to int: %v", err)
 	}
 
-	address := fmt.Sprintf("%s:%s", host, port)
+	address := net.JoinHostPort(host, port)
 
 	client := redis.NewClient(&redis.Options{
 		Addr:     address,

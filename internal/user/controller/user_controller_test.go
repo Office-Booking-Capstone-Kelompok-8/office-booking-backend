@@ -189,3 +189,105 @@ func (s *TestSuiteUserController) TestGetFullUserByID() {
 		s.TearDownTest()
 	}
 }
+
+func (s *TestSuiteUserController) TestGetAllUsers() {
+	for _, tc := range []struct {
+		Name           string
+		Q              string
+		Limit          string
+		Page           string
+		ServiceReturns *dto.BriefUsersResponse
+		ServiceErr     error
+		ExpectedStatus int
+		ExpectedBody   response.BaseResponse
+	}{
+		{
+			Name: "success",
+			ServiceReturns: &dto.BriefUsersResponse{
+				{
+					ID: "some_uid",
+				},
+			},
+			ExpectedStatus: fiber.StatusOK,
+			ExpectedBody: response.BaseResponse{
+				Message: "user fetched successfully",
+				Data: []interface{}{
+					map[string]interface{}{
+						"email": "",
+						"id":    "some_uid",
+						"name":  "",
+						"phone": "",
+					},
+				},
+				Meta: map[string]interface{}{
+					"limit": float64(20),
+					"page":  float64(1),
+					"total": float64(1),
+				},
+			},
+		},
+		{
+			Name:           "Success: No user",
+			ServiceReturns: &dto.BriefUsersResponse{},
+			ExpectedStatus: fiber.StatusOK,
+			ExpectedBody: response.BaseResponse{
+				Message: "user fetched successfully",
+				Data:    []interface{}{},
+				Meta: map[string]interface{}{
+					"limit": float64(20),
+					"page":  float64(1),
+					"total": float64(1),
+				},
+			},
+		},
+		{
+			Name:           "Fail: Limit is not a number",
+			Limit:          "some_limit",
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidQueryParams.Error(),
+			},
+		},
+		{
+			Name:           "Fail: Page is not a number",
+			Page:           "some_page",
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidQueryParams.Error(),
+			},
+		},
+		{
+			Name:           "Fail: Unknown error",
+			ServiceReturns: nil,
+			ServiceErr:     errors.New("some error"),
+			ExpectedStatus: fiber.StatusInternalServerError,
+			ExpectedBody: response.BaseResponse{
+				Message: "some error",
+			},
+		},
+	} {
+		s.SetupTest()
+		s.Run(tc.Name, func() {
+			s.mockService.On("GetAllUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.ServiceReturns, int64(1), tc.ServiceErr)
+
+			s.fiberApp.Get("/", func(ctx *fiber.Ctx) error {
+				ctx.Context().QueryArgs().Set("q", tc.Q)
+				ctx.Context().QueryArgs().Set("limit", tc.Limit)
+				ctx.Context().QueryArgs().Set("page", tc.Page)
+				return s.userController.GetAllUsers(ctx)
+			})
+			r := httptest.NewRequest("GET", "/", nil)
+			resp, err := s.fiberApp.Test(r)
+
+			s.NoError(err)
+
+			var body response.BaseResponse
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			s.NoError(err)
+
+			s.Equal(tc.ExpectedStatus, resp.StatusCode)
+			s.Equal(tc.ExpectedBody, body)
+		})
+		s.TearDownTest()
+	}
+}

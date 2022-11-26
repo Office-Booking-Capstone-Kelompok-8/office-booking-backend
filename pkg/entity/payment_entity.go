@@ -5,7 +5,8 @@ type Payment struct {
 	Name          string
 	AccountNumber string
 	Description   string
-	LogoID        PaymentPicture
+	PictureID     string         `gorm:"type:varchar(36)"`
+	Picture       PaymentPicture `gorm:"foreignKey:PictureID"`
 }
 
 type PaymentPicture struct {

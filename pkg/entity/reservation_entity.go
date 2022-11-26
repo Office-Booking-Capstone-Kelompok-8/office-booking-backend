@@ -10,11 +10,14 @@ import (
 type Reservation struct {
 	ID          string `gorm:"primaryKey; type:varchar(36); not null"`
 	CompanyName string
-	BuildingID  Building
+	BuildingID  string `gorm:"type:varchar(36); not null" `
+	Building    Building
 	StartDate   time.Time `gorm:"type:datetime"`
 	EndDate     time.Time `gorm:"type:datetime"`
-	UserID      User
-	StatusID    Status
+	UserID      string    `gorm:"type:varchar(36); not null"`
+	User        User
+	StatusID    int
+	Status      Status
 }
 
 func (r *Reservation) BeforeCreate(tx *gorm.DB) (err error) {

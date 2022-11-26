@@ -2,6 +2,7 @@ package routes
 
 import (
 	ac "office-booking-backend/internal/auth/controller"
+	bc "office-booking-backend/internal/buildings/controller"
 	uc "office-booking-backend/internal/user/controller"
 	"office-booking-backend/pkg/middlewares"
 
@@ -11,14 +12,16 @@ import (
 type Routes struct {
 	authController             *ac.AuthController
 	userControllerPkg          *uc.UserController
+	buildingControllerPkg      *bc.BuildingController
 	accessTokenMiddleware      fiber.Handler
 	adminAccessTokenMiddleware fiber.Handler
 }
 
-func NewRoutes(authController *ac.AuthController, userControllerPkg *uc.UserController, accessTokenMiddleware fiber.Handler, adminAccessTokenMiddleware fiber.Handler) *Routes {
+func NewRoutes(authController *ac.AuthController, userControllerPkg *uc.UserController, buildingControllerPkg *bc.BuildingController, accessTokenMiddleware fiber.Handler, adminAccessTokenMiddleware fiber.Handler) *Routes {
 	return &Routes{
 		authController:             authController,
 		userControllerPkg:          userControllerPkg,
+		buildingControllerPkg:      buildingControllerPkg,
 		accessTokenMiddleware:      accessTokenMiddleware,
 		adminAccessTokenMiddleware: adminAccessTokenMiddleware,
 	}
@@ -53,6 +56,10 @@ func (r *Routes) Init(app *fiber.App) {
 	aUser := admin.Group("/users")
 	aUser.Get("/:userID", r.userControllerPkg.GetFullUserByID)
 	aUser.Get("/", r.userControllerPkg.GetAllUsers)
+
+	// Buildings routes
+	building := v1.Group("/buildings")
+	building.Get("/", r.buildingControllerPkg.GetAllBuildings)
 }
 
 func ping(c *fiber.Ctx) error {

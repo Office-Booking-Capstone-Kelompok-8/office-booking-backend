@@ -6,6 +6,8 @@ import (
 )
 
 // Fiber config
+//
+//goland:noinspection ALL
 const (
 	APP_NAME             = "office-zone-api v0.1"
 	SERVER_HEADER        = "office-zone-api"

@@ -17,7 +17,7 @@ func NewUserResponse(user *entity.User) *UserResponse {
 		Email:      user.Email,
 		Name:       user.Detail.Name,
 		Phone:      user.Detail.Phone,
-		PictureURL: user.Detail.ProfilePicture.Url,
+		PictureURL: user.Detail.Picture.Url,
 		Role:       user.Role,
 	}
 }

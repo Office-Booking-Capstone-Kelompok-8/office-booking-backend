@@ -830,7 +830,7 @@ func (s *TestSuiteAuthController) TestChangePassword() {
 			MimeType:       fiber.MIMEApplicationJSON,
 			RequestBody:    req,
 			ServiceErr:     err2.ErrPasswordNotMatch,
-			ExpectedStatus: fiber.StatusUnauthorized,
+			ExpectedStatus: fiber.StatusConflict,
 			ExpectedBody: response.BaseResponse{
 				Message: err2.ErrPasswordNotMatch.Error(),
 			},

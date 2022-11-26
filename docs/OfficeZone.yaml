@@ -560,7 +560,7 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  /users/password:
+  /users/change-password:
     put:
       summary: Update logged in user password
       operationId: updateUserPassword
@@ -596,9 +596,9 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: user password updated successfully
+                    example: password changed successful
         400:
-          description: Bad request
+          description: Bad request body
           content:
             application/json:
               schema:
@@ -608,8 +608,10 @@ paths:
                   $ref: '#/components/examples/InvalidRequestBody'
                 InvalidPassword:
                   $ref: '#/components/examples/InvalidPassword'
+             
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
+                
         404:
           $ref: '#/components/responses/UserNotFound'
         409:
@@ -621,7 +623,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: old password is incorrect
+                    example:  password not match
         500:
           $ref: '#/components/responses/InternalServerError'
 
@@ -2558,6 +2560,9 @@ components:
         
   
   examples:
+    InvalidOrMissingToken:
+      value:
+        message: invalid or expired JWT
     InvalidRequestBody:
       description: Invalid request body due to either syntactically incorrect or confrom to the schema (e.g. missing required fields)
       value:

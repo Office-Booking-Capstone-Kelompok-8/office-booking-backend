@@ -230,7 +230,7 @@ func (a *AuthController) ChangePassword(c *fiber.Ctx) error {
 		case err2.ErrUserNotFound:
 			return fiber.NewError(fiber.StatusNotFound, err.Error())
 		case err2.ErrPasswordNotMatch:
-			return fiber.NewError(fiber.StatusUnauthorized, err.Error())
+			return fiber.NewError(fiber.StatusConflict, err.Error())
 		default:
 			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 		}

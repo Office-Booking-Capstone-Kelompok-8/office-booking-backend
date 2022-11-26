@@ -11,11 +11,11 @@ var OTPLimitter = limiter.New(limiter.Config{
 	Expiration: config.OTP_RESEND_TIME,
 	KeyGenerator: func(c *fiber.Ctx) string {
 		// limit by ip
-		//ip := c.Get("x-real-ip")
-		//if ip == "" {
-		//	return c.IP()
-		//}
-		//return ip
+		// ip := c.Get("x-real-ip")
+		// if ip == "" {
+		//  	return c.IP()
+		// }
+		// return ip
 
 		// Limit with email
 		body := new(struct {

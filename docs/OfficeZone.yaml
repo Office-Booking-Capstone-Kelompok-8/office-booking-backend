@@ -492,7 +492,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: user details updated successfully
+                    example: user updated successfully
         400:
           description: Bad request
           content:

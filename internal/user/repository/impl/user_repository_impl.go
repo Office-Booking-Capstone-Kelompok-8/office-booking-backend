@@ -5,6 +5,7 @@ import (
 	"office-booking-backend/internal/user/repository"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -67,6 +68,10 @@ func (a *UserRepositoryImpl) GetAllUsers(ctx context.Context, q string, limit in
 func (u *UserRepositoryImpl) UpdateUserByID(ctx context.Context, user *entity.User) error {
 	res := u.db.WithContext(ctx).Model(&entity.User{}).Where("id = ?", user.ID).Updates(user)
 	if res.Error != nil {
+		if strings.Contains(res.Error.Error(), "for key 'users.email'") {
+			return err2.ErrDuplicateEmail
+		}
+
 		return res.Error
 	}
 

@@ -340,6 +340,18 @@ func (s *TestSuiteUserController) TestUpdateUser() {
 			},
 		},
 		{
+			Name: "Fail: Duplicate email",
+			Request: dto.UserUpdateRequest{
+				Email: "some_email",
+			},
+			Mime:           fiber.MIMEApplicationJSON,
+			ServiceErr:     err2.ErrDuplicateEmail,
+			ExpectedStatus: fiber.StatusConflict,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrDuplicateEmail.Error(),
+			},
+		},
+		{
 			Name: "Fail: Unknown error",
 			Request: dto.UserUpdateRequest{
 				Name:  "some_name",
@@ -429,6 +441,18 @@ func (s *TestSuiteUserController) TestUpdateLoggedUser() {
 			ExpectedStatus: fiber.StatusNotFound,
 			ExpectedBody: response.BaseResponse{
 				Message: err2.ErrUserNotFound.Error(),
+			},
+		},
+		{
+			Name: "Fail: Duplicate email",
+			Request: dto.UserUpdateRequest{
+				Email: "some_email",
+			},
+			Mime:           fiber.MIMEApplicationJSON,
+			ServiceErr:     err2.ErrDuplicateEmail,
+			ExpectedStatus: fiber.StatusConflict,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrDuplicateEmail.Error(),
 			},
 		},
 		{

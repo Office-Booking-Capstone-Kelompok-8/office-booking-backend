@@ -189,6 +189,12 @@ func (s *TestSuiteUserRepository) TestUpdateUserByID() {
 			RowsAffrcted: 0,
 		},
 		{
+			Name:         "Error: duplicate entry",
+			Err:          errors.New("Error 1062: Duplicate entry '123' for key 'users.email'"),
+			ExpectedErr:  err2.ErrDuplicateEmail,
+			RowsAffrcted: 0,
+		},
+		{
 			Name:         "Error: unknown",
 			Err:          errors.New("unknown error"),
 			ExpectedErr:  errors.New("unknown error"),

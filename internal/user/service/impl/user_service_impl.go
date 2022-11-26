@@ -70,9 +70,5 @@ func (u *UserServiceImpl) UpdateUserByID(ctx context.Context, id string, user *d
 		return nil
 	})
 
-	if err := errGroup.Wait(); err != nil {
-		return err
-	}
-
-	return nil
+	return errGroup.Wait()
 }

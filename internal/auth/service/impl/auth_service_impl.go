@@ -240,3 +240,29 @@ func (a *AuthServiceImpl) ResetPassword(ctx context.Context, password *dto.Passw
 
 	return nil
 }
+
+func (a *AuthServiceImpl) ChangePassword(ctx context.Context, uid string, password *dto.ChangePasswordRequest) error {
+	user, err := a.userRepo.GetFullUserByID(ctx, uid)
+	if err != nil {
+		log.Println("Error while finding user by id: ", err)
+		return err
+	}
+
+	err = a.password.CompareHashAndPassword([]byte(user.Password), []byte(password.OldPassword))
+	if err != nil {
+		return err2.ErrPasswordNotMatch
+	}
+
+	hashedPassword, err := a.password.GenerateFromPassword([]byte(password.NewPassword), DefaultPasswordCost)
+	if err != nil {
+		return err
+	}
+
+	err = a.repository.ChangePassword(ctx, uid, string(hashedPassword))
+	if err != nil {
+		log.Println("Error while changing password: ", err)
+		return err
+	}
+
+	return nil
+}

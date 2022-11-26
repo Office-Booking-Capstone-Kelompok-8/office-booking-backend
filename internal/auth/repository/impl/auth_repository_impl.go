@@ -47,6 +47,20 @@ func (a *AuthRepositoryImpl) GetUserByEmail(ctx context.Context, email string) (
 	return user, nil
 }
 
+func (a *AuthRepositoryImpl) GetUserByID(ctx context.Context, id string) (*entity.User, error) {
+	user := &entity.User{}
+	err := a.db.WithContext(ctx).Model(&entity.User{}).Where("id = ?", id).First(user).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, err2.ErrUserNotFound
+		}
+
+		return nil, err
+	}
+
+	return user, nil
+}
+
 func (a *AuthRepositoryImpl) ChangePassword(ctx context.Context, id string, password string) error {
 	result := a.db.WithContext(ctx).Model(&entity.User{}).Where("id = ?", id).Update("password", password)
 	if result.Error != nil {

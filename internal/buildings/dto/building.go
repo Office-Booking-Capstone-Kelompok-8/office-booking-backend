@@ -3,26 +3,27 @@ package dto
 import "office-booking-backend/pkg/entity"
 
 type GetAllBuildingResponse struct {
-	ID           string          `json:"id"`
-	Name         string          `json:"name"`
-	Pictures     entity.Pictures `json:"pictures"`
-	AnnualPrice  int             `json:"annual_price"`
-	MonthlyPrice int             `json:"monthly_price"`
-	Owner        string          `json:"owner"`
-	CityID       int             `json:"city_id"`
-	DistrictID   int             `json:"district_id"`
+	ID       string          `json:"id"`
+	Name     string          `json:"name"`
+	Pictures entity.Pictures `json:"pictures"`
+	Prices   Price           `json:"price"`
+	Owner    string          `json:"owner"`
+	Location Locations       `json:"location"`
+}
+
+type Locations struct {
+	City     string `json:"city"`
+	District string `json:"district"`
 }
 
 func NewGetAllBuildingResponse(building *entity.Building) *GetAllBuildingResponse {
 	return &GetAllBuildingResponse{
-		ID:           building.ID,
-		Name:         building.Name,
-		Pictures:     building.Pictures,
-		AnnualPrice:  building.AnnualPrice,
-		MonthlyPrice: building.MonthlyPrice,
-		Owner:        building.Owner,
-		CityID:       building.CityID,
-		DistrictID:   building.DistrictID,
+		ID:       building.ID,
+		Name:     building.Name,
+		Pictures: building.Pictures,
+		Prices:   Price{},
+		Owner:    building.Owner,
+		Location: Locations{},
 	}
 }
 

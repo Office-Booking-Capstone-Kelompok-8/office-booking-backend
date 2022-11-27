@@ -21,9 +21,15 @@ func NewGetAllBuildingResponse(building *entity.Building) *GetAllBuildingRespons
 		ID:       building.ID,
 		Name:     building.Name,
 		Pictures: building.Pictures,
-		Prices:   Price{},
-		Owner:    building.Owner,
-		Location: Locations{},
+		Prices: Price{
+			AnnualPrice:  building.AnnualPrice,
+			MonthlyPrice: building.MonthlyPrice,
+		},
+		Owner: building.Owner,
+		Location: Locations{
+			City:     building.City.Name,
+			District: building.District.Name,
+		},
 	}
 }
 

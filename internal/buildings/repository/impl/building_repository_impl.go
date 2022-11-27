@@ -23,7 +23,7 @@ func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, q string, 
 	buildings := &entity.Building{}
 	var count int64
 
-	query := b.db.WithContext(ctx).Joins("Pictures").Model(&entity.Building{})
+	query := b.db.WithContext(ctx).Joins("Pictures").Joins("District").Joins("City").Model(&entity.Building{})
 	if q != "" {
 		query = query.Where("`Pictures`.`name` LIKE ?", "%"+q+"%")
 	}

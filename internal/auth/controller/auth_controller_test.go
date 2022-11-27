@@ -790,7 +790,7 @@ func (s *TestSuiteAuthController) TestChangePassword() {
 			RequestBody: req,
 			ValidatorError: &validator.ErrorsResponse{
 				{
-					Field:  "old_password",
+					Field:  "oldPassword",
 					Reason: "required",
 				},
 			},
@@ -799,7 +799,7 @@ func (s *TestSuiteAuthController) TestChangePassword() {
 				Message: err2.ErrInvalidRequestBody.Error(),
 				Data: []interface{}{
 					map[string]interface{}{
-						"field":  "old_password",
+						"field":  "oldPassword",
 						"reason": "required",
 					},
 				},

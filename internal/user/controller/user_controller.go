@@ -8,16 +8,19 @@ import (
 	"office-booking-backend/internal/user/service"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
+	"office-booking-backend/pkg/utils/validator"
 	"strconv"
 )
 
 type UserController struct {
 	userService service.UserService
+	validator   validator.Validator
 }
 
-func NewUserController(userService service.UserService) *UserController {
+func NewUserController(userService service.UserService, validator validator.Validator) *UserController {
 	return &UserController{
 		userService: userService,
+		validator:   validator,
 	}
 }
 
@@ -98,6 +101,13 @@ func (u *UserController) UpdateUserByID(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
+	if errs := u.validator.Validate(*user); errs != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidRequestBody.Error(),
+			Data:    errs,
+		})
+	}
+
 	if err := u.userService.UpdateUserByID(c.Context(), uid, user); err != nil {
 		switch err {
 		case err2.ErrUserNotFound:
@@ -122,6 +132,17 @@ func (u *UserController) UpdateLoggedUser(c *fiber.Ctx) error {
 	user := new(dto.UserUpdateRequest)
 	if err := c.BodyParser(user); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	if user.Role != 0 && user.Role != int(claims["role"].(float64)) {
+		return fiber.NewError(fiber.StatusForbidden, err2.ErrNoPermission.Error())
+	}
+
+	if errs := u.validator.Validate(*user); errs != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidRequestBody.Error(),
+			Data:    errs,
+		})
 	}
 
 	if err := u.userService.UpdateUserByID(c.Context(), uid, user); err != nil {

@@ -35,7 +35,7 @@ func Init(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf map[strin
 
 	userRepository := userRepositoryPkg.NewUserRepositoryImpl(db)
 	userService := userServicePkg.NewUserServiceImpl(userRepository)
-	userController := userControllerPkg.NewUserController(userService)
+	userController := userControllerPkg.NewUserController(userService, validation)
 
 	authRepository := authRepositoryPkg.NewAuthRepositoryImpl(db)
 	authService := authServicePkg.NewAuthServiceImpl(authRepository, userRepository, tokenService, redisRepo, mailService, passwordService, generator)

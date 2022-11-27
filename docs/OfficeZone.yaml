@@ -2288,7 +2288,7 @@ components:
             properties:
               message:
                 type: string
-                example: role not supported
+                example: you don't have permission to perform the action
     InternalServerError:
       description: Unexpected error occurred
       content:

@@ -7,4 +7,5 @@ import (
 
 type BuildingService interface {
 	GetAllBuildings(ctx context.Context, q string, limit int, offset int) (*dto.GetAllBuildingsResponse, int64, error)
+	GetBuildingDetailByID(ctx context.Context, id string) (*dto.GetBuildingDetailsByIDResponse, error)
 }

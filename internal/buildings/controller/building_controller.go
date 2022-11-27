@@ -1,12 +1,14 @@
 package controller
 
 import (
+	"errors"
 	"office-booking-backend/internal/buildings/service"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type BuildingController struct {
@@ -47,5 +49,25 @@ func (b *BuildingController) GetAllBuildings(c *fiber.Ctx) error {
 			"page":  pageInt,
 			"total": total,
 		},
+	})
+}
+
+func (b *BuildingController) GetBuldingDetailByID(c *fiber.Ctx) error {
+	token := c.Locals("user").(*jwt.Token)
+	claims := token.Claims.(jwt.MapClaims)
+	uid := claims["uid"].(string)
+
+	building, err := b.buildingService.GetBuildingDetailByID(c.Context(), uid)
+	if err != nil {
+		if errors.Is(err, err2.ErrUserNotFound) {
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		}
+
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "user fetched successfully",
+		Data:    building,
 	})
 }

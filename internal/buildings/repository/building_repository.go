@@ -7,4 +7,5 @@ import (
 
 type BuildingRepository interface {
 	GetAllBuildings(ctx context.Context, q string, limit int, offset int) (*entity.Building, int64, error)
+	GetBuildingDetailByID(ctx context.Context, id string) (*entity.Building, error)
 }

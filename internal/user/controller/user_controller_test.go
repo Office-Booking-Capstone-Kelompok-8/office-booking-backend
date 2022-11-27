@@ -13,12 +13,14 @@ import (
 	mockService "office-booking-backend/internal/user/service/mock"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
+	"office-booking-backend/pkg/utils/validator"
 	"testing"
 )
 
 type TestSuiteUserController struct {
 	suite.Suite
 	mockService    *mockService.UserServiceMock
+	mockValidator  *validator.ValidatorMock
 	userController *UserController
 	fiberApp       *fiber.App
 }
@@ -29,7 +31,8 @@ func TestUserController(t *testing.T) {
 
 func (s *TestSuiteUserController) SetupTest() {
 	s.mockService = new(mockService.UserServiceMock)
-	s.userController = NewUserController(s.mockService)
+	s.mockValidator = new(validator.ValidatorMock)
+	s.userController = NewUserController(s.mockService, s.mockValidator)
 	s.fiberApp = fiber.New(fiber.Config{
 		ErrorHandler: response.DefaultErrorHandler,
 	})
@@ -37,6 +40,7 @@ func (s *TestSuiteUserController) SetupTest() {
 
 func (s *TestSuiteUserController) TearDownTest() {
 	s.mockService = nil
+	s.mockValidator = nil
 	s.userController = nil
 	s.fiberApp = nil
 }
@@ -298,6 +302,7 @@ func (s *TestSuiteUserController) TestUpdateUser() {
 		Name           string
 		Request        interface{}
 		Mime           string
+		ValidationErr  *validator.ErrorsResponse
 		ServiceErr     error
 		ExpectedStatus int
 		ExpectedBody   response.BaseResponse
@@ -352,6 +357,29 @@ func (s *TestSuiteUserController) TestUpdateUser() {
 			},
 		},
 		{
+			Name: "Fail: validation error",
+			Request: dto.UserUpdateRequest{
+				Email: "some_email",
+			},
+			Mime: fiber.MIMEApplicationJSON,
+			ValidationErr: &validator.ErrorsResponse{
+				{
+					Field:  "email",
+					Reason: "must be a valid email",
+				},
+			},
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
+				Data: []interface{}{
+					map[string]interface{}{
+						"field":  "email",
+						"reason": "must be a valid email",
+					},
+				},
+			},
+		},
+		{
 			Name: "Fail: Unknown error",
 			Request: dto.UserUpdateRequest{
 				Name:  "some_name",
@@ -367,6 +395,7 @@ func (s *TestSuiteUserController) TestUpdateUser() {
 	} {
 		s.SetupTest()
 		s.Run(tc.Name, func() {
+			s.mockValidator.On("Validate", mock.Anything).Return(tc.ValidationErr)
 			s.mockService.On("UpdateUserByID", mock.Anything, mock.Anything, mock.Anything).Return(tc.ServiceErr)
 
 			s.fiberApp.Put("/:userID", s.userController.UpdateUserByID)
@@ -394,7 +423,8 @@ func (s *TestSuiteUserController) TestUpdateUser() {
 func (s *TestSuiteUserController) TestUpdateLoggedUser() {
 	token := &jwt.Token{
 		Claims: jwt.MapClaims{
-			"uid": "some_uid",
+			"uid":  "some_uid",
+			"role": float64(1),
 		},
 	}
 
@@ -402,6 +432,7 @@ func (s *TestSuiteUserController) TestUpdateLoggedUser() {
 		Name           string
 		Request        interface{}
 		Mime           string
+		ValidationErr  *validator.ErrorsResponse
 		ServiceErr     error
 		ExpectedStatus int
 		ExpectedBody   response.BaseResponse
@@ -456,6 +487,40 @@ func (s *TestSuiteUserController) TestUpdateLoggedUser() {
 			},
 		},
 		{
+			Name: "Fail: Trying to change role",
+			Request: dto.UserUpdateRequest{
+				Role: 2,
+			},
+			Mime:           fiber.MIMEApplicationJSON,
+			ExpectedStatus: fiber.StatusForbidden,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrNoPermission.Error(),
+			},
+		},
+		{
+			Name: "Fail: validation error",
+			Request: dto.UserUpdateRequest{
+				Email: "some_email",
+			},
+			Mime: fiber.MIMEApplicationJSON,
+			ValidationErr: &validator.ErrorsResponse{
+				{
+					Field:  "email",
+					Reason: "must be a valid email",
+				},
+			},
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
+				Data: []interface{}{
+					map[string]interface{}{
+						"field":  "email",
+						"reason": "must be a valid email",
+					},
+				},
+			},
+		},
+		{
 			Name: "Fail: Unknown error",
 			Request: dto.UserUpdateRequest{
 				Name:  "some_name",
@@ -471,6 +536,7 @@ func (s *TestSuiteUserController) TestUpdateLoggedUser() {
 	} {
 		s.SetupTest()
 		s.Run(tc.Name, func() {
+			s.mockValidator.On("Validate", mock.Anything).Return(tc.ValidationErr)
 			s.mockService.On("UpdateUserByID", mock.Anything, "some_uid", mock.Anything).Return(tc.ServiceErr)
 
 			s.fiberApp.Put("/", func(ctx *fiber.Ctx) error {

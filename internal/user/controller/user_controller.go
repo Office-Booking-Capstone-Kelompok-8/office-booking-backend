@@ -134,7 +134,7 @@ func (u *UserController) UpdateLoggedUser(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	if user.Role != int(claims["role"].(float64)) {
+	if user.Role != 0 && user.Role != int(claims["role"].(float64)) {
 		return fiber.NewError(fiber.StatusForbidden, err2.ErrNoPermission.Error())
 	}
 

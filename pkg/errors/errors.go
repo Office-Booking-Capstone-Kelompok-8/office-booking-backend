@@ -27,8 +27,8 @@ var (
 	//	ErrInvalidOTPToken is returned when the OTP token is invalid
 	ErrInvalidOTPToken = errors.New("invalid OTP token")
 
-	// ErrNoPermission is returned when the user doesn't have permission to access the resource
-	ErrNoPermission = errors.New("you don't have permission to access this resource")
+	// ErrNoPermission is returned when the user doesn't have permission to perform the action (e.g. access admin page as a user)
+	ErrNoPermission = errors.New("you don't have permission to perform the action")
 
 	//	ErrInvalidQueryParams is returned when the query params is invalid
 	ErrInvalidQueryParams = errors.New("invalid query params")

@@ -126,6 +126,9 @@ paths:
                   data:
                     type: object
                     properties:
+                      role:
+                        type: integer
+                        example: 1
                       access_token:
                         type: string
                         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiI3MTg1OGNmMS1lNDhkLTQzYmQtOGU0YS1jZDNkNGE1YjIwMDMiLCJyb2xlIjoxLCJleHAiOjB9.G0PITHn6gz-fu6kqrZYwBc_bAca1YCZvMNGFvKHDytk
@@ -1796,6 +1799,15 @@ paths:
           $ref: '#/components/responses/RolesNotSupported'
         404:
           $ref: '#/components/responses/UserNotFound'
+        409:
+          description: User has active reservations with status "pending", "accepted", "awaiting payment" or "active"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              example:
+                message: user has active reservation
+
         500:
           $ref: '#/components/responses/InternalServerError'
   
@@ -2138,7 +2150,7 @@ paths:
           $ref: '#/components/responses/BuildingNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
-  /buildings/faclities/categories:
+  /buildings/faclities/category:
     get:
       summary: Get all building facilities categories
       operationId: getBuildingFacilitiesCategories
@@ -2154,7 +2166,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: building facilities categories retrieved successfully
+                    example: facility categories fetched successfully
                   data:
                     type: array
                     items: 
@@ -2393,6 +2405,9 @@ components:
                 type: string
                 format: uuid
                 example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+              index:
+                type: integer
+                example: 1
               url:
                 type: string
                 example: https://ik.imagekit.io/fortyfour/default-image.jpg

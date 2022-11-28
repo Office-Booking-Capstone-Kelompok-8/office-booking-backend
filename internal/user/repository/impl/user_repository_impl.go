@@ -94,3 +94,16 @@ func (u *UserRepositoryImpl) UpdateUserDetailByID(ctx context.Context, userDetai
 
 	return nil
 }
+
+func (u *UserRepositoryImpl) DeleteUserByID(ctx context.Context, id string) error {
+	res := u.db.WithContext(ctx).Model(&entity.User{}).Where("id = ?", id).Delete(&entity.User{})
+	if res.Error != nil {
+		return res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return err2.ErrUserNotFound
+	}
+
+	return nil
+}

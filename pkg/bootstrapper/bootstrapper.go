@@ -4,6 +4,11 @@ import (
 	authControllerPkg "office-booking-backend/internal/auth/controller"
 	authRepositoryPkg "office-booking-backend/internal/auth/repository/impl"
 	authServicePkg "office-booking-backend/internal/auth/service/impl"
+	buildingControllerPkg "office-booking-backend/internal/building/controller"
+	buildingRepositoryPkg "office-booking-backend/internal/building/repository/impl"
+	buildingServicePkg "office-booking-backend/internal/building/service/impl"
+	reservationRepositoryPkg "office-booking-backend/internal/reservation/repository/impl"
+	reservationServicePkg "office-booking-backend/internal/reservation/service/impl"
 	userControllerPkg "office-booking-backend/internal/user/controller"
 	userRepositoryPkg "office-booking-backend/internal/user/repository/impl"
 	userServicePkg "office-booking-backend/internal/user/service/impl"
@@ -33,15 +38,22 @@ func Init(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf map[strin
 	accessTokenMiddleware := middlewares.NewJWTMiddleware(conf["ACCESS_SECRET"], middlewares.ValidateAccessToken(tokenService))
 	adminAccessTokenMiddleware := middlewares.NewJWTMiddleware(conf["ACCESS_SECRET"], middlewares.ValidateAdminAccessToken(tokenService))
 
+	reservationRepository := reservationRepositoryPkg.NewReservationRepositoryImpl(db)
+	reservationService := reservationServicePkg.NewReservationServiceImpl(reservationRepository)
+
 	userRepository := userRepositoryPkg.NewUserRepositoryImpl(db)
-	userService := userServicePkg.NewUserServiceImpl(userRepository)
+	userService := userServicePkg.NewUserServiceImpl(userRepository, reservationService)
 	userController := userControllerPkg.NewUserController(userService, validation)
 
 	authRepository := authRepositoryPkg.NewAuthRepositoryImpl(db)
 	authService := authServicePkg.NewAuthServiceImpl(authRepository, userRepository, tokenService, redisRepo, mailService, passwordService, generator)
 	authController := authControllerPkg.NewAuthController(authService, validation)
 
+	buildingRepository := buildingRepositoryPkg.NewBuildingRepositoryImpl(db)
+	buildingService := buildingServicePkg.NewBuildingServiceImpl(buildingRepository)
+	buildingController := buildingControllerPkg.NewBuildingController(buildingService, validation)
+
 	// init routes
-	route := routes.NewRoutes(authController, userController, accessTokenMiddleware, adminAccessTokenMiddleware)
+	route := routes.NewRoutes(authController, userController, buildingController, accessTokenMiddleware, adminAccessTokenMiddleware)
 	route.Init(app)
 }

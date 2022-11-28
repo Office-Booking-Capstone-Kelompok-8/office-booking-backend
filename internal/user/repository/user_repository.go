@@ -11,4 +11,5 @@ type UserRepository interface {
 	GetAllUsers(ctx context.Context, q string, limit int, offset int) (*entity.Users, int64, error)
 	UpdateUserByID(ctx context.Context, user *entity.User) error
 	UpdateUserDetailByID(ctx context.Context, userDetail *entity.UserDetail) error
+	DeleteUserByID(ctx context.Context, id string) error
 }

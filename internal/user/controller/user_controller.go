@@ -160,3 +160,23 @@ func (u *UserController) UpdateLoggedUser(c *fiber.Ctx) error {
 		Message: "user updated successfully",
 	})
 }
+
+func (u *UserController) DeleteUserByID(c *fiber.Ctx) error {
+	uid := c.Params("userID")
+
+	if err := u.userService.DeleteUserByID(c.Context(), uid); err != nil {
+		switch err {
+		case err2.ErrUserNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		case err2.ErrUserHasReservation:
+			return fiber.NewError(fiber.StatusConflict, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "user deleted successfully",
+	})
+}

@@ -38,4 +38,7 @@ var (
 
 	//	ErrBuildingNotFound is returned when the building is not found
 	ErrBuildingNotFound = errors.New("building not found")
+
+	// ErrUserHasReservation is returned when the user has reservation
+	ErrUserHasReservation = errors.New("user has active reservation")
 )

@@ -24,3 +24,8 @@ func (m *UserServiceMock) UpdateUserByID(ctx context.Context, id string, user *d
 	args := m.Called(ctx, id, user)
 	return args.Error(0)
 }
+
+func (m *UserServiceMock) DeleteUserByID(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	mockReservationSrv "office-booking-backend/internal/reservation/service/mock"
 	"office-booking-backend/internal/user/dto"
 	mockRepo "office-booking-backend/internal/user/repository/mock"
 	"office-booking-backend/internal/user/service"
@@ -14,17 +15,20 @@ import (
 
 type TestSuiteUserService struct {
 	suite.Suite
-	mockRepo    *mockRepo.UserRepositoryMock
-	userService service.UserService
+	mockRepo           *mockRepo.UserRepositoryMock
+	mockReservationSrv *mockReservationSrv.ReservationServiceMock
+	userService        service.UserService
 }
 
 func (s *TestSuiteUserService) SetupTest() {
 	s.mockRepo = new(mockRepo.UserRepositoryMock)
-	s.userService = NewUserServiceImpl(s.mockRepo)
+	s.mockReservationSrv = new(mockReservationSrv.ReservationServiceMock)
+	s.userService = NewUserServiceImpl(s.mockRepo, s.mockReservationSrv)
 }
 
 func (s *TestSuiteUserService) TearDownTest() {
 	s.mockRepo = nil
+	s.mockReservationSrv = nil
 	s.userService = nil
 }
 

@@ -34,3 +34,8 @@ func (u *UserRepositoryMock) UpdateUserDetailByID(ctx context.Context, userDetai
 	args := u.Called(ctx, userDetail)
 	return args.Error(0)
 }
+
+func (u *UserRepositoryMock) DeleteUserByID(ctx context.Context, id string) error {
+	args := u.Called(ctx, id)
+	return args.Error(0)
+}

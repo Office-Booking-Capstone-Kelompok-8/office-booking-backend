@@ -4,18 +4,22 @@ import (
 	"context"
 	"golang.org/x/sync/errgroup"
 	"log"
+	service2 "office-booking-backend/internal/reservation/service"
 	"office-booking-backend/internal/user/dto"
 	"office-booking-backend/internal/user/repository"
 	"office-booking-backend/internal/user/service"
+	err2 "office-booking-backend/pkg/errors"
 )
 
 type UserServiceImpl struct {
-	userRepository repository.UserRepository
+	userRepository     repository.UserRepository
+	reservationService service2.ReservationService
 }
 
-func NewUserServiceImpl(userRepository repository.UserRepository) service.UserService {
+func NewUserServiceImpl(userRepository repository.UserRepository, resevationService service2.ReservationService) service.UserService {
 	return &UserServiceImpl{
-		userRepository: userRepository,
+		userRepository:     userRepository,
+		reservationService: resevationService,
 	}
 }
 
@@ -71,4 +75,23 @@ func (u *UserServiceImpl) UpdateUserByID(ctx context.Context, id string, user *d
 	})
 
 	return errGroup.Wait()
+}
+
+func (u *UserServiceImpl) DeleteUserByID(ctx context.Context, id string) error {
+	userReservation, err := u.reservationService.CountUserActiveReservations(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	if userReservation > 0 {
+		return err2.ErrUserHasReservation
+	}
+
+	err = u.userRepository.DeleteUserByID(ctx, id)
+	if err != nil {
+		log.Println("Error while deleting user by id: ", err)
+		return err
+	}
+
+	return nil
 }

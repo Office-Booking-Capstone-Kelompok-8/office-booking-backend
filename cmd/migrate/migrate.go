@@ -136,6 +136,10 @@ func InitStatus(db *gorm.DB) error {
 		},
 		{
 			ID:      6,
+			Message: "Active",
+		},
+		{
+			ID:      7,
 			Message: "Completed",
 		},
 	}

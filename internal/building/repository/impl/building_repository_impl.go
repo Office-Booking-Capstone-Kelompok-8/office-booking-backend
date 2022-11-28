@@ -25,9 +25,7 @@ func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, q string, 
 	var count int64
 
 	query := b.db.WithContext(ctx).
-		Preload("Pictures", func(db *gorm.DB) *gorm.DB {
-			return db.Select("building_id, thumbnail_url")
-		}).
+		Preload("Pictures", "`pictures`.`index` = 0").
 		Joins("District").
 		Joins("City").
 		Model(&entity.Building{})

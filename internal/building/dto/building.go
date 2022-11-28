@@ -70,16 +70,18 @@ type Price struct {
 }
 
 type Picture struct {
-	ID  string `json:"id"`
-	Url string `json:"url"`
-	Alt string `json:"alt"`
+	ID    string `json:"id"`
+	Index int    `json:"index"`
+	Url   string `json:"url"`
+	Alt   string `json:"alt"`
 }
 
 func NewPicture(picture *entity.Picture) *Picture {
 	return &Picture{
-		ID:  picture.ID,
-		Url: picture.Url,
-		Alt: picture.Alt,
+		ID:    picture.ID,
+		Index: picture.Index,
+		Url:   picture.Url,
+		Alt:   picture.Alt,
 	}
 }
 

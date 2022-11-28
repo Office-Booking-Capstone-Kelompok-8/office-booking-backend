@@ -56,6 +56,7 @@ type Cities []City
 type Picture struct {
 	ID           string `gorm:"primaryKey; type:varchar(36); not null"`
 	BuildingID   string `gorm:"type:varchar(36); not null" `
+	Index        int
 	Url          string
 	ThumbnailUrl string
 	Alt          string

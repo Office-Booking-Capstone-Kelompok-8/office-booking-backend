@@ -2393,6 +2393,9 @@ components:
                 type: string
                 format: uuid
                 example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+              index:
+                type: integer
+                example: 1
               url:
                 type: string
                 example: https://ik.imagekit.io/fortyfour/default-image.jpg

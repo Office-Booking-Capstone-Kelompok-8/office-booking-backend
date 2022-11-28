@@ -59,7 +59,9 @@ func (b *BuildingRepositoryImpl) GetBuildingDetailByID(ctx context.Context, id s
 	building := &entity.Building{}
 	err := b.db.WithContext(ctx).
 		Preload("Pictures").
-		Preload("Facilities").
+		Preload("Facilities", func(db *gorm.DB) *gorm.DB {
+			return db.Joins("Category")
+		}).
 		Joins("District").
 		Joins("City").
 		Model(&entity.Building{}).

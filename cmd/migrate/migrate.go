@@ -70,6 +70,11 @@ func main() {
 		log.Fatalf("Error seeding district: %v", err)
 	}
 
+	err = InitCategory(db)
+	if err != nil {
+		log.Fatalf("Error seeding category: %v", err)
+	}
+
 	log.Println("Database migration successful")
 }
 
@@ -470,4 +475,22 @@ func InitDistrict(db *gorm.DB) error {
 	}
 
 	return db.Create(&district).Error
+}
+
+func InitCategory(db *gorm.DB) error {
+	category := entity.Categories{
+		{
+			ID:   1,
+			Name: "other_houses",
+			Url:  "https://ik.imagekit.io/fortyfour/FacilityCategory/other_houses_FILL0_wght400_GRAD0_opsz48_ySm9eMGlM.svg",
+		},
+	}
+
+	var count int64
+	db.Model(&entity.Category{}).Count(&count)
+	if count != 0 {
+		return nil
+	}
+
+	return db.Create(&category).Error
 }

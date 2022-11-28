@@ -173,6 +173,7 @@ func (s *TestSuiteAuthController) TestLoginUser() {
 			ExpectedBody: response.BaseResponse{
 				Message: "user logged in successfully",
 				Data: map[string]interface{}{
+					"role":         float64(0),
 					"accessToken":  token.AccessToken,
 					"refreshToken": token.RefreshToken,
 				},
@@ -337,6 +338,7 @@ func (s *TestSuiteAuthController) TestRefreshToken() {
 			ExpectedBody: response.BaseResponse{
 				Message: "token refreshed successfully",
 				Data: map[string]interface{}{
+					"role":         float64(0),
 					"accessToken":  token.AccessToken,
 					"refreshToken": token.RefreshToken,
 				},

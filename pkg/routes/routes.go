@@ -64,7 +64,9 @@ func (r *Routes) Init(app *fiber.App) {
 	// Buildings routes
 	building := v1.Group("/buildings")
 	building.Get("/", r.buildingController.GetAllBuildings)
-	building.Get("/:buildingID", r.buildingController.GetBuldingDetailByID)
+	building.Get("/:buildingID", r.buildingController.GetBuildingDetailByID)
+	building.Get("/facilities/category", r.buildingController.GetFacilityCategories)
+
 }
 
 func ping(c *fiber.Ctx) error {

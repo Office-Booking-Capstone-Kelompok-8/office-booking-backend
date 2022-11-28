@@ -86,7 +86,7 @@ func (b *BuildingController) GetAllBuildings(c *fiber.Ctx) error {
 	})
 }
 
-func (b *BuildingController) GetBuldingDetailByID(c *fiber.Ctx) error {
+func (b *BuildingController) GetBuildingDetailByID(c *fiber.Ctx) error {
 	id := c.Params("buildingID")
 
 	building, err := b.buildingService.GetBuildingDetailByID(c.Context(), id)
@@ -101,5 +101,17 @@ func (b *BuildingController) GetBuldingDetailByID(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
 		Message: "building fetched successfully",
 		Data:    building,
+	})
+}
+
+func (b *BuildingController) GetFacilityCategories(c *fiber.Ctx) error {
+	categories, err := b.buildingService.GetFacilityCategories(c.Context())
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "facility categories fetched successfully",
+		Data:    categories,
 	})
 }

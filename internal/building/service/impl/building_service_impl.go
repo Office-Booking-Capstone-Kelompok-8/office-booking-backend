@@ -20,7 +20,7 @@ func NewBuildingServiceImpl(repo repository.BuildingRepository) service.Building
 	}
 }
 
-func (b BuildingServiceImpl) GetAllBuildings(ctx context.Context, q string, cityID int, districtID int, startDate time.Time, endDate time.Time, limit int, page int) (*dto.BriefBuildingsResponse, int64, error) {
+func (b *BuildingServiceImpl) GetAllBuildings(ctx context.Context, q string, cityID int, districtID int, startDate time.Time, endDate time.Time, limit int, page int) (*dto.BriefBuildingsResponse, int64, error) {
 	//	check if start date is after end date
 	if startDate.After(endDate) {
 		return nil, 0, err2.ErrStartDateAfterEndDate
@@ -39,7 +39,7 @@ func (b BuildingServiceImpl) GetAllBuildings(ctx context.Context, q string, city
 	return buildingsResponse, count, nil
 }
 
-func (b BuildingServiceImpl) GetBuildingDetailByID(ctx context.Context, id string) (*dto.FullBuildingResponse, error) {
+func (b *BuildingServiceImpl) GetBuildingDetailByID(ctx context.Context, id string) (*dto.FullBuildingResponse, error) {
 	building, err := b.repo.GetBuildingDetailByID(ctx, id)
 	if err != nil {
 		log.Println("error when getting building detail by id: ", err)
@@ -48,4 +48,16 @@ func (b BuildingServiceImpl) GetBuildingDetailByID(ctx context.Context, id strin
 
 	buildingResponse := dto.NewFullBuildingResponse(building)
 	return buildingResponse, nil
+}
+
+func (b *BuildingServiceImpl) GetFacilityCategories(ctx context.Context) (*dto.FacilityCategoriesResponse, error) {
+	facilityCategories, err := b.repo.GetFacilityCategories(ctx)
+	if err != nil {
+		log.Println("error when getting facility categories: ", err)
+		return nil, err
+	}
+
+	facilityCategoriesResponse := dto.NewFacilityCategoriesResponse(facilityCategories)
+	return facilityCategoriesResponse, nil
+
 }

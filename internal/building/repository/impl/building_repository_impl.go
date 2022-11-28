@@ -75,3 +75,13 @@ func (b *BuildingRepositoryImpl) GetBuildingDetailByID(ctx context.Context, id s
 
 	return building, nil
 }
+
+func (b *BuildingRepositoryImpl) GetFacilityCategories(ctx context.Context) (*entity.Categories, error) {
+	categories := &entity.Categories{}
+	err := b.db.WithContext(ctx).Model(&entity.Category{}).Find(categories).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return categories, nil
+}

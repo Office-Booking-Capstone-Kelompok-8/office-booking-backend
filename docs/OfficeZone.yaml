@@ -2150,7 +2150,7 @@ paths:
           $ref: '#/components/responses/BuildingNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
-  /buildings/faclities/categories:
+  /buildings/faclities/category:
     get:
       summary: Get all building facilities categories
       operationId: getBuildingFacilitiesCategories
@@ -2166,7 +2166,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: building facilities categories retrieved successfully
+                    example: facility categories fetched successfully
                   data:
                     type: array
                     items: 

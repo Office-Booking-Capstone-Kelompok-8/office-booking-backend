@@ -15,6 +15,7 @@ type Building struct {
 	Capacity     int
 	AnnualPrice  int
 	MonthlyPrice int
+	Facilities   Facilities `gorm:"foreignKey:BuildingID"`
 	Owner        string
 	Size         int
 	CityID       int
@@ -28,6 +29,8 @@ type Building struct {
 	UpdatedAt    time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
 }
+
+type Buildings []Building
 
 func (b *Building) BeforeCreate(*gorm.DB) (err error) {
 	b.ID = uuid.New().String()
@@ -47,6 +50,8 @@ type City struct {
 	Districts Districts
 	Name      string
 }
+
+type Cities []City
 
 type Picture struct {
 	ID           string `gorm:"primaryKey; type:varchar(36); not null"`

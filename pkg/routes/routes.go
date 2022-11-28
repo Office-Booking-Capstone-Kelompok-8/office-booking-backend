@@ -2,6 +2,7 @@ package routes
 
 import (
 	ac "office-booking-backend/internal/auth/controller"
+	bc "office-booking-backend/internal/building/controller"
 	uc "office-booking-backend/internal/user/controller"
 	"office-booking-backend/pkg/middlewares"
 
@@ -10,15 +11,17 @@ import (
 
 type Routes struct {
 	authController             *ac.AuthController
-	userControllerPkg          *uc.UserController
+	userController             *uc.UserController
+	buildingController         *bc.BuildingController
 	accessTokenMiddleware      fiber.Handler
 	adminAccessTokenMiddleware fiber.Handler
 }
 
-func NewRoutes(authController *ac.AuthController, userControllerPkg *uc.UserController, accessTokenMiddleware fiber.Handler, adminAccessTokenMiddleware fiber.Handler) *Routes {
+func NewRoutes(authController *ac.AuthController, userControllerPkg *uc.UserController, buildingController *bc.BuildingController, accessTokenMiddleware fiber.Handler, adminAccessTokenMiddleware fiber.Handler) *Routes {
 	return &Routes{
 		authController:             authController,
-		userControllerPkg:          userControllerPkg,
+		userController:             userControllerPkg,
+		buildingController:         buildingController,
 		accessTokenMiddleware:      accessTokenMiddleware,
 		adminAccessTokenMiddleware: adminAccessTokenMiddleware,
 	}
@@ -44,8 +47,8 @@ func (r *Routes) Init(app *fiber.App) {
 
 	// Enduser.User routes
 	user := v1.Group("/users", r.accessTokenMiddleware)
-	user.Get("/", r.userControllerPkg.GetLoggedFullUserByID)
-	user.Put("/", r.userControllerPkg.UpdateLoggedUser)
+	user.Get("/", r.userController.GetLoggedFullUserByID)
+	user.Put("/", r.userController.UpdateLoggedUser)
 	user.Put("/change-password", r.authController.ChangePassword)
 
 	// Admin routes
@@ -53,9 +56,14 @@ func (r *Routes) Init(app *fiber.App) {
 
 	// Admin.User routes
 	aUser := admin.Group("/users")
-	aUser.Get("/", r.userControllerPkg.GetAllUsers)
-	aUser.Get("/:userID", r.userControllerPkg.GetFullUserByID)
-	aUser.Put("/:userID", r.userControllerPkg.UpdateUserByID)
+	aUser.Get("/", r.userController.GetAllUsers)
+	aUser.Get("/:userID", r.userController.GetFullUserByID)
+	aUser.Put("/:userID", r.userController.UpdateUserByID)
+
+	// Buildings routes
+	building := v1.Group("/buildings")
+	building.Get("/", r.buildingController.GetAllBuildings)
+	building.Get("/:buildingID", r.buildingController.GetBuldingDetailByID)
 }
 
 func ping(c *fiber.Ctx) error {

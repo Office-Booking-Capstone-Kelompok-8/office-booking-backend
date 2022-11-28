@@ -32,4 +32,10 @@ var (
 
 	//	ErrInvalidQueryParams is returned when the query params is invalid
 	ErrInvalidQueryParams = errors.New("invalid query params")
+
+	//	ErrStartDateAfterEndDate is returned when the start date is after the end date
+	ErrStartDateAfterEndDate = errors.New("start date must be before end date")
+
+	//	ErrBuildingNotFound is returned when the building is not found
+	ErrBuildingNotFound = errors.New("building not found")
 )

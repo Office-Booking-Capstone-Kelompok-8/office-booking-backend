@@ -143,3 +143,27 @@ func NewFullBuildingResponse(building *entity.Building) *FullBuildingResponse {
 		},
 	}
 }
+
+type FacilityCategoryResponse struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+	Url  string `json:"url"`
+}
+
+func NewFacilityCategoryResponse(category *entity.Category) *FacilityCategoryResponse {
+	return &FacilityCategoryResponse{
+		ID:   category.ID,
+		Name: category.Name,
+		Url:  category.Url,
+	}
+}
+
+type FacilityCategoriesResponse []FacilityCategoryResponse
+
+func NewFacilityCategoriesResponse(categories *entity.Categories) *FacilityCategoriesResponse {
+	var categoriesResponse FacilityCategoriesResponse
+	for _, category := range *categories {
+		categoriesResponse = append(categoriesResponse, *NewFacilityCategoryResponse(&category))
+	}
+	return &categoriesResponse
+}

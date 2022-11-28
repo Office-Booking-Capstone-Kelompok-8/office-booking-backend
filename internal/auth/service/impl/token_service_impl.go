@@ -80,6 +80,7 @@ func (t *TokenServiceImpl) NewTokenPair(ctx context.Context, user *entity.User) 
 	}
 
 	return &dto.TokenPair{
+			Role:         user.Role,
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
 		},

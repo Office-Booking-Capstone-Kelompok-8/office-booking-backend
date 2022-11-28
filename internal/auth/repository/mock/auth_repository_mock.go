@@ -25,3 +25,8 @@ func (m *AuthRepositoryMock) ChangePassword(ctx context.Context, id string, pass
 	args := m.Called(ctx, id, password)
 	return args.Error(0)
 }
+
+func (m *AuthRepositoryMock) GetUserByID(ctx context.Context, id string) (*entity.User, error) {
+	args := m.Called(ctx, id)
+	return args.Get(0).(*entity.User), args.Error(1)
+}

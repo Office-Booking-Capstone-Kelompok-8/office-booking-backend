@@ -206,3 +206,37 @@ func (a *AuthController) ResetPassword(c *fiber.Ctx) error {
 		Message: "password reset successfully",
 	})
 }
+
+func (a *AuthController) ChangePassword(c *fiber.Ctx) error {
+	token := c.Locals("user").(*jwt.Token)
+	claims := token.Claims.(jwt.MapClaims)
+	uid := claims["uid"].(string)
+
+	password := new(dto.ChangePasswordRequest)
+	if err := c.BodyParser(password); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	errs := a.validator.Validate(*password)
+	if errs != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidRequestBody.Error(),
+			Data:    errs,
+		})
+	}
+
+	if err := a.service.ChangePassword(c.Context(), uid, password); err != nil {
+		switch err {
+		case err2.ErrUserNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		case err2.ErrPasswordNotMatch:
+			return fiber.NewError(fiber.StatusConflict, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "password changed successfully",
+	})
+}

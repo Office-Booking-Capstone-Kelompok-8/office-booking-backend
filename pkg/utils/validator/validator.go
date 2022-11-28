@@ -50,6 +50,8 @@ func (c *CustomValidator) Validate(s interface{}) *ErrorsResponse {
 			message = "must be a valid email"
 		case "min":
 			message = "must be at least " + err.Param() + " characters"
+		case "oneof":
+			message = "must be one of " + err.Param()
 		}
 		errors = append(errors, ErrorResponse{
 			Field:  err.Field(),

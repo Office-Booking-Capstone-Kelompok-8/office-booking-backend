@@ -24,3 +24,13 @@ func (u *UserRepositoryMock) GetAllUsers(ctx context.Context, q string, limit in
 	args := u.Called(ctx, q, limit, offset)
 	return args.Get(0).(*entity.Users), args.Get(1).(int64), args.Error(2)
 }
+
+func (u *UserRepositoryMock) UpdateUserByID(ctx context.Context, user *entity.User) error {
+	args := u.Called(ctx, user)
+	return args.Error(0)
+}
+
+func (u *UserRepositoryMock) UpdateUserDetailByID(ctx context.Context, userDetail *entity.UserDetail) error {
+	args := u.Called(ctx, userDetail)
+	return args.Error(0)
+}

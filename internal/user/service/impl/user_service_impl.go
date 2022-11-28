@@ -2,6 +2,7 @@ package impl
 
 import (
 	"context"
+	"golang.org/x/sync/errgroup"
 	"log"
 	"office-booking-backend/internal/user/dto"
 	"office-booking-backend/internal/user/repository"
@@ -39,4 +40,35 @@ func (u *UserServiceImpl) GetAllUsers(ctx context.Context, q string, limit int, 
 
 	briefUsers := dto.NewBriefUsersResponse(users)
 	return briefUsers, total, nil
+}
+
+func (u *UserServiceImpl) UpdateUserByID(ctx context.Context, id string, user *dto.UserUpdateRequest) error {
+	userEntity := user.ToEntity()
+	userEntity.ID = id
+	userEntity.Detail.UserID = id
+
+	if userEntity.Email != "" {
+		userEntity.IsVerified = false
+	}
+
+	errGroup, c := errgroup.WithContext(ctx)
+	errGroup.Go(func() error {
+		err := u.userRepository.UpdateUserByID(c, userEntity)
+		if err != nil {
+			log.Println("Error while updating user by id: ", err)
+			return err
+		}
+		return nil
+	})
+
+	errGroup.Go(func() error {
+		err := u.userRepository.UpdateUserDetailByID(c, &userEntity.Detail)
+		if err != nil {
+			log.Println("Error while updating user detail by id: ", err)
+			return err
+		}
+		return nil
+	})
+
+	return errGroup.Wait()
 }

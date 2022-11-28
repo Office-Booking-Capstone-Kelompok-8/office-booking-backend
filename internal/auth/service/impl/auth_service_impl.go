@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
 	redis2 "github.com/go-redis/redis/v9"
 	"github.com/google/uuid"
 	"log"
@@ -111,7 +110,7 @@ func (a *AuthServiceImpl) RefreshToken(ctx context.Context, token *dto.RefreshTo
 
 func createKey(email string) string {
 	hasher := md5.New()
-	hasher.Write([]byte(fmt.Sprintf("%s", email)))
+	hasher.Write([]byte(email))
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
@@ -234,6 +233,32 @@ func (a *AuthServiceImpl) ResetPassword(ctx context.Context, password *dto.Passw
 	}
 
 	err = a.repository.ChangePassword(ctx, otp.UserID, string(hashedPassword))
+	if err != nil {
+		log.Println("Error while changing password: ", err)
+		return err
+	}
+
+	return nil
+}
+
+func (a *AuthServiceImpl) ChangePassword(ctx context.Context, uid string, password *dto.ChangePasswordRequest) error {
+	user, err := a.repository.GetUserByID(ctx, uid)
+	if err != nil {
+		log.Println("Error while finding user by id: ", err)
+		return err
+	}
+
+	err = a.password.CompareHashAndPassword([]byte(user.Password), []byte(password.OldPassword))
+	if err != nil {
+		return err2.ErrPasswordNotMatch
+	}
+
+	hashedPassword, err := a.password.GenerateFromPassword([]byte(password.NewPassword), DefaultPasswordCost)
+	if err != nil {
+		return err
+	}
+
+	err = a.repository.ChangePassword(ctx, uid, string(hashedPassword))
 	if err != nil {
 		log.Println("Error while changing password: ", err)
 		return err

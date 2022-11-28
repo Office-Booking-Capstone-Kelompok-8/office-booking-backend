@@ -45,3 +45,8 @@ func (m *AuthServiceMock) ResetPassword(ctx context.Context, password *dto.Passw
 	args := m.Called(ctx, password)
 	return args.Error(0)
 }
+
+func (m *AuthServiceMock) ChangePassword(ctx context.Context, uid string, password *dto.ChangePasswordRequest) error {
+	args := m.Called(ctx, uid, password)
+	return args.Error(0)
+}

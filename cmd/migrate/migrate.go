@@ -8,6 +8,7 @@ import (
 	"office-booking-backend/pkg/config"
 	"office-booking-backend/pkg/database/mysql"
 	"office-booking-backend/pkg/entity"
+	"office-booking-backend/pkg/utils/password"
 	"os"
 )
 
@@ -62,17 +63,24 @@ func main() {
 }
 
 func InitAdmin(db *gorm.DB) error {
+	passFunc := password.NewPasswordFuncImpl()
+	pass, err := passFunc.GenerateFromPassword([]byte("admin123"), 10)
+	if err != nil {
+		return err
+	}
+
 	admin := entity.User{
 		ID:         uuid.New().String(),
 		Email:      "admin@mail.fortyfourvisual.com",
-		Password:   "admin123",
+		Password:   string(pass), // admin123
 		Role:       2,
 		IsVerified: true,
 		Detail: entity.UserDetail{
-			Name:             "Admin",
-			Phone:            "081234567890",
-			ProfilePictureID: "",
-			ProfilePicture: entity.ProfilePicture{
+			Name:      "Admin",
+			Phone:     "081234567890",
+			PictureID: "123",
+			Picture: entity.ProfilePicture{
+				ID:  "123",
 				Url: "https://ik.imagekit.io/fortyfour/default-image.jpg",
 			},
 		},

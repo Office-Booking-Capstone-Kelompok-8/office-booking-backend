@@ -27,14 +27,14 @@ func (u *User) BeforeCreate(*gorm.DB) (err error) {
 }
 
 type UserDetail struct {
-	UserID           string `gorm:"primaryKey; type:varchar(36)"`
-	Name             string
-	Phone            string
-	ProfilePictureID string `gorm:"type:varchar(36)"`
-	ProfilePicture   ProfilePicture
-	CreatedAt        time.Time      `gorm:"autoCreateTime"`
-	UpdatedAt        time.Time      `gorm:"autoUpdateTime"`
-	DeletedAt        gorm.DeletedAt `gorm:"index"`
+	UserID    string `gorm:"primaryKey; type:varchar(36)"`
+	Name      string
+	Phone     string
+	PictureID string         `gorm:"type:varchar(36); default:null"`
+	Picture   ProfilePicture `gorm:"foreignKey:PictureID"`
+	CreatedAt time.Time      `gorm:"autoCreateTime"`
+	UpdatedAt time.Time      `gorm:"autoUpdateTime"`
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
 type ProfilePicture struct {

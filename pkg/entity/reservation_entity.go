@@ -20,7 +20,7 @@ type Reservation struct {
 	Status      Status
 }
 
-func (r *Reservation) BeforeCreate(tx *gorm.DB) (err error) {
+func (r *Reservation) BeforeCreate(*gorm.DB) (err error) {
 	r.ID = uuid.New().String()
 	return
 }

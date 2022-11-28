@@ -13,4 +13,5 @@ type AuthService interface {
 	RequestOTP(ctx context.Context, email string) error
 	VerifyOTP(ctx context.Context, otp *dto.OTPVerifyRequest) (*string, error)
 	ResetPassword(ctx context.Context, password *dto.PasswordResetRequest) error
+	ChangePassword(ctx context.Context, uid string, password *dto.ChangePasswordRequest) error
 }

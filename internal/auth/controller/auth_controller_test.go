@@ -419,6 +419,451 @@ func (s *TestSuiteAuthController) TestRefreshToken() {
 	}
 }
 
+func (s *TestSuiteAuthController) TestRequestOTP() {
+	req := &dto.OTPRequest{
+		Email: "some_email",
+	}
+
+	for _, tc := range []struct {
+		Name           string
+		MimeType       string
+		RequestBody    interface{}
+		ValidatorError *validator.ErrorsResponse
+		ServiceErr     error
+		ExpectedStatus int
+		ExpectedBody   response.BaseResponse
+		ExpectedErr    error
+	}{
+		{
+			Name:           "Success requesting OTP",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    req,
+			ExpectedStatus: fiber.StatusOK,
+			ExpectedBody: response.BaseResponse{
+				Message: "otp sent successfully",
+			},
+		},
+		{
+			Name:           "Failed requesting OTP: invalid request body",
+			MimeType:       fiber.MIMETextPlain,
+			RequestBody:    []byte("some invalid json"),
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
+			},
+		},
+		{
+			Name:        "Failed requesting OTP: validation error",
+			MimeType:    fiber.MIMEApplicationJSON,
+			RequestBody: req,
+			ValidatorError: &validator.ErrorsResponse{
+				{
+					Field:  "email",
+					Reason: "required",
+				},
+			},
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
+				Data: []interface{}{
+					map[string]interface{}{
+						"field":  "email",
+						"reason": "required",
+					},
+				},
+			},
+		},
+		{
+			Name:           "Failed requesting OTP: user not found",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    req,
+			ServiceErr:     err2.ErrUserNotFound,
+			ExpectedStatus: fiber.StatusNotFound,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrUserNotFound.Error(),
+			},
+		},
+		{
+			Name:           "Failed requesting OTP: service error",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    req,
+			ServiceErr:     errors.New("error"),
+			ExpectedStatus: fiber.StatusInternalServerError,
+			ExpectedBody: response.BaseResponse{
+				Message: "error",
+			},
+		},
+	} {
+		s.SetupTest()
+		s.Run(tc.Name, func() {
+			jsonBody, err := json.Marshal(tc.RequestBody)
+			s.NoError(err)
+
+			s.mockAuthService.On("RequestOTP", mock.Anything, mock.Anything).Return(tc.ServiceErr)
+			s.mockValidator.On("Validate", mock.Anything).Return(tc.ValidatorError)
+
+			s.fiberApp.Post("/", s.authController.RequestOTP)
+			r := httptest.NewRequest("POST", "/", bytes.NewBuffer(jsonBody))
+			r.Header.Set(fiber.HeaderContentType, tc.MimeType)
+			resp, err := s.fiberApp.Test(r)
+			s.NoError(err)
+
+			var body response.BaseResponse
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			s.NoError(err)
+
+			s.Equal(tc.ExpectedStatus, resp.StatusCode)
+			s.Equal(tc.ExpectedBody, body)
+		})
+		s.TearDownTest()
+	}
+}
+
+func (s *TestSuiteAuthController) TestVerifyOTP() {
+	req := &dto.OTPVerifyRequest{
+		Email: "123@123.com",
+		Code:  "123123",
+	}
+
+	key := "some_key"
+
+	for _, tc := range []struct {
+		Name           string
+		MimeType       string
+		RequestBody    interface{}
+		ValidatorError *validator.ErrorsResponse
+		ServiceErr     error
+		ExpectedStatus int
+		ExpectedBody   response.BaseResponse
+	}{
+		{
+			Name:           "Success verifying OTP",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    req,
+			ExpectedStatus: fiber.StatusOK,
+			ExpectedBody: response.BaseResponse{
+				Message: "otp verified successfully",
+				Data: map[string]interface{}{
+					"key": key,
+				},
+			},
+		},
+		{
+			Name:           "Failed verifying OTP: invalid request body",
+			MimeType:       fiber.MIMETextPlain,
+			RequestBody:    []byte("some invalid request"),
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
+			},
+		},
+		{
+			Name:        "Failed verifying OTP: validation error",
+			MimeType:    fiber.MIMEApplicationJSON,
+			RequestBody: req,
+			ValidatorError: &validator.ErrorsResponse{
+				{
+					Field:  "email",
+					Reason: "required",
+				},
+			},
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
+				Data: []interface{}{
+					map[string]interface{}{
+						"field":  "email",
+						"reason": "required",
+					},
+				},
+			},
+		},
+		{
+			Name:           "Failed verifying OTP: Invalid OTP",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    req,
+			ServiceErr:     err2.ErrInvalidOTP,
+			ExpectedStatus: fiber.StatusUnauthorized,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidOTP.Error(),
+			},
+		},
+		{
+			Name:           "Failed verifying OTP: service error",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    req,
+			ServiceErr:     errors.New("error"),
+			ExpectedStatus: fiber.StatusInternalServerError,
+			ExpectedBody: response.BaseResponse{
+				Message: "error",
+			},
+		},
+	} {
+		s.SetupTest()
+		s.Run(tc.Name, func() {
+			jsonBody, err := json.Marshal(tc.RequestBody)
+			s.NoError(err)
+
+			s.mockAuthService.On("VerifyOTP", mock.Anything, mock.Anything).Return(&key, tc.ServiceErr)
+			s.mockValidator.On("Validate", mock.Anything).Return(tc.ValidatorError)
+
+			s.fiberApp.Post("/", s.authController.VerifyOTP)
+			r := httptest.NewRequest("POST", "/", bytes.NewBuffer(jsonBody))
+			r.Header.Set(fiber.HeaderContentType, tc.MimeType)
+			resp, err := s.fiberApp.Test(r)
+			s.NoError(err)
+
+			var body response.BaseResponse
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			s.NoError(err)
+
+			s.Equal(tc.ExpectedStatus, resp.StatusCode)
+			s.Equal(tc.ExpectedBody, body)
+		})
+		s.TearDownTest()
+	}
+}
+
+func (s *TestSuiteAuthController) TestResetPassword() {
+	req := &dto.PasswordResetRequest{
+		Email:    "123@123.com",
+		Password: "123123123",
+		Key:      "someKey",
+	}
+
+	for _, tc := range []struct {
+		Name           string
+		MimeType       string
+		RequestBody    interface{}
+		ValidatorError *validator.ErrorsResponse
+		ServiceErr     error
+		ExpectedStatus int
+		ExpectedBody   response.BaseResponse
+	}{
+		{
+			Name:           "Success resetting password",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    req,
+			ExpectedStatus: fiber.StatusOK,
+			ExpectedBody: response.BaseResponse{
+				Message: "password reset successfully",
+			},
+		},
+		{
+			Name:           "Failed resetting password: invalid request body",
+			MimeType:       fiber.MIMETextPlain,
+			RequestBody:    []byte("some invalid request"),
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
+			},
+		},
+		{
+			Name:        "Failed resetting password: validation error",
+			MimeType:    fiber.MIMEApplicationJSON,
+			RequestBody: req,
+			ValidatorError: &validator.ErrorsResponse{
+				{
+					Field:  "email",
+					Reason: "required",
+				},
+			},
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
+				Data: []interface{}{
+					map[string]interface{}{
+						"field":  "email",
+						"reason": "required",
+					},
+				},
+			},
+		},
+		{
+			Name:           "Failed resetting password: service error",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    req,
+			ServiceErr:     errors.New("error"),
+			ExpectedStatus: fiber.StatusInternalServerError,
+			ExpectedBody: response.BaseResponse{
+				Message: "error",
+			},
+		},
+		{
+			Name:           "Failed resetting password: invalid key",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    req,
+			ServiceErr:     err2.ErrInvalidOTPToken,
+			ExpectedStatus: fiber.StatusUnauthorized,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidOTPToken.Error(),
+			},
+		},
+		{
+			Name:           "Failed resetting password: user not found",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    req,
+			ServiceErr:     err2.ErrUserNotFound,
+			ExpectedStatus: fiber.StatusNotFound,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrUserNotFound.Error(),
+			},
+		},
+		{
+			Name:           "Failed resetting password: unable to update password",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    req,
+			ServiceErr:     errors.New("error"),
+			ExpectedStatus: fiber.StatusInternalServerError,
+			ExpectedBody: response.BaseResponse{
+				Message: "error",
+			},
+		},
+	} {
+		s.SetupTest()
+		s.Run(tc.Name, func() {
+			jsonBody, err := json.Marshal(tc.RequestBody)
+			s.NoError(err)
+
+			s.mockAuthService.On("ResetPassword", mock.Anything, mock.Anything).Return(tc.ServiceErr)
+			s.mockValidator.On("Validate", mock.Anything).Return(tc.ValidatorError)
+
+			s.fiberApp.Post("/", s.authController.ResetPassword)
+			r := httptest.NewRequest("POST", "/", bytes.NewBuffer(jsonBody))
+			r.Header.Set(fiber.HeaderContentType, tc.MimeType)
+			resp, err := s.fiberApp.Test(r)
+			s.NoError(err)
+
+			var body response.BaseResponse
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			s.NoError(err)
+
+			s.Equal(tc.ExpectedStatus, resp.StatusCode)
+			s.Equal(tc.ExpectedBody, body)
+		})
+		s.TearDownTest()
+	}
+}
+
+func (s *TestSuiteAuthController) TestChangePassword() {
+	req := &dto.ChangePasswordRequest{
+		OldPassword: "123123123",
+		NewPassword: "456456456",
+	}
+
+	token := &jwt.Token{
+		Claims: jwt.MapClaims{
+			"uid": "123",
+		},
+	}
+
+	for _, tc := range []struct {
+		Name           string
+		MimeType       string
+		RequestBody    interface{}
+		ValidatorError *validator.ErrorsResponse
+		ServiceErr     error
+		ExpectedStatus int
+		ExpectedBody   response.BaseResponse
+	}{
+		{
+			Name:           "Success changing password",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    req,
+			ExpectedStatus: fiber.StatusOK,
+			ExpectedBody: response.BaseResponse{
+				Message: "password changed successfully",
+			},
+		},
+		{
+			Name:           "Failed changing password: invalid request body",
+			MimeType:       fiber.MIMETextPlain,
+			RequestBody:    []byte("some invalid request"),
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
+			},
+		},
+		{
+			Name:        "Failed changing password: validation error",
+			MimeType:    fiber.MIMEApplicationJSON,
+			RequestBody: req,
+			ValidatorError: &validator.ErrorsResponse{
+				{
+					Field:  "oldPassword",
+					Reason: "required",
+				},
+			},
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
+				Data: []interface{}{
+					map[string]interface{}{
+						"field":  "oldPassword",
+						"reason": "required",
+					},
+				},
+			},
+		},
+		{
+			Name:           "Failed changing password: service error",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    req,
+			ServiceErr:     errors.New("error"),
+			ExpectedStatus: fiber.StatusInternalServerError,
+			ExpectedBody: response.BaseResponse{
+				Message: "error",
+			},
+		},
+		{
+			Name:           "Failed changing password: user not found",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    req,
+			ServiceErr:     err2.ErrUserNotFound,
+			ExpectedStatus: fiber.StatusNotFound,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrUserNotFound.Error(),
+			},
+		},
+		{
+			Name:           "Failed changing password: old password is incorrect",
+			MimeType:       fiber.MIMEApplicationJSON,
+			RequestBody:    req,
+			ServiceErr:     err2.ErrPasswordNotMatch,
+			ExpectedStatus: fiber.StatusConflict,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrPasswordNotMatch.Error(),
+			},
+		},
+	} {
+		s.SetupTest()
+		s.Run(tc.Name, func() {
+			jsonBody, err := json.Marshal(tc.RequestBody)
+			s.NoError(err)
+
+			s.mockAuthService.On("ChangePassword", mock.Anything, mock.Anything, mock.Anything).Return(tc.ServiceErr)
+			s.mockValidator.On("Validate", mock.Anything).Return(tc.ValidatorError)
+
+			s.fiberApp.Put("/", func(ctx *fiber.Ctx) error {
+				ctx.Locals("user", token)
+				return s.authController.ChangePassword(ctx)
+			})
+			r := httptest.NewRequest("PUT", "/", bytes.NewBuffer(jsonBody))
+			r.Header.Set(fiber.HeaderContentType, tc.MimeType)
+			resp, err := s.fiberApp.Test(r)
+			s.NoError(err)
+
+			var body response.BaseResponse
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			s.NoError(err)
+
+			s.Equal(tc.ExpectedStatus, resp.StatusCode)
+			s.Equal(tc.ExpectedBody, body)
+		})
+		s.TearDownTest()
+	}
+}
+
 func TestAuthController(t *testing.T) {
 	suite.Run(t, new(TestSuiteAuthController))
 }

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"github.com/gofiber/fiber/v2"
@@ -12,12 +13,14 @@ import (
 	mockService "office-booking-backend/internal/user/service/mock"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
+	"office-booking-backend/pkg/utils/validator"
 	"testing"
 )
 
 type TestSuiteUserController struct {
 	suite.Suite
 	mockService    *mockService.UserServiceMock
+	mockValidator  *validator.ValidatorMock
 	userController *UserController
 	fiberApp       *fiber.App
 }
@@ -28,7 +31,8 @@ func TestUserController(t *testing.T) {
 
 func (s *TestSuiteUserController) SetupTest() {
 	s.mockService = new(mockService.UserServiceMock)
-	s.userController = NewUserController(s.mockService)
+	s.mockValidator = new(validator.ValidatorMock)
+	s.userController = NewUserController(s.mockService, s.mockValidator)
 	s.fiberApp = fiber.New(fiber.Config{
 		ErrorHandler: response.DefaultErrorHandler,
 	})
@@ -36,6 +40,7 @@ func (s *TestSuiteUserController) SetupTest() {
 
 func (s *TestSuiteUserController) TearDownTest() {
 	s.mockService = nil
+	s.mockValidator = nil
 	s.userController = nil
 	s.fiberApp = nil
 }
@@ -279,6 +284,273 @@ func (s *TestSuiteUserController) TestGetAllUsers() {
 			r := httptest.NewRequest("GET", "/", nil)
 			resp, err := s.fiberApp.Test(r)
 
+			s.NoError(err)
+
+			var body response.BaseResponse
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			s.NoError(err)
+
+			s.Equal(tc.ExpectedStatus, resp.StatusCode)
+			s.Equal(tc.ExpectedBody, body)
+		})
+		s.TearDownTest()
+	}
+}
+
+func (s *TestSuiteUserController) TestUpdateUser() {
+	for _, tc := range []struct {
+		Name           string
+		Request        interface{}
+		Mime           string
+		ValidationErr  *validator.ErrorsResponse
+		ServiceErr     error
+		ExpectedStatus int
+		ExpectedBody   response.BaseResponse
+	}{
+		{
+			Name: "success",
+			Request: dto.UserUpdateRequest{
+				Name:  "some_name",
+				Phone: "some_phone",
+			},
+			Mime:           fiber.MIMEApplicationJSON,
+			ExpectedStatus: fiber.StatusOK,
+			ExpectedBody: response.BaseResponse{
+				Message: "user updated successfully",
+			},
+		},
+		{
+			Name: "Fail: Invalid request",
+			Request: dto.UserUpdateRequest{
+				Name:  "some_name",
+				Phone: "some_phone",
+			},
+			Mime:           fiber.MIMEApplicationXML,
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
+			},
+		},
+		{
+			Name: "Fail: user not found",
+			Request: dto.UserUpdateRequest{
+				Name:  "some_name",
+				Phone: "some_phone",
+			},
+			Mime:           fiber.MIMEApplicationJSON,
+			ServiceErr:     err2.ErrUserNotFound,
+			ExpectedStatus: fiber.StatusNotFound,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrUserNotFound.Error(),
+			},
+		},
+		{
+			Name: "Fail: Duplicate email",
+			Request: dto.UserUpdateRequest{
+				Email: "some_email",
+			},
+			Mime:           fiber.MIMEApplicationJSON,
+			ServiceErr:     err2.ErrDuplicateEmail,
+			ExpectedStatus: fiber.StatusConflict,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrDuplicateEmail.Error(),
+			},
+		},
+		{
+			Name: "Fail: validation error",
+			Request: dto.UserUpdateRequest{
+				Email: "some_email",
+			},
+			Mime: fiber.MIMEApplicationJSON,
+			ValidationErr: &validator.ErrorsResponse{
+				{
+					Field:  "email",
+					Reason: "must be a valid email",
+				},
+			},
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
+				Data: []interface{}{
+					map[string]interface{}{
+						"field":  "email",
+						"reason": "must be a valid email",
+					},
+				},
+			},
+		},
+		{
+			Name: "Fail: Unknown error",
+			Request: dto.UserUpdateRequest{
+				Name:  "some_name",
+				Phone: "some_phone",
+			},
+			Mime:           fiber.MIMEApplicationJSON,
+			ServiceErr:     errors.New("some error"),
+			ExpectedStatus: fiber.StatusInternalServerError,
+			ExpectedBody: response.BaseResponse{
+				Message: "some error",
+			},
+		},
+	} {
+		s.SetupTest()
+		s.Run(tc.Name, func() {
+			s.mockValidator.On("Validate", mock.Anything).Return(tc.ValidationErr)
+			s.mockService.On("UpdateUserByID", mock.Anything, mock.Anything, mock.Anything).Return(tc.ServiceErr)
+
+			s.fiberApp.Put("/:userID", s.userController.UpdateUserByID)
+
+			jsonBody := new(bytes.Buffer)
+			err := json.NewEncoder(jsonBody).Encode(tc.Request)
+			s.NoError(err)
+
+			r := httptest.NewRequest("PUT", "/some_uid", jsonBody)
+			r.Header.Set("Content-Type", tc.Mime)
+			resp, err := s.fiberApp.Test(r)
+			s.NoError(err)
+
+			var body response.BaseResponse
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			s.NoError(err)
+
+			s.Equal(tc.ExpectedStatus, resp.StatusCode)
+			s.Equal(tc.ExpectedBody, body)
+		})
+		s.TearDownTest()
+	}
+}
+
+func (s *TestSuiteUserController) TestUpdateLoggedUser() {
+	token := &jwt.Token{
+		Claims: jwt.MapClaims{
+			"uid":  "some_uid",
+			"role": float64(1),
+		},
+	}
+
+	for _, tc := range []struct {
+		Name           string
+		Request        interface{}
+		Mime           string
+		ValidationErr  *validator.ErrorsResponse
+		ServiceErr     error
+		ExpectedStatus int
+		ExpectedBody   response.BaseResponse
+	}{
+		{
+			Name: "success",
+			Request: dto.UserUpdateRequest{
+				Name:  "some_name",
+				Phone: "some_phone",
+			},
+			Mime:           fiber.MIMEApplicationJSON,
+			ExpectedStatus: fiber.StatusOK,
+			ExpectedBody: response.BaseResponse{
+				Message: "user updated successfully",
+			},
+		},
+		{
+			Name: "Fail: Invalid request",
+			Request: dto.UserUpdateRequest{
+				Name:  "some_name",
+				Phone: "some_phone",
+			},
+			Mime:           fiber.MIMEApplicationXML,
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
+			},
+		},
+		{
+			Name: "Fail: user not found",
+			Request: dto.UserUpdateRequest{
+				Name:  "some_name",
+				Phone: "some_phone",
+			},
+			Mime:           fiber.MIMEApplicationJSON,
+			ServiceErr:     err2.ErrUserNotFound,
+			ExpectedStatus: fiber.StatusNotFound,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrUserNotFound.Error(),
+			},
+		},
+		{
+			Name: "Fail: Duplicate email",
+			Request: dto.UserUpdateRequest{
+				Email: "some_email",
+			},
+			Mime:           fiber.MIMEApplicationJSON,
+			ServiceErr:     err2.ErrDuplicateEmail,
+			ExpectedStatus: fiber.StatusConflict,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrDuplicateEmail.Error(),
+			},
+		},
+		{
+			Name: "Fail: Trying to change role",
+			Request: dto.UserUpdateRequest{
+				Role: 2,
+			},
+			Mime:           fiber.MIMEApplicationJSON,
+			ExpectedStatus: fiber.StatusForbidden,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrNoPermission.Error(),
+			},
+		},
+		{
+			Name: "Fail: validation error",
+			Request: dto.UserUpdateRequest{
+				Email: "some_email",
+			},
+			Mime: fiber.MIMEApplicationJSON,
+			ValidationErr: &validator.ErrorsResponse{
+				{
+					Field:  "email",
+					Reason: "must be a valid email",
+				},
+			},
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidRequestBody.Error(),
+				Data: []interface{}{
+					map[string]interface{}{
+						"field":  "email",
+						"reason": "must be a valid email",
+					},
+				},
+			},
+		},
+		{
+			Name: "Fail: Unknown error",
+			Request: dto.UserUpdateRequest{
+				Name:  "some_name",
+				Phone: "some_phone",
+			},
+			Mime:           fiber.MIMEApplicationJSON,
+			ServiceErr:     errors.New("some error"),
+			ExpectedStatus: fiber.StatusInternalServerError,
+			ExpectedBody: response.BaseResponse{
+				Message: "some error",
+			},
+		},
+	} {
+		s.SetupTest()
+		s.Run(tc.Name, func() {
+			s.mockValidator.On("Validate", mock.Anything).Return(tc.ValidationErr)
+			s.mockService.On("UpdateUserByID", mock.Anything, "some_uid", mock.Anything).Return(tc.ServiceErr)
+
+			s.fiberApp.Put("/", func(ctx *fiber.Ctx) error {
+				ctx.Locals("user", token)
+				return s.userController.UpdateLoggedUser(ctx)
+			})
+
+			jsonBody := new(bytes.Buffer)
+			err := json.NewEncoder(jsonBody).Encode(tc.Request)
+			s.NoError(err)
+
+			r := httptest.NewRequest("PUT", "/", jsonBody)
+			r.Header.Set("Content-Type", tc.Mime)
+			resp, err := s.fiberApp.Test(r)
 			s.NoError(err)
 
 			var body response.BaseResponse

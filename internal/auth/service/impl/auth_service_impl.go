@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	redis2 "github.com/go-redis/redis/v9"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"log"
 	"office-booking-backend/internal/auth/dto"
@@ -98,7 +99,22 @@ func (a *AuthServiceImpl) RefreshToken(ctx context.Context, token *dto.RefreshTo
 	if err != nil {
 		return nil, err
 	}
-	// TODO: check if refresh token is valid on redis
+
+	jwtMapClaim := jwt.MapClaims{
+		"uid": claims.UID,
+		"cat": claims.Category,
+		"jti": claims.ID,
+	}
+
+	ok, err := a.token.CheckToken(ctx, &jwtMapClaim)
+	if err != nil {
+		return nil, err
+	}
+
+	if !ok {
+		return nil, err2.ErrInvalidToken
+	}
+
 	user, err := a.userRepo.GetFullUserByID(ctx, claims.UID)
 	if err != nil {
 		log.Println("Error while finding user by id: ", err)

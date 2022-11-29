@@ -9,4 +9,7 @@ FROM alpine:3.16
 # Copy the binary from the builder image
 COPY --from=builder /bin/main .
 
-CMD [ "./main" ]
+RUN apk add dumb-init
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+
+CMD [ "sh", "-c", "./main" ]

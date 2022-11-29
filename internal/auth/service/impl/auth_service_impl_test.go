@@ -378,6 +378,8 @@ func (s *TestSuiteAuthService) TestRefreshToken() {
 		Name           string
 		TokenReturn    *dto.RefreshToken
 		TokenError     error
+		CheckReturn    bool
+		CheckErr       error
 		RepoReturn     *entity.User
 		RepoError      error
 		GenerateReturn *dto.TokenPair
@@ -392,6 +394,7 @@ func (s *TestSuiteAuthService) TestRefreshToken() {
 				UID:              "someId",
 				Category:         "someCategory",
 			},
+			CheckReturn: true,
 			RepoReturn: &entity.User{
 				ID:         "someId",
 				IsVerified: false,
@@ -413,10 +416,27 @@ func (s *TestSuiteAuthService) TestRefreshToken() {
 			ExpectedErr: errors.New("some error"),
 		},
 		{
+			Name:        "Fail: Error Checking Token",
+			TokenReturn: &dto.RefreshToken{},
+			CheckReturn: false,
+			CheckErr:    errors.New("some error"),
+			Expected:    nil,
+			ExpectedErr: errors.New("some error"),
+		},
+		{
+			Name:        "Fail: Refresh Token Not Found",
+			TokenReturn: &dto.RefreshToken{},
+			CheckReturn: false,
+			CheckErr:    nil,
+			Expected:    nil,
+			ExpectedErr: err2.ErrInvalidToken,
+		},
+		{
 			Name: "Fail: User Not Found",
 			TokenReturn: &dto.RefreshToken{
 				RegisteredClaims: jwt.RegisteredClaims{},
 			},
+			CheckReturn: true,
 			RepoReturn:  nil,
 			RepoError:   err2.ErrUserNotFound,
 			Expected:    nil,
@@ -427,6 +447,7 @@ func (s *TestSuiteAuthService) TestRefreshToken() {
 			TokenReturn: &dto.RefreshToken{
 				RegisteredClaims: jwt.RegisteredClaims{},
 			},
+			CheckReturn: true,
 			RepoReturn: &entity.User{
 				ID: "someId",
 			},
@@ -440,6 +461,7 @@ func (s *TestSuiteAuthService) TestRefreshToken() {
 		s.SetupTest()
 		s.Run(tc.Name, func() {
 			s.mockToken.On("ParseRefreshToken", mock.Anything).Return(tc.TokenReturn, tc.TokenError)
+			s.mockToken.On("CheckToken", mock.Anything, mock.Anything).Return(tc.CheckReturn, tc.CheckErr)
 			s.mockUserRepo.On("GetFullUserByID", mock.Anything, mock.Anything).Return(tc.RepoReturn, tc.RepoError)
 			s.mockToken.On("NewTokenPair", mock.Anything, tc.RepoReturn).Return(tc.GenerateReturn, tc.GenerateError)
 

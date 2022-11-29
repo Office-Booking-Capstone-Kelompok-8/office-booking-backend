@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"io"
 	"office-booking-backend/internal/user/dto"
 )
 
@@ -10,4 +11,5 @@ type UserService interface {
 	GetAllUsers(ctx context.Context, q string, limit int, offset int) (*dto.BriefUsersResponse, int64, error)
 	UpdateUserByID(ctx context.Context, id string, user *dto.UserUpdateRequest) error
 	DeleteUserByID(ctx context.Context, id string) error
+	UploadUserAvatar(ctx context.Context, id string, file io.Reader) error
 }

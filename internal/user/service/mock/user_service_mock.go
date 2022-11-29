@@ -3,6 +3,7 @@ package mock
 import (
 	"context"
 	"github.com/stretchr/testify/mock"
+	"io"
 	"office-booking-backend/internal/user/dto"
 )
 
@@ -27,5 +28,10 @@ func (m *UserServiceMock) UpdateUserByID(ctx context.Context, id string, user *d
 
 func (m *UserServiceMock) DeleteUserByID(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *UserServiceMock) UploadUserAvatar(ctx context.Context, id string, file io.Reader) error {
+	args := m.Called(ctx, id, file)
 	return args.Error(0)
 }

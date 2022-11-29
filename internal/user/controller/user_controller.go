@@ -173,10 +173,43 @@ func (u *UserController) DeleteUserByID(c *fiber.Ctx) error {
 		default:
 			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 		}
-
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
 		Message: "user deleted successfully",
+	})
+}
+
+func (u *UserController) UpdateUserAvatar(c *fiber.Ctx) error {
+	token := c.Locals("user").(*jwt.Token)
+	claims := token.Claims.(jwt.MapClaims)
+	uid := claims["uid"].(string)
+
+	form, err := c.MultipartForm()
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	file, err := form.File["picture"][0].Open()
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	if err := u.userService.UploadUserAvatar(c.Context(), uid, file); err != nil {
+		switch err {
+		case err2.ErrUserNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	err = file.Close()
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "user avatar updated successfully",
 	})
 }

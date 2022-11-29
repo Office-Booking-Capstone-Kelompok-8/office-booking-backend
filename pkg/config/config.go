@@ -51,6 +51,9 @@ func LoadConfig() map[string]string {
 	env["MAIL_API_KEY"] = os.Getenv("MAIL_API_KEY")
 	env["MAIL_SENDER"] = os.Getenv("MAIL_SENDER")
 	env["MAIL_SENDER_NAME"] = os.Getenv("MAIL_SENDER_NAME")
+	env["IMGKIT_PUBLIC_KEY"] = os.Getenv("IMGKIT_PUBLIC_KEY")
+	env["IMGKIT_PRIVATE_KEY"] = os.Getenv("IMGKIT_PRIVATE_KEY")
+	env["IMGKIT_URL_ENDPOINT"] = os.Getenv("IMGKIT_URL_ENDPOINT")
 	env["PORT"] = os.Getenv("PORT")
 	env["PREFORK"] = os.Getenv("PREFORK")
 

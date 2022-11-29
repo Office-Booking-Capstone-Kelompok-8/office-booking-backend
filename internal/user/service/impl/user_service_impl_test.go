@@ -10,6 +10,7 @@ import (
 	"office-booking-backend/internal/user/service"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
+	mockImageKitSrv "office-booking-backend/pkg/utils/imagekit"
 	"testing"
 )
 
@@ -17,18 +18,21 @@ type TestSuiteUserService struct {
 	suite.Suite
 	mockRepo           *mockRepo.UserRepositoryMock
 	mockReservationSrv *mockReservationSrv.ReservationServiceMock
+	mockImageKitSrv    *mockImageKitSrv.ImgKitServiceMock
 	userService        service.UserService
 }
 
 func (s *TestSuiteUserService) SetupTest() {
 	s.mockRepo = new(mockRepo.UserRepositoryMock)
 	s.mockReservationSrv = new(mockReservationSrv.ReservationServiceMock)
-	s.userService = NewUserServiceImpl(s.mockRepo, s.mockReservationSrv)
+	s.mockImageKitSrv = new(mockImageKitSrv.ImgKitServiceMock)
+	s.userService = NewUserServiceImpl(s.mockRepo, s.mockReservationSrv, s.mockImageKitSrv)
 }
 
 func (s *TestSuiteUserService) TearDownTest() {
 	s.mockRepo = nil
 	s.mockReservationSrv = nil
+	s.mockImageKitSrv = nil
 	s.userService = nil
 }
 

@@ -41,4 +41,10 @@ var (
 
 	// ErrUserHasReservation is returned when the user has reservation
 	ErrUserHasReservation = errors.New("user has active reservation")
+
+	//	ErrPictureServiceFailed is returned when the picture service failed
+	ErrPictureServiceFailed = errors.New("picture service failed")
+
+	// ErrProfilePictureNotFound is returned when the profile picture is not found
+	ErrProfilePictureNotFound = errors.New("profile picture not found")
 )

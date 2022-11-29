@@ -40,7 +40,7 @@ func (u *UserRepositoryMock) DeleteUserByID(ctx context.Context, id string) erro
 	return args.Error(0)
 }
 
-func (u *UserRepositoryMock) UpdateAvatarByID(ctx context.Context, id string, avatar *entity.ProfilePicture) error {
-	args := u.Called(ctx, id, avatar)
-	return args.Error(0)
+func (u *UserRepositoryMock) GetUserProfilePictureID(ctx context.Context, id string) (*entity.ProfilePicture, error) {
+	args := u.Called(ctx, id)
+	return args.Get(0).(*entity.ProfilePicture), args.Error(1)
 }

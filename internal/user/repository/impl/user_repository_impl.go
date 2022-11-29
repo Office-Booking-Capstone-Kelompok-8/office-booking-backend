@@ -85,7 +85,7 @@ func (u *UserRepositoryImpl) GetAllUsers(ctx context.Context, q string, limit in
 }
 
 func (u *UserRepositoryImpl) UpdateUserByID(ctx context.Context, user *entity.User) error {
-	res := u.db.WithContext(ctx).Updates(user)
+	res := u.db.WithContext(ctx).Where("id = ?", user.ID).Updates(user)
 	if res.Error != nil {
 		if strings.Contains(res.Error.Error(), "for key 'users.email'") {
 			return err2.ErrDuplicateEmail
@@ -102,7 +102,7 @@ func (u *UserRepositoryImpl) UpdateUserByID(ctx context.Context, user *entity.Us
 }
 
 func (u *UserRepositoryImpl) UpdateUserDetailByID(ctx context.Context, userDetail *entity.UserDetail) error {
-	res := u.db.WithContext(ctx).Updates(userDetail)
+	res := u.db.WithContext(ctx).Where("user_id = ?", userDetail.UserID).Updates(userDetail)
 	if res.Error != nil {
 		return res.Error
 	}

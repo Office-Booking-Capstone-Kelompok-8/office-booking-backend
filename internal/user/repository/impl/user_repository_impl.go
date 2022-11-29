@@ -46,10 +46,10 @@ func (u *UserRepositoryImpl) GetFullUserByID(ctx context.Context, id string) (*e
 		"LEFT JOIN profile_pictures pp ON d.picture_id = pp.id " +
 		"WHERE u.deleted_at IS NULL AND u.id = ? ORDER BY u.id "
 	rows, err := u.db.WithContext(ctx).Raw(query, id).Rows()
-	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	if !rows.Next() {
 		return nil, err2.ErrUserNotFound

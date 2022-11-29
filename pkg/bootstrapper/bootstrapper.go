@@ -16,6 +16,7 @@ import (
 	redisRepoPkg "office-booking-backend/pkg/database/redis"
 	"office-booking-backend/pkg/middlewares"
 	"office-booking-backend/pkg/routes"
+	imagekitServicePkg "office-booking-backend/pkg/utils/imagekit"
 	"office-booking-backend/pkg/utils/mail"
 	passwordServicePkg "office-booking-backend/pkg/utils/password"
 	"office-booking-backend/pkg/utils/random"
@@ -27,8 +28,9 @@ import (
 )
 
 func Init(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf map[string]string) {
-	passwordService := passwordServicePkg.NewPasswordFuncImpl()
 
+	imagekitService := imagekitServicePkg.NewImgKitService(conf["IMGKIT_PRIVATE_KEY"], conf["IMGKIT_PUBLIC_KEY"], conf["IMGKIT_URL_ENDPOINT"])
+	passwordService := passwordServicePkg.NewPasswordFuncImpl()
 	validation := validator.NewValidator()
 	generator := random.NewGenerator()
 	redisRepo := redisRepoPkg.NewRedisClient(redisClient)
@@ -42,7 +44,7 @@ func Init(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf map[strin
 	reservationService := reservationServicePkg.NewReservationServiceImpl(reservationRepository)
 
 	userRepository := userRepositoryPkg.NewUserRepositoryImpl(db)
-	userService := userServicePkg.NewUserServiceImpl(userRepository, reservationService)
+	userService := userServicePkg.NewUserServiceImpl(userRepository, reservationService, imagekitService)
 	userController := userControllerPkg.NewUserController(userService, validation)
 
 	authRepository := authRepositoryPkg.NewAuthRepositoryImpl(db)

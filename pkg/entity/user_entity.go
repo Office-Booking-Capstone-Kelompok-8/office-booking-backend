@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -42,4 +43,16 @@ type ProfilePicture struct {
 	Url       string
 	CreatedAt time.Time      `gorm:"autoCreateTime"`
 	DeletedAt gorm.DeletedAt `gorm:"index"`
+}
+
+type NullAbleProfilePicture struct {
+	ID  sql.NullString
+	Url sql.NullString
+}
+
+func (n *NullAbleProfilePicture) ConvertToProfilePicture() ProfilePicture {
+	return ProfilePicture{
+		ID:  n.ID.String,
+		Url: n.Url.String,
+	}
 }

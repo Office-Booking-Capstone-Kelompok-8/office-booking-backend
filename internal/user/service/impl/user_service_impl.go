@@ -2,24 +2,30 @@ package impl
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"golang.org/x/sync/errgroup"
+	"io"
 	"log"
 	service2 "office-booking-backend/internal/reservation/service"
 	"office-booking-backend/internal/user/dto"
 	"office-booking-backend/internal/user/repository"
 	"office-booking-backend/internal/user/service"
+	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
+	"office-booking-backend/pkg/utils/imagekit"
 )
 
 type UserServiceImpl struct {
 	userRepository     repository.UserRepository
 	reservationService service2.ReservationService
+	imgKitService      imagekit.ImgKitService
 }
 
-func NewUserServiceImpl(userRepository repository.UserRepository, resevationService service2.ReservationService) service.UserService {
+func NewUserServiceImpl(userRepository repository.UserRepository, resevationService service2.ReservationService, imgKitService imagekit.ImgKitService) service.UserService {
 	return &UserServiceImpl{
 		userRepository:     userRepository,
 		reservationService: resevationService,
+		imgKitService:      imgKitService,
 	}
 }
 
@@ -90,6 +96,28 @@ func (u *UserServiceImpl) DeleteUserByID(ctx context.Context, id string) error {
 	err = u.userRepository.DeleteUserByID(ctx, id)
 	if err != nil {
 		log.Println("Error while deleting user by id: ", err)
+		return err
+	}
+
+	return nil
+}
+
+func (u *UserServiceImpl) UploadUserAvatar(ctx context.Context, id string, file io.Reader) error {
+	fileName := uuid.New().String()
+
+	uploadResult, err := u.imgKitService.UploadFile(ctx, file, fileName, "avatars")
+	if err != nil {
+		log.Println("Error while uploading user avatar: ", err)
+		return err2.ErrPictureServiceFailed
+	}
+
+	user := new(entity.UserDetail)
+	user.Picture = *dto.NewPictureEntity(uploadResult)
+	user.UserID = id
+
+	err = u.userRepository.UpdateUserDetailByID(ctx, user)
+	if err != nil {
+		log.Println("Error while updating user detail by id: ", err)
 		return err
 	}
 

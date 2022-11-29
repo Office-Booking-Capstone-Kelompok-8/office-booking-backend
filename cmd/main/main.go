@@ -85,7 +85,7 @@ func gracefulShutdown(ctx context.Context, timeout time.Duration, ops map[string
 func main() {
 	env := config.LoadConfig()
 
-	redis := redis.InitRedis(env["REDIS_HOST"], env["REDIS_PORT"], env["REDIS_PASS"], env["REDIS_DB"])
+	rs := redis.InitRedis(env["REDIS_HOST"], env["REDIS_PORT"], env["REDIS_PASS"], env["REDIS_DB"])
 	db := mysql.InitDatabase(env["DB_HOST"], env["DB_PORT"], env["DB_USER"], env["DB_PASS"], env["DB_NAME"])
 
 	app := fiber.New(fiber.Config{
@@ -96,7 +96,7 @@ func main() {
 		ErrorHandler: response.DefaultErrorHandler,
 	})
 
-	bootstrapper.Init(app, db, redis, env)
+	bootstrapper.Init(app, db, rs, env)
 
 	wait := gracefulShutdown(context.Background(), config.SHUTDOWN_TIMEOUT*time.Second, map[string]operation{
 		"fiber": func(ctx context.Context) error {
@@ -112,7 +112,7 @@ func main() {
 		},
 
 		"redis": func(ctx context.Context) error {
-			return redis.Close()
+			return rs.Close()
 		},
 	})
 

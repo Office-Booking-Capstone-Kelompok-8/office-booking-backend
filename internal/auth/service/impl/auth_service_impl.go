@@ -98,7 +98,7 @@ func (a *AuthServiceImpl) RefreshToken(ctx context.Context, token *dto.RefreshTo
 	if err != nil {
 		return nil, err
 	}
-
+	// TODO: check if refresh token is valid on redis
 	user, err := a.userRepo.GetFullUserByID(ctx, claims.UID)
 	if err != nil {
 		log.Println("Error while finding user by id: ", err)

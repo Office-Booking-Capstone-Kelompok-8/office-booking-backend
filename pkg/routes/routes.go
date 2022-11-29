@@ -49,6 +49,7 @@ func (r *Routes) Init(app *fiber.App) {
 	user := v1.Group("/users", r.accessTokenMiddleware)
 	user.Get("/", r.userController.GetLoggedFullUserByID)
 	user.Put("/", r.userController.UpdateLoggedUser)
+	user.Put("/picture", r.userController.UpdateUserAvatar)
 	user.Put("/change-password", r.authController.ChangePassword)
 
 	// Admin routes

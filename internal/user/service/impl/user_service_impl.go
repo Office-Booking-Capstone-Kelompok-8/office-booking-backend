@@ -2,7 +2,6 @@ package impl
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"golang.org/x/sync/errgroup"
 	"io"
 	"log"
@@ -103,9 +102,13 @@ func (u *UserServiceImpl) DeleteUserByID(ctx context.Context, id string) error {
 }
 
 func (u *UserServiceImpl) UploadUserAvatar(ctx context.Context, id string, file io.Reader) error {
-	fileName := uuid.New().String()
+	picture, err := u.userRepository.GetUserProfilePictureID(ctx, id)
+	if err != nil {
+		log.Println("Error while getting user profile picture id: ", err)
+		return err
+	}
 
-	uploadResult, err := u.imgKitService.UploadFile(ctx, file, fileName, "avatars")
+	uploadResult, err := u.imgKitService.UploadFile(ctx, file, picture.ID, "avatars")
 	if err != nil {
 		log.Println("Error while uploading user avatar: ", err)
 		return err2.ErrPictureServiceFailed

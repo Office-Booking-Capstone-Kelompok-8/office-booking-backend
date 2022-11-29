@@ -12,4 +12,6 @@ type UserRepository interface {
 	UpdateUserByID(ctx context.Context, user *entity.User) error
 	UpdateUserDetailByID(ctx context.Context, userDetail *entity.UserDetail) error
 	DeleteUserByID(ctx context.Context, id string) error
+	GetUserProfilePictureID(ctx context.Context, id string) (*entity.ProfilePicture, error)
+	DeleteUserProfilePictureByID(ctx context.Context, pictureId string) error
 }

@@ -9,6 +9,7 @@ import (
 
 type ImgKitService interface {
 	UploadFile(ctx context.Context, file io.Reader, fileName string, folder string) (*uploader.UploadResult, error)
+	DeleteFile(ctx context.Context, fileId string) error
 }
 
 type ImgKitServiceImpl struct {
@@ -35,4 +36,9 @@ func (t *ImgKitServiceImpl) UploadFile(ctx context.Context, file io.Reader, file
 	}
 
 	return &uploadResp.Data, nil
+}
+
+func (t *ImgKitServiceImpl) DeleteFile(ctx context.Context, fileId string) error {
+	_, err := t.ImageKitClient.Media.DeleteFile(ctx, fileId)
+	return err
 }

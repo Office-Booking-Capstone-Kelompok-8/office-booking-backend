@@ -126,3 +126,26 @@ func (u *UserRepositoryImpl) DeleteUserByID(ctx context.Context, id string) erro
 
 	return nil
 }
+
+func (u *UserRepositoryImpl) GetUserProfilePictureID(ctx context.Context, id string) (*entity.ProfilePicture, error) {
+	userDetail := &entity.UserDetail{}
+	err := u.db.WithContext(ctx).Model(&entity.UserDetail{}).Select("picture_id").Joins("Picture").Where("user_id = ?", id).First(userDetail).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &userDetail.Picture, nil
+}
+
+func (u *UserRepositoryImpl) DeleteUserProfilePictureByID(ctx context.Context, pictureId string) error {
+	res := u.db.WithContext(ctx).Unscoped().Where("id = ?", pictureId).Delete(&entity.ProfilePicture{})
+	if res.Error != nil {
+		return res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return err2.ErrProfilePictureNotFound
+	}
+
+	return nil
+}

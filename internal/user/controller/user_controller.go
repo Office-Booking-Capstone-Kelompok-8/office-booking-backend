@@ -173,7 +173,6 @@ func (u *UserController) DeleteUserByID(c *fiber.Ctx) error {
 		default:
 			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 		}
-
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{

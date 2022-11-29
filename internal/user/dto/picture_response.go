@@ -8,6 +8,7 @@ import (
 func NewPictureEntity(picture *uploader.UploadResult) *entity.ProfilePicture {
 	return &entity.ProfilePicture{
 		ID:  picture.FileId,
+		Key: picture.Name,
 		Url: picture.Url,
 	}
 }

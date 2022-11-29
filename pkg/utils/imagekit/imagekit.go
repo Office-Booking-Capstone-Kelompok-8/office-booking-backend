@@ -27,9 +27,11 @@ func NewImgKitService(privateKey string, publicKey string, urlEndpoint string) I
 }
 
 func (t *ImgKitServiceImpl) UploadFile(ctx context.Context, file io.Reader, fileName string, folder string) (*uploader.UploadResult, error) {
+	falsePtr := false
 	uploadResp, err := t.ImageKitClient.Uploader.Upload(ctx, file, uploader.UploadParam{
-		FileName: fileName,
-		Folder:   folder,
+		FileName:          fileName,
+		Folder:            folder,
+		UseUniqueFileName: &falsePtr,
 	})
 	if err != nil {
 		return nil, err

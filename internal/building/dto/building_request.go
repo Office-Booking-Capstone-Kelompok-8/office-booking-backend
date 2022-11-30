@@ -3,22 +3,21 @@ package dto
 import "office-booking-backend/pkg/entity"
 
 type UpdateBuildingRequest struct {
-	ID          string            `json:"id" validate:"omitempty,uuid"`
 	Name        string            `json:"name" validate:"omitempty,min=3,max=100"`
-	Pictures    PicturesRequest   `json:"pictures" validate:"omitempty"`
+	Pictures    PicturesRequest   `json:"pictures" validate:"omitempty,dive"`
 	Description string            `json:"description" validate:"omitempty,min=3,max=1000"`
-	Facilities  FacilitiesRequest `json:"facilities" validate:"omitempty"`
+	Facilities  FacilitiesRequest `json:"facilities" validate:"omitempty,dive"`
 	Capacity    int               `json:"capacity" validate:"omitempty,gte=1,lte=1000"`
-	Prices      PriceRequest      `json:"price" validate:"omitempty"`
+	Prices      PriceRequest      `json:"price" validate:"omitempty,dive"`
 	Owner       string            `json:"owner" validate:"omitempty"`
-	Locations   LocationRequest   `json:"location" validate:"omitempty"`
+	Locations   LocationRequest   `json:"location" validate:"omitempty,dive"`
 }
 
-func (c *UpdateBuildingRequest) ToEntity() *entity.Building {
+func (c *UpdateBuildingRequest) ToEntity(buildingID string) *entity.Building {
 	return &entity.Building{
-		ID:           c.ID,
+		ID:           buildingID,
 		Name:         c.Name,
-		Pictures:     *c.Pictures.ToEntity(),
+		Pictures:     *c.Pictures.ToEntity(buildingID),
 		Description:  c.Description,
 		Facilities:   *c.Facilities.ToEntity(),
 		Capacity:     c.Capacity,
@@ -35,19 +34,20 @@ type PictureRequest struct {
 	PictureID string `json:"pictureId" validate:"required"`
 }
 
-func (p *PictureRequest) ToEntity() *entity.Picture {
+func (p *PictureRequest) ToEntity(buildingID string) *entity.Picture {
 	return &entity.Picture{
-		ID:    p.PictureID,
-		Index: p.Index,
+		ID:         p.PictureID,
+		BuildingID: buildingID,
+		Index:      p.Index,
 	}
 }
 
 type PicturesRequest []PictureRequest
 
-func (p *PicturesRequest) ToEntity() *entity.Pictures {
+func (p *PicturesRequest) ToEntity(buildingID string) *entity.Pictures {
 	var pics entity.Pictures
 	for _, picture := range *p {
-		pics = append(pics, *picture.ToEntity())
+		pics = append(pics, *picture.ToEntity(buildingID))
 	}
 	return &pics
 }

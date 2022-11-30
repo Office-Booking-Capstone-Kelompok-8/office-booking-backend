@@ -14,6 +14,6 @@ type BuildingService interface {
 	GetBuildingDetailByID(ctx context.Context, id string) (*dto.FullBuildingResponse, error)
 	GetFacilityCategories(ctx context.Context) (*dto.FacilityCategoriesResponse, error)
 	CreateEmptyBuilding(ctx context.Context, creatorID string) (string, error)
-	UpdateBuilding(ctx context.Context, building *dto.UpdateBuildingRequest) error
+	UpdateBuilding(ctx context.Context, building *dto.UpdateBuildingRequest, buildinID string) error
 	AddBuildingPicture(ctx context.Context, buildingID string, alt string, picture io.Reader) (*dto.AddPictureResponse, error)
 }

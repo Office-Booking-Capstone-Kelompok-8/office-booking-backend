@@ -2,6 +2,8 @@ package impl
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"office-booking-backend/internal/building/repository"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
@@ -65,7 +67,9 @@ func (b *BuildingRepositoryImpl) GetBuildingDetailByID(ctx context.Context, id s
 	building := &entity.Building{}
 
 	query := b.db.WithContext(ctx).
-		Preload("Pictures").
+		Preload("Pictures", func(db *gorm.DB) *gorm.DB {
+			return db.Order("`pictures`.`index` ASC")
+		}).
 		Preload("Facilities", func(db *gorm.DB) *gorm.DB {
 			return db.Joins("Category")
 		}).
@@ -114,16 +118,58 @@ func (b *BuildingRepositoryImpl) CreateBuilding(ctx context.Context, building *e
 }
 
 func (b *BuildingRepositoryImpl) UpdateBuildingByID(ctx context.Context, building *entity.Building) error {
-	res := b.db.WithContext(ctx).
-		Model(&entity.Building{}).
+	marshaled, _ := json.Marshal(building)
+	fmt.Println(string(marshaled))
+
+	tx := b.db.WithContext(ctx).Begin()
+	res := tx.WithContext(ctx).
 		Where("id = ?", building.ID).
 		Updates(building)
+	if res.Error != nil {
+		tx.Rollback()
+		return res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		tx.Rollback()
+		return err2.ErrBuildingNotFound
+	}
+
+	for _, picture := range building.Pictures {
+		res := tx.WithContext(ctx).
+			Model(&entity.Picture{}).
+			Where("id = ?", picture.ID).
+			Updates(picture)
+		if res.Error != nil {
+			tx.Rollback()
+			return res.Error
+		}
+
+		if res.RowsAffected == 0 {
+			tx.Rollback()
+			return err2.ErrPictureNotFound
+		}
+	}
+
+	err := tx.Commit().Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (b *BuildingRepositoryImpl) UpdateBuildingPictures(ctx context.Context, picture *entity.Picture) error {
+	res := b.db.WithContext(ctx).
+		Model(&entity.Picture{}).
+		Where("id = ?", picture.ID).
+		Updates(picture)
 	if res.Error != nil {
 		return res.Error
 	}
 
 	if res.RowsAffected == 0 {
-		return err2.ErrBuildingNotFound
+		return err2.ErrPictureNotFound
 	}
 
 	return nil

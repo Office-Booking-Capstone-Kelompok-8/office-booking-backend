@@ -256,16 +256,21 @@ func (b *BuildingController) UploadBuildingPicture(c *fiber.Ctx) error {
 }
 
 func (b *BuildingController) UpdateBuilding(c *fiber.Ctx) error {
+	buildingID := c.Params("buildingID")
+
 	building := new(dto2.UpdateBuildingRequest)
 	if err := c.BodyParser(building); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
 	if err := b.validator.Validate(building); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidRequestBody.Error(),
+			Data:    err,
+		})
 	}
 
-	if err := b.buildingService.UpdateBuilding(c.Context(), building); err != nil {
+	if err := b.buildingService.UpdateBuilding(c.Context(), building, buildingID); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 

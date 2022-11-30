@@ -96,7 +96,6 @@ func (b *BuildingServiceImpl) GetFacilityCategories(ctx context.Context) (*dto.F
 
 	facilityCategoriesResponse := dto.NewFacilityCategoriesResponse(facilityCategories)
 	return facilityCategoriesResponse, nil
-
 }
 
 func (b *BuildingServiceImpl) CreateEmptyBuilding(ctx context.Context, creatorID string) (string, error) {
@@ -112,8 +111,8 @@ func (b *BuildingServiceImpl) CreateEmptyBuilding(ctx context.Context, creatorID
 	return building.ID, nil
 }
 
-func (b *BuildingServiceImpl) UpdateBuilding(ctx context.Context, building *dto.UpdateBuildingRequest) error {
-	buildingEntity := building.ToEntity()
+func (b *BuildingServiceImpl) UpdateBuilding(ctx context.Context, building *dto.UpdateBuildingRequest, buildingID string) error {
+	buildingEntity := building.ToEntity(buildingID)
 
 	err := b.repo.UpdateBuildingByID(ctx, buildingEntity)
 	if err != nil {

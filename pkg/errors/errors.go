@@ -47,4 +47,7 @@ var (
 
 	// ErrPicureLimitExceeded is returned when the picture limit is exceeded
 	ErrPicureLimitExceeded = errors.New("picture limit exceeded")
+
+	// ErrPictureNotFound is returned when the picture is not found
+	ErrPictureNotFound = errors.New("picture not found")
 )

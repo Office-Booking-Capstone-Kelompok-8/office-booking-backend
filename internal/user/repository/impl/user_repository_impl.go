@@ -2,11 +2,12 @@ package repository
 
 import (
 	"context"
-	"gorm.io/gorm"
 	"office-booking-backend/internal/user/repository"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
 type UserRepositoryImpl struct {
@@ -67,7 +68,7 @@ func (u *UserRepositoryImpl) GetFullUserByID(ctx context.Context, id string) (*e
 	return user, nil
 }
 
-func (u *UserRepositoryImpl) GetAllUsers(ctx context.Context, q string, limit int, offset int) (*entity.Users, int64, error) {
+func (u *UserRepositoryImpl) GetAllUsers(ctx context.Context, q string, role int, limit int, offset int) (*entity.Users, int64, error) {
 	users := &entity.Users{}
 	var count int64
 
@@ -76,7 +77,12 @@ func (u *UserRepositoryImpl) GetAllUsers(ctx context.Context, q string, limit in
 		query = query.Where("`Detail`.`name` LIKE ?", "%"+q+"%")
 	}
 
-	err := query.Limit(limit).Offset(offset).Find(users).Count(&count).Error
+	err := query.
+		Where("role = ?", role).
+		Limit(limit).
+		Offset(offset).
+		Find(users).
+		Count(&count).Error
 	if err != nil {
 		return nil, 0, err
 	}

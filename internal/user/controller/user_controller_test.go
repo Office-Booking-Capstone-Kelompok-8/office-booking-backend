@@ -4,10 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v4"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/suite"
 	"net/http/httptest"
 	"office-booking-backend/internal/user/dto"
 	mockService "office-booking-backend/internal/user/service/mock"
@@ -15,6 +11,11 @@ import (
 	"office-booking-backend/pkg/response"
 	"office-booking-backend/pkg/utils/validator"
 	"testing"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v4"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
 )
 
 type TestSuiteUserController struct {
@@ -198,6 +199,7 @@ func (s *TestSuiteUserController) TestGetFullUserByID() {
 func (s *TestSuiteUserController) TestGetAllUsers() {
 	for _, tc := range []struct {
 		Name           string
+		Role           string
 		Q              string
 		Limit          string
 		Page           string
@@ -208,6 +210,7 @@ func (s *TestSuiteUserController) TestGetAllUsers() {
 	}{
 		{
 			Name: "success",
+			Role: "1",
 			ServiceReturns: &dto.BriefUsersResponse{
 				{
 					ID: "some_uid",
@@ -233,6 +236,7 @@ func (s *TestSuiteUserController) TestGetAllUsers() {
 		},
 		{
 			Name:           "Success: No user",
+			Role:           "1",
 			ServiceReturns: &dto.BriefUsersResponse{},
 			ExpectedStatus: fiber.StatusOK,
 			ExpectedBody: response.BaseResponse{
@@ -247,6 +251,7 @@ func (s *TestSuiteUserController) TestGetAllUsers() {
 		},
 		{
 			Name:           "Fail: Limit is not a number",
+			Role:           "1",
 			Limit:          "some_limit",
 			ExpectedStatus: fiber.StatusBadRequest,
 			ExpectedBody: response.BaseResponse{
@@ -255,6 +260,7 @@ func (s *TestSuiteUserController) TestGetAllUsers() {
 		},
 		{
 			Name:           "Fail: Page is not a number",
+			Role:           "1",
 			Page:           "some_page",
 			ExpectedStatus: fiber.StatusBadRequest,
 			ExpectedBody: response.BaseResponse{
@@ -262,7 +268,16 @@ func (s *TestSuiteUserController) TestGetAllUsers() {
 			},
 		},
 		{
+			Name:           "Fail: Role is not a number",
+			Role:           "some_role",
+			ExpectedStatus: fiber.StatusBadRequest,
+			ExpectedBody: response.BaseResponse{
+				Message: err2.ErrInvalidQueryParams.Error(),
+			},
+		},
+		{
 			Name:           "Fail: Unknown error",
+			Role:           "1",
 			ServiceReturns: nil,
 			ServiceErr:     errors.New("some error"),
 			ExpectedStatus: fiber.StatusInternalServerError,
@@ -277,6 +292,7 @@ func (s *TestSuiteUserController) TestGetAllUsers() {
 
 			s.fiberApp.Get("/", func(ctx *fiber.Ctx) error {
 				ctx.Context().QueryArgs().Set("q", tc.Q)
+				ctx.Context().QueryArgs().Set("role", tc.Role)
 				ctx.Context().QueryArgs().Set("limit", tc.Limit)
 				ctx.Context().QueryArgs().Set("page", tc.Page)
 				return s.userController.GetAllUsers(ctx)

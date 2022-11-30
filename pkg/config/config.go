@@ -28,9 +28,11 @@ const (
 	OTP_RESEND_TIME     = 1 * time.Minute
 )
 
+// Global config
 const (
-	USER_ROLE  = 1
-	ADMIN_ROLE = 2
+	USER_ROLE           = 1
+	ADMIN_ROLE          = 2
+	DEFAULT_USER_AVATAR = "https://ik.imagekit.io/fortyfour/default-image.jpg"
 )
 
 func LoadConfig() map[string]string {

@@ -503,17 +503,6 @@ func (s *TestSuiteUserController) TestUpdateLoggedUser() {
 			},
 		},
 		{
-			Name: "Fail: Trying to change role",
-			Request: dto.UserUpdateRequest{
-				Role: 2,
-			},
-			Mime:           fiber.MIMEApplicationJSON,
-			ExpectedStatus: fiber.StatusForbidden,
-			ExpectedBody: response.BaseResponse{
-				Message: err2.ErrNoPermission.Error(),
-			},
-		},
-		{
 			Name: "Fail: validation error",
 			Request: dto.UserUpdateRequest{
 				Email: "some_email",

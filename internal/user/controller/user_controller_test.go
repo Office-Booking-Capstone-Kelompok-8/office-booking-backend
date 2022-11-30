@@ -221,10 +221,11 @@ func (s *TestSuiteUserController) TestGetAllUsers() {
 				Message: "user fetched successfully",
 				Data: []interface{}{
 					map[string]interface{}{
-						"email": "",
-						"id":    "some_uid",
-						"name":  "",
-						"phone": "",
+						"email":   "",
+						"id":      "some_uid",
+						"name":    "",
+						"phone":   "",
+						"picture": "",
 					},
 				},
 				Meta: map[string]interface{}{

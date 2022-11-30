@@ -18,7 +18,7 @@ func (m *UserServiceMock) GetFullUserByID(ctx context.Context, id string) (*dto.
 }
 
 func (m *UserServiceMock) GetAllUsers(ctx context.Context, q string, role int, limit int, offset int) (*dto.BriefUsersResponse, int64, error) {
-	args := m.Called(ctx, q, limit, offset)
+	args := m.Called(ctx, q, role, limit, offset)
 	return args.Get(0).(*dto.BriefUsersResponse), args.Get(1).(int64), args.Error(2)
 }
 

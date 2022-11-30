@@ -53,13 +53,13 @@ func (s *TestSuiteUserService) TestGetFullUserByID_Fail() {
 }
 
 func (s *TestSuiteUserService) TestGetAllUsers_Success() {
-	s.mockRepo.On("GetAllUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&entity.Users{}, int64(0), nil)
+	s.mockRepo.On("GetAllUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&entity.Users{}, int64(0), nil)
 	_, _, err := s.userService.GetAllUsers(context.Background(), "", 1, 0, 0)
 	s.NoError(err)
 }
 
 func (s *TestSuiteUserService) TestGetAllUsers_Fail() {
-	s.mockRepo.On("GetAllUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return((*entity.Users)(nil), int64(0), err2.ErrUserNotFound)
+	s.mockRepo.On("GetAllUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return((*entity.Users)(nil), int64(0), err2.ErrUserNotFound)
 	_, _, err := s.userService.GetAllUsers(context.Background(), "", 1, 0, 0)
 	s.Error(err)
 }

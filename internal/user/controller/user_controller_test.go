@@ -288,7 +288,7 @@ func (s *TestSuiteUserController) TestGetAllUsers() {
 	} {
 		s.SetupTest()
 		s.Run(tc.Name, func() {
-			s.mockService.On("GetAllUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.ServiceReturns, int64(1), tc.ServiceErr)
+			s.mockService.On("GetAllUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.ServiceReturns, int64(1), tc.ServiceErr)
 
 			s.fiberApp.Get("/", func(ctx *fiber.Ctx) error {
 				ctx.Context().QueryArgs().Set("q", tc.Q)

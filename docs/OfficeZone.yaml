@@ -815,7 +815,40 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  /admin/buildings/picture:
+  /admin/buildings/id:
+    get:
+      summary: Get empty building ID for uploading building picture and creating building
+      operationId: getEmptyBuildingID
+      security:
+        - access_token: []
+      tags:
+        - Admin.Buildings
+      responses:
+        200:
+          description: Successfully retrieved empty building ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building id requested successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/buildings/{buildingID}/picture:
     post:
       summary: Upload a picture for a building
       operationId: uploadBuildingPicture
@@ -823,6 +856,15 @@ paths:
         - access_token: []
       tags:
         - Admin.Buildings
+      parameters:
+        - name: buildingID
+          in: path
+          description: ID of the building to be added with picture
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
       requestBody:
         content:
           multipart/form-data:
@@ -830,6 +872,8 @@ paths:
               type: object
               required:
                 - picture
+                - buildingID
+                - alt
               properties:
                 picture:
                   type: string
@@ -863,148 +907,6 @@ paths:
                       alt:
                         type: string
                         example: Jakarta Convention Center
-        401:
-          $ref: '#/components/responses/InvalidOrMissingToken'
-        403:
-          $ref: '#/components/responses/RolesNotSupported'
-        500:
-          $ref: '#/components/responses/InternalServerError'
-
-  /admin/buildings:
-    post:
-      summary: Create a building
-      operationId: createBuilding
-      security:
-        - access_token: []
-      tags:
-        - Admin.Buildings
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - name
-                - picture
-                - description
-                - facilities
-                - capacity
-                - price
-                - location
-              properties:
-                name:
-                  type: string
-                  example: Jakarta Convention Center
-                picture:
-                  type: array
-                  items:
-                    type: object
-                    required:
-                      - index
-                      - pictureID
-                    properties:
-                      index:
-                        type: integer
-                        example: 0
-                      pictureID:
-                        type: string
-                        example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
-                description:
-                  type: string
-                  example: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                facilities:
-                  type: array
-                  items:
-                    type: object
-                    required:
-                      - name
-                      - iconID
-                    properties:
-                      name:
-                        type: string
-                        example: Wifi
-                      iconID:
-                        type: integer
-                        example: 1
-                      description:
-                        type: string
-                        example: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                capacity:
-                  type: integer
-                  example: 1000
-                price:
-                  type: object
-                  required:
-                    - annual
-                    - monthly
-                  properties:
-                    annual:
-                      type: integer
-                      example: 100000000
-                    monthly:
-                      type: integer
-                      example: 10000000
-                location:
-                  type: object
-                  required:
-                    - districtID
-                    - cityID
-                    - address
-                    - geo
-                  properties:
-                    districtID:
-                      type: integer
-                      example: 1
-                    cityID:
-                      type: integer
-                      example: 1
-                    address:
-                      type: string
-                      example: Jl. MH Thamrin No. 1, RT.1/RW.2, Gondangdia, Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10340
-                    geo:
-                      type: object
-                      required:
-                        - lat
-                        - long
-                      properties:
-                        lat:
-                          type: number
-                          example: -6.175392
-                        long:
-                          type: number
-                          example: 106.827153
-        required: true
-      responses:
-        201:
-          description: Successfully created building
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: building created successfully
-                  data:
-                    type: object
-                    properties:
-                      buildingID:
-                        type: string
-                        format: uuid
-                        example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
-        400:
-          description: Invalid request body
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BaseResponse'
-              examples:
-                InvalidPictureID:
-                  $ref: '#/components/examples/InvalidPictureID'
-                InvalidDistrictID:
-                  $ref: '#/components/examples/InvalidDistrictID'
-                InvalidCityID:
-                  $ref: '#/components/examples/InvalidCityID'
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         403:
@@ -1109,6 +1011,10 @@ paths:
                         long:
                           type: number
                           example: 106.827153
+                isPublished:
+                  type: boolean
+                  description: Set to true to publish the building, only published building will be shown in the app. And to publish the building, the building must have at least 1 picture, 1 facility and all required fields must be filled.
+                  example: true
         required: true
       responses:
         200:

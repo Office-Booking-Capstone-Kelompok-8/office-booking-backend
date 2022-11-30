@@ -2,7 +2,7 @@ package dto
 
 import "office-booking-backend/pkg/entity"
 
-type BriefBuildingResponse struct {
+type BriefPublishedBuildingResponse struct {
 	ID       string    `json:"id"`
 	Name     string    `json:"name"`
 	Pictures string    `json:"pictures"`
@@ -11,11 +11,16 @@ type BriefBuildingResponse struct {
 	Location *Location `json:"location"`
 }
 
-func NewBriefBuildingResponse(building *entity.Building) *BriefBuildingResponse {
-	return &BriefBuildingResponse{
+func NewBriefPublishedBuildingResponse(building *entity.Building) *BriefPublishedBuildingResponse {
+	pictureUrl := ""
+	if len(building.Pictures) > 0 {
+		pictureUrl = building.Pictures[0].ThumbnailUrl
+	}
+
+	return &BriefPublishedBuildingResponse{
 		ID:       building.ID,
 		Name:     building.Name,
-		Pictures: building.Pictures[0].ThumbnailUrl,
+		Pictures: pictureUrl,
 		Prices: &Price{
 			AnnualPrice:  building.AnnualPrice,
 			MonthlyPrice: building.MonthlyPrice,
@@ -25,6 +30,49 @@ func NewBriefBuildingResponse(building *entity.Building) *BriefBuildingResponse 
 			City:     building.City.Name,
 			District: building.District.Name,
 		},
+	}
+}
+
+type BriefPublishedBuildingsResponse []BriefPublishedBuildingResponse
+
+func NewBriefPublishedBuildingsResponse(buildings *entity.Buildings) *BriefPublishedBuildingsResponse {
+	var briefBuildings BriefPublishedBuildingsResponse
+	for _, building := range *buildings {
+		briefBuildings = append(briefBuildings, *NewBriefPublishedBuildingResponse(&building))
+	}
+	return &briefBuildings
+}
+
+type BriefBuildingResponse struct {
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	Pictures    string    `json:"pictures"`
+	Prices      *Price    `json:"price"`
+	Owner       string    `json:"owner"`
+	Location    *Location `json:"location"`
+	IsPublished bool      `json:"is_published"`
+}
+
+func NewBriefBuildingResponse(building *entity.Building) *BriefBuildingResponse {
+	pictureUrl := ""
+	if len(building.Pictures) > 0 {
+		pictureUrl = building.Pictures[0].ThumbnailUrl
+	}
+
+	return &BriefBuildingResponse{
+		ID:       building.ID,
+		Name:     building.Name,
+		Pictures: pictureUrl,
+		Prices: &Price{
+			AnnualPrice:  building.AnnualPrice,
+			MonthlyPrice: building.MonthlyPrice,
+		},
+		Owner: building.Owner,
+		Location: &Location{
+			City:     building.City.Name,
+			District: building.District.Name,
+		},
+		IsPublished: building.IsPublished,
 	}
 }
 
@@ -109,6 +157,43 @@ type Geo struct {
 	Latitude  float64 `json:"lat"`
 }
 
+type FullPublishedBuildingResponse struct {
+	ID          string      `json:"id"`
+	Name        string      `json:"name"`
+	Pictures    *Pictures   `json:"pictures"`
+	Description string      `json:"description"`
+	Facilities  *Facilities `json:"facilities"`
+	Capacity    int         `json:"capacity"`
+	Prices      *Price      `json:"price"`
+	Owner       string      `json:"owner"`
+	Locations   *Location   `json:"location"`
+}
+
+func NewFullPublishedBuildingResponse(building *entity.Building) *FullPublishedBuildingResponse {
+	return &FullPublishedBuildingResponse{
+		ID:          building.ID,
+		Name:        building.Name,
+		Pictures:    NewPictures(&building.Pictures),
+		Description: building.Description,
+		Facilities:  NewFacilities(&building.Facilities),
+		Capacity:    building.Capacity,
+		Prices: &Price{
+			AnnualPrice:  building.AnnualPrice,
+			MonthlyPrice: building.MonthlyPrice,
+		},
+		Owner: building.Owner,
+		Locations: &Location{
+			Address:  building.Address,
+			City:     building.City.Name,
+			District: building.District.Name,
+			Geo: &Geo{
+				Longitude: building.Longitude,
+				Latitude:  building.Latitude,
+			},
+		},
+	}
+}
+
 type FullBuildingResponse struct {
 	ID          string      `json:"id"`
 	Name        string      `json:"name"`
@@ -119,6 +204,7 @@ type FullBuildingResponse struct {
 	Prices      *Price      `json:"price"`
 	Owner       string      `json:"owner"`
 	Locations   *Location   `json:"location"`
+	IsPublished bool        `json:"is_published"`
 }
 
 func NewFullBuildingResponse(building *entity.Building) *FullBuildingResponse {
@@ -143,6 +229,7 @@ func NewFullBuildingResponse(building *entity.Building) *FullBuildingResponse {
 				Latitude:  building.Latitude,
 			},
 		},
+		IsPublished: building.IsPublished,
 	}
 }
 

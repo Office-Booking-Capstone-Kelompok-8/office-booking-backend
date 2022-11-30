@@ -20,7 +20,7 @@ func NewBuildingRepositoryImpl(db *gorm.DB) repository.BuildingRepository {
 	}
 }
 
-func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, q string, cityID int, districtID int, startDate time.Time, endDate time.Time, limit int, offset int) (*entity.Buildings, int64, error) {
+func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, q string, cityID int, districtID int, startDate time.Time, endDate time.Time, limit int, offset int, isPublishedOnly bool) (*entity.Buildings, int64, error) {
 	buildings := &entity.Buildings{}
 	var count int64
 
@@ -45,8 +45,11 @@ func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, q string, 
 		query = query.Where("NOT EXISTS (SELECT * FROM `reservations` WHERE `reservations`.`building_id` = `buildings`.`id` AND `reservations`.`start_date` <= ? AND `reservations`.`end_date` >= ?)", endDate, startDate)
 	}
 
+	if isPublishedOnly {
+		query = query.Where("`buildings`.`is_published` = ?", true)
+	}
+
 	err := query.
-		Where("`buildings`.`is_published` = 1").
 		Limit(limit).
 		Offset(offset).
 		Find(buildings).
@@ -58,9 +61,10 @@ func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, q string, 
 	return buildings, count, nil
 }
 
-func (b *BuildingRepositoryImpl) GetBuildingDetailByID(ctx context.Context, id string) (*entity.Building, error) {
+func (b *BuildingRepositoryImpl) GetBuildingDetailByID(ctx context.Context, id string, isPublishedOnly bool) (*entity.Building, error) {
 	building := &entity.Building{}
-	err := b.db.WithContext(ctx).
+
+	query := b.db.WithContext(ctx).
 		Preload("Pictures").
 		Preload("Facilities", func(db *gorm.DB) *gorm.DB {
 			return db.Joins("Category")
@@ -68,9 +72,13 @@ func (b *BuildingRepositoryImpl) GetBuildingDetailByID(ctx context.Context, id s
 		Joins("District").
 		Joins("City").
 		Model(&entity.Building{}).
-		Where("`buildings`.`id` = ?", id).
-		Where("`buildings`.`is_published` = 1").
-		First(building).Error
+		Where("`buildings`.`id` = ?", id)
+
+	if isPublishedOnly {
+		query = query.Where("`buildings`.`is_published` = ?", true)
+	}
+
+	err := query.First(building).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, err2.ErrBuildingNotFound

@@ -2,7 +2,6 @@ package controller
 
 import (
 	"errors"
-	"github.com/golang-jwt/jwt/v4"
 	dto2 "office-booking-backend/internal/building/dto"
 	"office-booking-backend/internal/building/service"
 	err2 "office-booking-backend/pkg/errors"
@@ -10,6 +9,8 @@ import (
 	"office-booking-backend/pkg/utils/validator"
 	"strconv"
 	"time"
+
+	"github.com/golang-jwt/jwt/v4"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -24,6 +25,68 @@ func NewBuildingController(buildingService service.BuildingService, validator va
 		buildingService: buildingService,
 		validator:       validator,
 	}
+}
+
+func (b *BuildingController) GetAllPublishedBuildings(c *fiber.Ctx) error {
+	q := c.Query("q")
+	city := c.Query("city", "0")
+	district := c.Query("district", "0")
+	startDate := c.Query("startDate", "0001-01-01")
+	endDate := c.Query("endDate", "0001-01-01")
+	limit := c.Query("limit", "20")
+	page := c.Query("page", "1")
+
+	// Parse startDate to time.Time YYYY-MM-DD format
+	startDateParsed, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
+	}
+
+	// Parse endDate to time.Time YYYY-MM-DD format
+	endDateParsed, err := time.Parse("2006-01-02", endDate)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
+	}
+
+	cityInt, err := strconv.Atoi(city)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
+	}
+
+	districtInt, err := strconv.Atoi(district)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
+	}
+
+	limitInt, err := strconv.Atoi(limit)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
+	}
+
+	pageInt, err := strconv.Atoi(page)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
+	}
+
+	buildings, total, err := b.buildingService.GetAllPublishedBuildings(c.Context(), q, cityInt, districtInt, startDateParsed, endDateParsed, limitInt, pageInt)
+	if err != nil {
+		switch err {
+		case err2.ErrStartDateAfterEndDate:
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "buildings fetched successfully",
+		Data:    buildings,
+		Meta: fiber.Map{
+			"limit": limitInt,
+			"page":  pageInt,
+			"total": total,
+		},
+	})
 }
 
 func (b *BuildingController) GetAllBuildings(c *fiber.Ctx) error {
@@ -88,6 +151,24 @@ func (b *BuildingController) GetAllBuildings(c *fiber.Ctx) error {
 	})
 }
 
+func (b *BuildingController) GetPublishedBuildingDetailByID(c *fiber.Ctx) error {
+	id := c.Params("buildingID")
+
+	building, err := b.buildingService.GetPublishedBuildingDetailByID(c.Context(), id)
+	if err != nil {
+		if errors.Is(err, err2.ErrBuildingNotFound) {
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		}
+
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "building fetched successfully",
+		Data:    building,
+	})
+}
+
 func (b *BuildingController) GetBuildingDetailByID(c *fiber.Ctx) error {
 	id := c.Params("buildingID")
 
@@ -137,14 +218,10 @@ func (b *BuildingController) RequestNewBuildingID(c *fiber.Ctx) error {
 }
 
 func (b *BuildingController) UploadBuildingPicture(c *fiber.Ctx) error {
+	buildingID := c.Params("buildingID")
+
 	form, err := c.MultipartForm()
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
-	}
-
-	// Get buildingID from form
-	buildingID := form.Value["buildingID"][0]
-	if buildingID == "" {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
@@ -178,8 +255,8 @@ func (b *BuildingController) UploadBuildingPicture(c *fiber.Ctx) error {
 	})
 }
 
-func (b *BuildingController) CreateBuilding(c *fiber.Ctx) error {
-	building := new(dto2.CreateBuildingRequest)
+func (b *BuildingController) UpdateBuilding(c *fiber.Ctx) error {
+	building := new(dto2.UpdateBuildingRequest)
 	if err := c.BodyParser(building); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
@@ -188,11 +265,11 @@ func (b *BuildingController) CreateBuilding(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	if err := b.buildingService.CreateBuilding(c.Context(), building); err != nil {
+	if err := b.buildingService.UpdateBuilding(c.Context(), building); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
-		Message: "building created successfully",
+		Message: "building updated successfully",
 	})
 }

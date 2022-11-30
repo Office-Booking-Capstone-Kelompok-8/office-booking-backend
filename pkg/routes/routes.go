@@ -64,14 +64,16 @@ func (r *Routes) Init(app *fiber.App) {
 
 	// Admin.Building routes
 	aBuilding := admin.Group("/buildings")
+	aBuilding.Get("/", r.buildingController.GetAllBuildings)
 	aBuilding.Get("/id", r.buildingController.RequestNewBuildingID)
-	aBuilding.Post("/picture", r.buildingController.UploadBuildingPicture)
-	aBuilding.Post("/", r.buildingController.CreateBuilding)
+	aBuilding.Get("/:buildingID", r.buildingController.GetBuildingDetailByID)
+	aBuilding.Put("/:buildingID", r.buildingController.UpdateBuilding)
+	aBuilding.Post("/:buildingID/picture", r.buildingController.UploadBuildingPicture)
 
 	// Buildings routes
 	building := v1.Group("/buildings")
-	building.Get("/", r.buildingController.GetAllBuildings)
-	building.Get("/:buildingID", r.buildingController.GetBuildingDetailByID)
+	building.Get("/", r.buildingController.GetAllPublishedBuildings)
+	building.Get("/:buildingID", r.buildingController.GetPublishedBuildingDetailByID)
 	building.Get("/facilities/category", r.buildingController.GetFacilityCategories)
 
 }

@@ -30,7 +30,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
-	github.com/imagekit-developer/imagekit-go v0.0.0-20221027035115-2e643255882a // indirect
+	github.com/imagekit-developer/imagekit-go v0.0.0-20221027035115-2e643255882a
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.10 // indirect

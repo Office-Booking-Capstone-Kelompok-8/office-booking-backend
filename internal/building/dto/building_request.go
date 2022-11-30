@@ -2,19 +2,19 @@ package dto
 
 import "office-booking-backend/pkg/entity"
 
-type CreateBuildingRequest struct {
-	ID          string            `json:"id" validate:"required,uuid"`
-	Name        string            `json:"name" validate:"required,min=3,max=100"`
-	Pictures    PicturesRequest   `json:"pictures" validate:"required"`
-	Description string            `json:"description" validate:"required,min=3,max=1000"`
-	Facilities  FacilitiesRequest `json:"facilities" validate:"required"`
-	Capacity    int               `json:"capacity" validate:"required,gte=1,lte=1000"`
-	Prices      PriceRequest      `json:"price" validate:"required"`
-	Owner       string            `json:"owner" validate:"required"`
-	Locations   LocationRequest   `json:"location" validate:"required"`
+type UpdateBuildingRequest struct {
+	ID          string            `json:"id" validate:"omitempty,uuid"`
+	Name        string            `json:"name" validate:"omitempty,min=3,max=100"`
+	Pictures    PicturesRequest   `json:"pictures" validate:"omitempty"`
+	Description string            `json:"description" validate:"omitempty,min=3,max=1000"`
+	Facilities  FacilitiesRequest `json:"facilities" validate:"omitempty"`
+	Capacity    int               `json:"capacity" validate:"omitempty,gte=1,lte=1000"`
+	Prices      PriceRequest      `json:"price" validate:"omitempty"`
+	Owner       string            `json:"owner" validate:"omitempty"`
+	Locations   LocationRequest   `json:"location" validate:"omitempty"`
 }
 
-func (c *CreateBuildingRequest) ToEntity() *entity.Building {
+func (c *UpdateBuildingRequest) ToEntity() *entity.Building {
 	return &entity.Building{
 		ID:           c.ID,
 		Name:         c.Name,
@@ -77,18 +77,18 @@ func (f *FacilitiesRequest) ToEntity() *entity.Facilities {
 }
 
 type PriceRequest struct {
-	AnnualPrice  int `json:"annual" validate:"required,gte=0"`
-	MonthlyPrice int `json:"monthly" validate:"required,gte=0"`
+	AnnualPrice  int `json:"annual" validate:"omitempty,gte=0"`
+	MonthlyPrice int `json:"monthly" validate:"omitempty,gte=0"`
 }
 
 type LocationRequest struct {
-	Address    string `json:"address" validate:"required,min=3,max=100"`
-	DistrictID int    `json:"districtId" validate:"required"`
-	CityID     int    `json:"cityId" validate:"required"`
-	Geo        Geo    `json:"geo" validate:"required"`
+	Address    string `json:"address" validate:"omitempty,min=3,max=100"`
+	DistrictID int    `json:"districtId" validate:"omitempty"`
+	CityID     int    `json:"cityId" validate:"omitempty"`
+	Geo        Geo    `json:"geo" validate:"omitempty"`
 }
 
 type GeoRequest struct {
-	Longitude float64 `json:"long" validate:"required,latitude"`
-	Latitude  float64 `json:"lat" validate:"required,longitude"`
+	Longitude float64 `json:"long" validate:"omitempty,latitude"`
+	Latitude  float64 `json:"lat" validate:"omitempty,longitude"`
 }

@@ -2,7 +2,6 @@ package impl
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"io"
 	"log"
 	"office-booking-backend/internal/building/dto"
@@ -12,6 +11,8 @@ import (
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/utils/imagekit"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type BuildingServiceImpl struct {
@@ -26,6 +27,25 @@ func NewBuildingServiceImpl(repo repository.BuildingRepository, imgKitService im
 	}
 }
 
+func (b *BuildingServiceImpl) GetAllPublishedBuildings(ctx context.Context, q string, cityID int, districtID int, startDate time.Time, endDate time.Time, limit int, page int) (*dto.BriefPublishedBuildingsResponse, int64, error) {
+	//	check if start date is after end date
+	if startDate.After(endDate) {
+		return nil, 0, err2.ErrStartDateAfterEndDate
+	}
+
+	offset := (page - 1) * limit
+
+	//	get all buildings
+	buildings, count, err := b.repo.GetAllBuildings(ctx, q, cityID, districtID, startDate, endDate, limit, offset, true)
+	if err != nil {
+		log.Println("error when getting all buildings: ", err)
+		return nil, 0, err
+	}
+
+	buildingsResponse := dto.NewBriefPublishedBuildingsResponse(buildings)
+	return buildingsResponse, count, nil
+}
+
 func (b *BuildingServiceImpl) GetAllBuildings(ctx context.Context, q string, cityID int, districtID int, startDate time.Time, endDate time.Time, limit int, page int) (*dto.BriefBuildingsResponse, int64, error) {
 	//	check if start date is after end date
 	if startDate.After(endDate) {
@@ -35,7 +55,7 @@ func (b *BuildingServiceImpl) GetAllBuildings(ctx context.Context, q string, cit
 	offset := (page - 1) * limit
 
 	//	get all buildings
-	buildings, count, err := b.repo.GetAllBuildings(ctx, q, cityID, districtID, startDate, endDate, limit, offset)
+	buildings, count, err := b.repo.GetAllBuildings(ctx, q, cityID, districtID, startDate, endDate, limit, offset, false)
 	if err != nil {
 		log.Println("error when getting all buildings: ", err)
 		return nil, 0, err
@@ -45,8 +65,19 @@ func (b *BuildingServiceImpl) GetAllBuildings(ctx context.Context, q string, cit
 	return buildingsResponse, count, nil
 }
 
+func (b *BuildingServiceImpl) GetPublishedBuildingDetailByID(ctx context.Context, id string) (*dto.FullPublishedBuildingResponse, error) {
+	building, err := b.repo.GetBuildingDetailByID(ctx, id, true)
+	if err != nil {
+		log.Println("error when getting building detail by id: ", err)
+		return nil, err
+	}
+
+	buildingResponse := dto.NewFullPublishedBuildingResponse(building)
+	return buildingResponse, nil
+}
+
 func (b *BuildingServiceImpl) GetBuildingDetailByID(ctx context.Context, id string) (*dto.FullBuildingResponse, error) {
-	building, err := b.repo.GetBuildingDetailByID(ctx, id)
+	building, err := b.repo.GetBuildingDetailByID(ctx, id, false)
 	if err != nil {
 		log.Println("error when getting building detail by id: ", err)
 		return nil, err
@@ -81,7 +112,7 @@ func (b *BuildingServiceImpl) CreateEmptyBuilding(ctx context.Context, creatorID
 	return building.ID, nil
 }
 
-func (b *BuildingServiceImpl) CreateBuilding(ctx context.Context, building *dto.CreateBuildingRequest) error {
+func (b *BuildingServiceImpl) UpdateBuilding(ctx context.Context, building *dto.UpdateBuildingRequest) error {
 	buildingEntity := building.ToEntity()
 
 	err := b.repo.UpdateBuildingByID(ctx, buildingEntity)

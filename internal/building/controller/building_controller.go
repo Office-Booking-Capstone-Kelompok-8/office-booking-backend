@@ -136,9 +136,47 @@ func (b *BuildingController) RequestNewBuildingID(c *fiber.Ctx) error {
 	})
 }
 
-//func (b *BuildingController) UploadBuildingPicture(c *fiber.Ctx) error {
-//
-//}
+func (b *BuildingController) UploadBuildingPicture(c *fiber.Ctx) error {
+	form, err := c.MultipartForm()
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	// Get buildingID from form
+	buildingID := form.Value["buildingID"][0]
+	if buildingID == "" {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	// Get file alt text from form
+	altText := form.Value["alt"][0]
+	if altText == "" {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	// Get file from form
+	file, err := form.File["picture"][0].Open()
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	result, err := b.buildingService.AddBuildingPicture(c.Context(), buildingID, altText, file)
+	if err != nil {
+		switch err {
+		case err2.ErrBuildingNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		case err2.ErrPicureLimitExceeded:
+			return fiber.NewError(fiber.StatusConflict, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "building picture uploaded successfully",
+		Data:    result,
+	})
+}
 
 func (b *BuildingController) CreateBuilding(c *fiber.Ctx) error {
 	building := new(dto2.CreateBuildingRequest)

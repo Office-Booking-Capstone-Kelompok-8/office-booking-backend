@@ -45,6 +45,6 @@ var (
 	//	ErrPictureServiceFailed is returned when the picture service failed
 	ErrPictureServiceFailed = errors.New("picture service failed")
 
-	// ErrProfilePictureNotFound is returned when the profile picture is not found
-	ErrProfilePictureNotFound = errors.New("profile picture not found")
+	// ErrPicureLimitExceeded is returned when the picture limit is exceeded
+	ErrPicureLimitExceeded = errors.New("picture limit exceeded")
 )

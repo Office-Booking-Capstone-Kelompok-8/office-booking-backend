@@ -169,3 +169,17 @@ func NewFacilityCategoriesResponse(categories *entity.Categories) *FacilityCateg
 	}
 	return &categoriesResponse
 }
+
+type AddPictureResponse struct {
+	ID  string `json:"id"`
+	URL string `json:"url"`
+	Alt string `json:"alt"`
+}
+
+func NewAddPictureResponse(picture *entity.Picture) *AddPictureResponse {
+	return &AddPictureResponse{
+		ID:  picture.ID,
+		URL: picture.Url,
+		Alt: picture.Alt,
+	}
+}

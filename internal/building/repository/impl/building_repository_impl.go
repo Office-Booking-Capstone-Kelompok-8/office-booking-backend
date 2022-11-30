@@ -45,7 +45,12 @@ func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, q string, 
 		query = query.Where("NOT EXISTS (SELECT * FROM `reservations` WHERE `reservations`.`building_id` = `buildings`.`id` AND `reservations`.`start_date` <= ? AND `reservations`.`end_date` >= ?)", endDate, startDate)
 	}
 
-	err := query.Limit(limit).Offset(offset).Find(buildings).Count(&count).Error
+	err := query.
+		Where("`buildings`.`is_published` = 1").
+		Limit(limit).
+		Offset(offset).
+		Find(buildings).
+		Count(&count).Error
 	if err != nil {
 		return nil, 0, err
 	}
@@ -64,6 +69,7 @@ func (b *BuildingRepositoryImpl) GetBuildingDetailByID(ctx context.Context, id s
 		Joins("City").
 		Model(&entity.Building{}).
 		Where("`buildings`.`id` = ?", id).
+		Where("`buildings`.`is_published` = 1").
 		First(building).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -78,7 +84,9 @@ func (b *BuildingRepositoryImpl) GetBuildingDetailByID(ctx context.Context, id s
 
 func (b *BuildingRepositoryImpl) GetFacilityCategories(ctx context.Context) (*entity.Categories, error) {
 	categories := &entity.Categories{}
-	err := b.db.WithContext(ctx).Model(&entity.Category{}).Find(categories).Error
+	err := b.db.WithContext(ctx).
+		Model(&entity.Category{}).
+		Find(categories).Error
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +95,9 @@ func (b *BuildingRepositoryImpl) GetFacilityCategories(ctx context.Context) (*en
 }
 
 func (b *BuildingRepositoryImpl) CreateBuilding(ctx context.Context, building *entity.Building) error {
-	err := b.db.WithContext(ctx).Model(&entity.Building{}).Create(building).Error
+	err := b.db.WithContext(ctx).
+		Model(&entity.Building{}).
+		Create(building).Error
 	if err != nil {
 		return err
 	}
@@ -96,13 +106,53 @@ func (b *BuildingRepositoryImpl) CreateBuilding(ctx context.Context, building *e
 }
 
 func (b *BuildingRepositoryImpl) UpdateBuildingByID(ctx context.Context, building *entity.Building) error {
-	res := b.db.WithContext(ctx).Model(&entity.Building{}).Where("id = ?", building.ID).Updates(building)
+	res := b.db.WithContext(ctx).
+		Model(&entity.Building{}).
+		Where("id = ?", building.ID).
+		Updates(building)
 	if res.Error != nil {
 		return res.Error
 	}
 
 	if res.RowsAffected == 0 {
 		return err2.ErrBuildingNotFound
+	}
+
+	return nil
+}
+
+func (b *BuildingRepositoryImpl) CheckBuilding(ctx context.Context, buildingId string) (bool, error) {
+	var count int64
+	err := b.db.WithContext(ctx).
+		Model(&entity.Building{}).
+		Where("id = ?", buildingId).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func (b *BuildingRepositoryImpl) CountBuildingPicturesByID(ctx context.Context, buildingId string) (int64, error) {
+	var count int64
+	err := b.db.WithContext(ctx).
+		Model(&entity.Picture{}).
+		Where("building_id = ?", buildingId).
+		Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+func (b *BuildingRepositoryImpl) AddPicture(ctx context.Context, picture *entity.Picture) error {
+	err := b.db.WithContext(ctx).
+		Model(&entity.Picture{}).
+		Create(picture).Error
+	if err != nil {
+		return err
 	}
 
 	return nil

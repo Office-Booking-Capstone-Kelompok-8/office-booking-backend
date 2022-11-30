@@ -3,22 +3,26 @@ package impl
 import (
 	"context"
 	"github.com/google/uuid"
+	"io"
 	"log"
 	"office-booking-backend/internal/building/dto"
 	"office-booking-backend/internal/building/repository"
 	"office-booking-backend/internal/building/service"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
+	"office-booking-backend/pkg/utils/imagekit"
 	"time"
 )
 
 type BuildingServiceImpl struct {
-	repo repository.BuildingRepository
+	repo          repository.BuildingRepository
+	imgKitService imagekit.ImgKitService
 }
 
-func NewBuildingServiceImpl(repo repository.BuildingRepository) service.BuildingService {
+func NewBuildingServiceImpl(repo repository.BuildingRepository, imgKitService imagekit.ImgKitService) service.BuildingService {
 	return &BuildingServiceImpl{
-		repo: repo,
+		repo:          repo,
+		imgKitService: imgKitService,
 	}
 }
 
@@ -87,4 +91,52 @@ func (b *BuildingServiceImpl) CreateBuilding(ctx context.Context, building *dto.
 	}
 
 	return nil
+}
+
+func (b *BuildingServiceImpl) AddBuildingPicture(ctx context.Context, buildingID string, alt string, picture io.Reader) (*dto.AddPictureResponse, error) {
+	//	check if building exists
+	exists, err := b.repo.CheckBuilding(ctx, buildingID)
+	if err != nil {
+		log.Println("error when checking building: ", err)
+		return nil, err
+	}
+
+	if !exists {
+		return nil, err2.ErrBuildingNotFound
+	}
+
+	pictureCount, err := b.repo.CountBuildingPicturesByID(ctx, buildingID)
+	if err != nil {
+		log.Println("error when counting building pictures: ", err)
+		return nil, err
+	}
+
+	if pictureCount >= 10 {
+		return nil, err2.ErrPicureLimitExceeded
+	}
+
+	pictureKey := uuid.New().String()
+	uploadResult, err := b.imgKitService.UploadFile(ctx, picture, pictureKey, "buildings")
+	if err != nil {
+		log.Println("error when uploading file: ", err)
+		return nil, err2.ErrPictureServiceFailed
+	}
+
+	pictureEntity := &entity.Picture{
+		ID:           uploadResult.FileId,
+		BuildingID:   buildingID,
+		Index:        0,
+		Url:          uploadResult.Url,
+		ThumbnailUrl: uploadResult.ThumbnailUrl,
+		Alt:          alt,
+		Key:          pictureKey,
+	}
+
+	err = b.repo.AddPicture(ctx, pictureEntity)
+	if err != nil {
+		log.Println("error when adding building picture: ", err)
+		return nil, err
+	}
+
+	return dto.NewAddPictureResponse(pictureEntity), nil
 }

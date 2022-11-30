@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"io"
 	"office-booking-backend/internal/building/dto"
 	"time"
 )
@@ -12,4 +13,5 @@ type BuildingService interface {
 	GetFacilityCategories(ctx context.Context) (*dto.FacilityCategoriesResponse, error)
 	CreateEmptyBuilding(ctx context.Context, creatorID string) (string, error)
 	CreateBuilding(ctx context.Context, building *dto.CreateBuildingRequest) error
+	AddBuildingPicture(ctx context.Context, buildingID string, alt string, picture io.Reader) (*dto.AddPictureResponse, error)
 }

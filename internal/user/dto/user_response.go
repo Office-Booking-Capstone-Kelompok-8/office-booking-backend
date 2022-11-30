@@ -1,6 +1,9 @@
 package dto
 
-import "office-booking-backend/pkg/entity"
+import (
+	"office-booking-backend/pkg/config"
+	"office-booking-backend/pkg/entity"
+)
 
 type UserResponse struct {
 	ID         string `json:"id"`
@@ -12,7 +15,7 @@ type UserResponse struct {
 }
 
 func NewUserResponse(user *entity.User) *UserResponse {
-	return &UserResponse{
+	response := &UserResponse{
 		ID:         user.ID,
 		Email:      user.Email,
 		Name:       user.Detail.Name,
@@ -20,6 +23,12 @@ func NewUserResponse(user *entity.User) *UserResponse {
 		PictureURL: user.Detail.Picture.Url,
 		Role:       user.Role,
 	}
+
+	if user.Detail.Picture.Url == "" {
+		response.PictureURL = config.DEFAULT_USER_AVATAR
+	}
+
+	return response
 }
 
 type BriefUserResponse struct {

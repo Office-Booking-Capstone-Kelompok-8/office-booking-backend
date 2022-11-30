@@ -271,7 +271,16 @@ func (b *BuildingController) UpdateBuilding(c *fiber.Ctx) error {
 	}
 
 	if err := b.buildingService.UpdateBuilding(c.Context(), building, buildingID); err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		switch err {
+		case err2.ErrBuildingNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		case err2.ErrPictureNotFound:
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		case err2.ErrFacilityNotFound:
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{

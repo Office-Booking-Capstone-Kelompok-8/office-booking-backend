@@ -12,7 +12,6 @@ type BuildingRepository interface {
 	GetFacilityCategories(ctx context.Context) (*entity.Categories, error)
 	CreateBuilding(ctx context.Context, building *entity.Building) error
 	UpdateBuildingByID(ctx context.Context, building *entity.Building) error
-	UpdateBuildingPictures(ctx context.Context, picture *entity.Picture) error
 	CountBuildingPicturesByID(ctx context.Context, buildingId string) (int64, error)
 	CheckBuilding(ctx context.Context, buildingId string) (bool, error)
 	AddPicture(ctx context.Context, picture *entity.Picture) error

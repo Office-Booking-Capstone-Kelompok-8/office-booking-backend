@@ -50,4 +50,7 @@ var (
 
 	// ErrPictureNotFound is returned when the picture is not found
 	ErrPictureNotFound = errors.New("picture not found")
+
+	// ErrInvalidPicture is returned when the picture is invalid
+	ErrFacilityNotFound = errors.New("facility not found")
 )

@@ -123,6 +123,7 @@ func (b *BuildingRepositoryImpl) UpdateBuildingByID(ctx context.Context, buildin
 
 	tx := b.db.WithContext(ctx).Begin()
 	res := tx.WithContext(ctx).
+		Model(&entity.Building{}).
 		Where("id = ?", building.ID).
 		Updates(building)
 	if res.Error != nil {
@@ -136,6 +137,23 @@ func (b *BuildingRepositoryImpl) UpdateBuildingByID(ctx context.Context, buildin
 	}
 
 	for _, picture := range building.Pictures {
+		// Check if picture id is exist in database
+		var count int64
+		err := tx.WithContext(ctx).
+			Model(&entity.Picture{}).
+			Where("id = ?", picture.ID).
+			Count(&count).Error
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		if count == 0 {
+			tx.Rollback()
+			return err2.ErrPictureNotFound
+		}
+
+		// if facility id is exist, update it
 		res := tx.WithContext(ctx).
 			Model(&entity.Picture{}).
 			Where("id = ?", picture.ID).
@@ -144,32 +162,22 @@ func (b *BuildingRepositoryImpl) UpdateBuildingByID(ctx context.Context, buildin
 			tx.Rollback()
 			return res.Error
 		}
+	}
 
-		if res.RowsAffected == 0 {
+	for _, facility := range building.Facilities {
+		res := tx.WithContext(ctx).
+			Model(&entity.Facility{}).
+			Where("id = ?", facility.ID).
+			Save(facility)
+		if res.Error != nil {
 			tx.Rollback()
-			return err2.ErrPictureNotFound
+			return res.Error
 		}
 	}
 
 	err := tx.Commit().Error
 	if err != nil {
 		return err
-	}
-
-	return nil
-}
-
-func (b *BuildingRepositoryImpl) UpdateBuildingPictures(ctx context.Context, picture *entity.Picture) error {
-	res := b.db.WithContext(ctx).
-		Model(&entity.Picture{}).
-		Where("id = ?", picture.ID).
-		Updates(picture)
-	if res.Error != nil {
-		return res.Error
-	}
-
-	if res.RowsAffected == 0 {
-		return err2.ErrPictureNotFound
 	}
 
 	return nil

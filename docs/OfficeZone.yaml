@@ -1651,6 +1651,124 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
+  /admin/users/new-user:
+    post:
+      summary: Register a new user
+      operationId: registerUserfromAdmin
+      tags:
+        - Admin.Users
+      security:
+        - access_token: []
+      requestBody:
+        description: User registration details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: John Doe
+                email:
+                  type: string
+                  format: email
+                  example: oz@mail.com
+                password:
+                  type: string
+                  format: password
+                  example: password
+                phone:
+                  type: string
+                  example: +1 234 567 890
+      responses:
+        201:
+          description: Successfully registering a new user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: user created successfully
+        409:
+          $ref: '#/components/responses/EmailAlreadyUsed'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidEmail:
+                  $ref: '#/components/examples/InvalidEmail'
+                InvalidPassword:
+                  $ref: '#/components/examples/InvalidPassword'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/users/new-admin:
+    post:
+      summary: Register a new admin
+      operationId: registerAdminfromAdmin
+      tags:
+        - Admin.Users
+      security:
+        - access_token: []
+      requestBody:
+        description: Admin registration details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: John Doe
+                email:
+                  type: string
+                  format: email
+                  example: oz@mail.com
+                password:
+                  type: string
+                  format: password
+                  example: password
+                phone:
+                  type: string
+                  example: +1 234 567 890
+      responses:
+        201:
+          description: Successfully registering a new admin
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: admin created successfully
+        409:
+          $ref: '#/components/responses/EmailAlreadyUsed'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidEmail:
+                  $ref: '#/components/examples/InvalidEmail'
+                InvalidPassword:
+                  $ref: '#/components/examples/InvalidPassword'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
   /admin/users/{userID}:
     get:
       summary: Get user by ID

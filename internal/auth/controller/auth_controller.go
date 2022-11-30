@@ -2,13 +2,14 @@ package controller
 
 import (
 	"errors"
-	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v4"
 	"office-booking-backend/internal/auth/dto"
 	"office-booking-backend/internal/auth/service"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
 	"office-booking-backend/pkg/utils/validator"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type AuthController struct {
@@ -46,6 +47,32 @@ func (a *AuthController) RegisterUser(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusCreated).JSON(response.BaseResponse{
 		Message: "user registered successfully",
+	})
+}
+
+func (a *AuthController) RegisterAdmin(c *fiber.Ctx) error {
+	user := new(dto.SignupRequest)
+	if err := c.BodyParser(user); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	errs := a.validator.Validate(*user)
+	if errs != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidRequestBody.Error(),
+			Data:    errs,
+		})
+	}
+
+	if err := a.service.RegisterAdmin(c.Context(), user); err != nil {
+		if errors.Is(err, err2.ErrDuplicateEmail) {
+			return fiber.NewError(fiber.StatusConflict, err.Error())
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(response.BaseResponse{
+		Message: "admin registered successfully",
 	})
 }
 

@@ -141,10 +141,6 @@ func (u *UserController) UpdateLoggedUser(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	if user.Role != 0 && user.Role != int(claims["role"].(float64)) {
-		return fiber.NewError(fiber.StatusForbidden, err2.ErrNoPermission.Error())
-	}
-
 	if errs := u.validator.Validate(*user); errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
 			Message: err2.ErrInvalidRequestBody.Error(),

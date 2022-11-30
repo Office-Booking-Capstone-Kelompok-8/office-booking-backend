@@ -6,7 +6,6 @@ type UserUpdateRequest struct {
 	Email string `json:"email" validate:"omitempty,email"`
 	Name  string `json:"name"`
 	Phone string `json:"phone"`
-	Role  int    `json:"role" validate:"omitempty,oneof=1 2"`
 }
 
 func (u *UserUpdateRequest) ToEntity() *entity.User {
@@ -16,6 +15,5 @@ func (u *UserUpdateRequest) ToEntity() *entity.User {
 			Name:  u.Name,
 			Phone: u.Phone,
 		},
-		Role: u.Role,
 	}
 }

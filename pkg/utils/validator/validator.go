@@ -50,8 +50,16 @@ func (c *CustomValidator) Validate(s interface{}) *ErrorsResponse {
 			message = "must be a valid email"
 		case "min":
 			message = "must be at least " + err.Param() + " characters"
-		case "oneof":
-			message = "must be one of " + err.Param()
+		case "gte":
+			message = "must be greater than or equal to " + err.Param()
+		case "lte":
+			message = "must be less than or equal to " + err.Param()
+		case "latitude":
+			message = "must be a valid latitude"
+		case "longitude":
+			message = "must be a valid longitude"
+		case "uuid":
+			message = "must be a valid uuid"
 		}
 		errors = append(errors, ErrorResponse{
 			Field:  err.Field(),

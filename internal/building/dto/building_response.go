@@ -39,6 +39,7 @@ func NewBriefBuildingsResponse(buildings *entity.Buildings) *BriefBuildingsRespo
 }
 
 type Facility struct {
+	ID          int    `json:"id"`
 	Name        string `json:"name"`
 	Icon        string `json:"icon"`
 	IconName    string `json:"iconName"`
@@ -47,6 +48,7 @@ type Facility struct {
 
 func NewFacility(facility *entity.Facility) *Facility {
 	return &Facility{
+		ID:          facility.ID,
 		Name:        facility.Name,
 		Icon:        facility.Category.Url,
 		IconName:    facility.Category.Name,

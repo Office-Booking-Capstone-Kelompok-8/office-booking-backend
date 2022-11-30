@@ -2,6 +2,8 @@ package controller
 
 import (
 	"errors"
+	"github.com/golang-jwt/jwt/v4"
+	dto2 "office-booking-backend/internal/building/dto"
 	"office-booking-backend/internal/building/service"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
@@ -113,5 +115,46 @@ func (b *BuildingController) GetFacilityCategories(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
 		Message: "facility categories fetched successfully",
 		Data:    categories,
+	})
+}
+
+func (b *BuildingController) RequestNewBuildingID(c *fiber.Ctx) error {
+	token := c.Locals("user").(*jwt.Token)
+	claims := token.Claims.(jwt.MapClaims)
+	creatorID := claims["uid"].(string)
+
+	id, err := b.buildingService.CreateEmptyBuilding(c.Context(), creatorID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "building id requested successfully",
+		Data: fiber.Map{
+			"id": id,
+		},
+	})
+}
+
+//func (b *BuildingController) UploadBuildingPicture(c *fiber.Ctx) error {
+//
+//}
+
+func (b *BuildingController) CreateBuilding(c *fiber.Ctx) error {
+	building := new(dto2.CreateBuildingRequest)
+	if err := c.BodyParser(building); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	if err := b.validator.Validate(building); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	if err := b.buildingService.CreateBuilding(c.Context(), building); err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "building created successfully",
 	})
 }

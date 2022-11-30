@@ -2,10 +2,12 @@ package impl
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"log"
 	"office-booking-backend/internal/building/dto"
 	"office-booking-backend/internal/building/repository"
 	"office-booking-backend/internal/building/service"
+	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"time"
 )
@@ -60,4 +62,29 @@ func (b *BuildingServiceImpl) GetFacilityCategories(ctx context.Context) (*dto.F
 	facilityCategoriesResponse := dto.NewFacilityCategoriesResponse(facilityCategories)
 	return facilityCategoriesResponse, nil
 
+}
+
+func (b *BuildingServiceImpl) CreateEmptyBuilding(ctx context.Context, creatorID string) (string, error) {
+	building := new(entity.Building)
+	building.ID = uuid.New().String()
+	building.CreatedByID = creatorID
+	err := b.repo.CreateBuilding(ctx, building)
+	if err != nil {
+		log.Println("error when creating empty building: ", err)
+		return "", err
+	}
+
+	return building.ID, nil
+}
+
+func (b *BuildingServiceImpl) CreateBuilding(ctx context.Context, building *dto.CreateBuildingRequest) error {
+	buildingEntity := building.ToEntity()
+
+	err := b.repo.UpdateBuildingByID(ctx, buildingEntity)
+	if err != nil {
+		log.Println("error when creating building: ", err)
+		return err
+	}
+
+	return nil
 }

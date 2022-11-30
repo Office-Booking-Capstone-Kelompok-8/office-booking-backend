@@ -85,3 +85,25 @@ func (b *BuildingRepositoryImpl) GetFacilityCategories(ctx context.Context) (*en
 
 	return categories, nil
 }
+
+func (b *BuildingRepositoryImpl) CreateBuilding(ctx context.Context, building *entity.Building) error {
+	err := b.db.WithContext(ctx).Model(&entity.Building{}).Create(building).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (b *BuildingRepositoryImpl) UpdateBuildingByID(ctx context.Context, building *entity.Building) error {
+	res := b.db.WithContext(ctx).Model(&entity.Building{}).Where("id = ?", building.ID).Updates(building)
+	if res.Error != nil {
+		return res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return err2.ErrBuildingNotFound
+	}
+
+	return nil
+}

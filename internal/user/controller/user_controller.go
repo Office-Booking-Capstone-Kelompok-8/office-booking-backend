@@ -2,14 +2,15 @@ package controller
 
 import (
 	"errors"
-	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v4"
 	"office-booking-backend/internal/user/dto"
 	"office-booking-backend/internal/user/service"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
 	"office-booking-backend/pkg/utils/validator"
 	"strconv"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type UserController struct {
@@ -66,6 +67,7 @@ func (u *UserController) GetAllUsers(c *fiber.Ctx) error {
 	q := c.Query("q")
 	limit := c.Query("limit", "20")
 	page := c.Query("page", "1")
+	role := c.Query("role") // 1 - user, 2 - admin
 
 	limitInt, err := strconv.Atoi(limit)
 	if err != nil {
@@ -77,7 +79,12 @@ func (u *UserController) GetAllUsers(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
 	}
 
-	users, total, err := u.userService.GetAllUsers(c.Context(), q, limitInt, pageInt)
+	roleInt, err := strconv.Atoi(role)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
+	}
+
+	users, total, err := u.userService.GetAllUsers(c.Context(), q, roleInt, limitInt, pageInt)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
@@ -132,10 +139,6 @@ func (u *UserController) UpdateLoggedUser(c *fiber.Ctx) error {
 	user := new(dto.UserUpdateRequest)
 	if err := c.BodyParser(user); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
-	}
-
-	if user.Role != 0 && user.Role != int(claims["role"].(float64)) {
-		return fiber.NewError(fiber.StatusForbidden, err2.ErrNoPermission.Error())
 	}
 
 	if errs := u.validator.Validate(*user); errs != nil {

@@ -16,6 +16,11 @@ func (m *AuthServiceMock) RegisterUser(ctx context.Context, user *dto.SignupRequ
 	return args.Error(0)
 }
 
+func (m *AuthServiceMock) RegisterAdmin(ctx context.Context, user *dto.SignupRequest) error {
+	args := m.Called(ctx, user)
+	return args.Error(0)
+}
+
 func (m *AuthServiceMock) LoginUser(ctx context.Context, user *dto.LoginRequest) (*dto.TokenPair, error) {
 	args := m.Called(ctx, user)
 	return args.Get(0).(*dto.TokenPair), args.Error(1)

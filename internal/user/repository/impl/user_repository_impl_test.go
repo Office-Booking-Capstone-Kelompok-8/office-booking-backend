@@ -3,16 +3,17 @@ package repository
 import (
 	"context"
 	"errors"
-	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/suite"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 	"office-booking-backend/internal/user/repository"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"regexp"
 	"testing"
 	"time"
+
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/stretchr/testify/suite"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 type TestSuiteUserRepository struct {
@@ -136,8 +137,10 @@ func (s *TestSuiteUserRepository) TestGetFullUserByID() {
 }
 
 func (s *TestSuiteUserRepository) TestGetAllUsers() {
-	query := regexp.QuoteMeta("SELECT `users`.`id`,`users`.`email`,`users`.`password`,`users`.`role`,`users`.`is_verified`,`users`.`created_at`,`users`.`updated_at`,`users`.`deleted_at`,`Detail`.`user_id` AS `Detail__user_id`,`Detail`.`name` AS `Detail__name`,`Detail`.`phone` AS `Detail__phone`,`Detail`.`picture_id` AS `Detail__picture_id`,`Detail`.`created_at` AS `Detail__created_at`,`Detail`.`updated_at` AS `Detail__updated_at`,`Detail`.`deleted_at` AS `Detail__deleted_at` FROM `users` LEFT JOIN `user_details` `Detail` ON `users`.`id` = `Detail`.`user_id` AND `Detail`.`deleted_at` IS NULL WHERE `Detail`.`name` LIKE ? AND `users`.`deleted_at` IS NULL LIMIT 1 OFFSET 1")
-	count := regexp.QuoteMeta("SELECT count(*) FROM `users` LEFT JOIN `user_details` `Detail` ON `users`.`id` = `Detail`.`user_id` AND `Detail`.`deleted_at` IS NULL WHERE `Detail`.`name` LIKE ? AND `users`.`deleted_at` IS NULL LIMIT 1 OFFSET 1")
+	query := regexp.QuoteMeta("SELECT * FROM `users` WHERE `Detail`.`name` LIKE ? AND role = ? AND `users`.`deleted_at` IS NULL LIMIT 1 OFFSET 1")
+	preload := regexp.QuoteMeta("SELECT * FROM `user_details` WHERE `user_details`.`user_id` = ? AND `user_details`.`deleted_at` IS NULL")
+	preloadPicture := regexp.QuoteMeta("SELECT * FROM `profile_pictures` WHERE `profile_pictures`.`id` = ? AND `profile_pictures`.`deleted_at` IS NULL")
+	count := regexp.QuoteMeta("SELECT count(*) FROM `users` WHERE `Detail`.`name` LIKE ? AND role = ? AND `users`.`deleted_at` IS NULL LIMIT 1 OFFSET 1")
 	for _, tc := range []struct {
 		Name        string
 		Err         error
@@ -158,13 +161,17 @@ func (s *TestSuiteUserRepository) TestGetAllUsers() {
 		s.Run(tc.Name, func() {
 			if tc.Err != nil {
 				s.mock.ExpectQuery(query).WillReturnError(tc.Err)
+				s.mock.ExpectQuery(preload).WillReturnError(tc.Err)
+				s.mock.ExpectQuery(preloadPicture).WillReturnError(tc.Err)
 				s.mock.ExpectQuery(count).WillReturnError(tc.Err)
 			} else {
 				s.mock.ExpectQuery(query).WillReturnRows(sqlmock.NewRows([]string{"id", "username", "password", "role"}).AddRow(1, "123", "123", 1))
+				s.mock.ExpectQuery(preload).WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "name", "phone", "picture_id", "created_at", "updated_at", "deleted_at"}).AddRow(1, 1, "123", "123", 1, time.Now(), time.Now(), time.Now()))
+				s.mock.ExpectQuery(preloadPicture).WillReturnRows(sqlmock.NewRows([]string{"id", "url", "created_at", "updated_at", "deleted_at"}).AddRow(1, "123", time.Now(), time.Now(), time.Now()))
 				s.mock.ExpectQuery(count).WillReturnRows(sqlmock.NewRows([]string{"count(*)"}).AddRow(1))
 			}
 
-			_, _, err := s.repo.GetAllUsers(context.Background(), "123", 1, 1)
+			_, _, err := s.repo.GetAllUsers(context.Background(), "123", 1, 1, 1)
 
 			s.Equal(tc.ExpectedErr, err)
 		})

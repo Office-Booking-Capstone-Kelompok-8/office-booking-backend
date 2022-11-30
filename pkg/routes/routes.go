@@ -58,6 +58,8 @@ func (r *Routes) Init(app *fiber.App) {
 	// Admin.User routes
 	aUser := admin.Group("/users")
 	aUser.Get("/", r.userController.GetAllUsers)
+	aUser.Post("/new-admin", r.authController.RegisterAdmin)
+	aUser.Post("/new-user", r.authController.RegisterUser)
 	aUser.Get("/:userID", r.userController.GetFullUserByID)
 	aUser.Put("/:userID", r.userController.UpdateUserByID)
 	aUser.Delete("/:userID", r.userController.DeleteUserByID)

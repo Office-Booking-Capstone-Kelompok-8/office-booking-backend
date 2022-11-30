@@ -15,35 +15,41 @@ type UserResponse struct {
 }
 
 func NewUserResponse(user *entity.User) *UserResponse {
-	response := &UserResponse{
+	picture := user.Detail.Picture.Url
+	if picture == "" {
+		picture = config.DEFAULT_USER_AVATAR
+	}
+
+	return &UserResponse{
 		ID:         user.ID,
 		Email:      user.Email,
 		Name:       user.Detail.Name,
 		Phone:      user.Detail.Phone,
-		PictureURL: user.Detail.Picture.Url,
+		PictureURL: picture,
 		Role:       user.Role,
 	}
-
-	if user.Detail.Picture.Url == "" {
-		response.PictureURL = config.DEFAULT_USER_AVATAR
-	}
-
-	return response
 }
 
 type BriefUserResponse struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
-	Phone string `json:"phone"`
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Email   string `json:"email"`
+	Phone   string `json:"phone"`
+	Picture string `json:"picture"`
 }
 
 func NewBriefUserResponse(user *entity.User) *BriefUserResponse {
+	picture := user.Detail.Picture.Url
+	if picture == "" {
+		picture = config.DEFAULT_USER_AVATAR
+	}
+
 	return &BriefUserResponse{
-		ID:    user.ID,
-		Name:  user.Detail.Name,
-		Email: user.Email,
-		Phone: user.Detail.Phone,
+		ID:      user.ID,
+		Name:    user.Detail.Name,
+		Email:   user.Email,
+		Phone:   user.Detail.Phone,
+		Picture: picture,
 	}
 }
 

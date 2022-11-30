@@ -6,9 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	redis2 "github.com/go-redis/redis/v9"
-	"github.com/golang-jwt/jwt/v4"
-	"github.com/google/uuid"
 	"log"
 	"office-booking-backend/internal/auth/dto"
 	"office-booking-backend/internal/auth/repository"
@@ -21,6 +18,10 @@ import (
 	"office-booking-backend/pkg/utils/mail"
 	"office-booking-backend/pkg/utils/password"
 	"office-booking-backend/pkg/utils/random"
+
+	redis2 "github.com/go-redis/redis/v9"
+	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 )
 
 const DefaultPasswordCost = 10
@@ -55,6 +56,25 @@ func (a *AuthServiceImpl) RegisterUser(ctx context.Context, user *dto.SignupRequ
 
 	user.Password = string(hashedPassword)
 	userEntity := user.ToEntity()
+
+	err = a.repository.RegisterUser(ctx, userEntity)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return nil
+}
+
+func (a *AuthServiceImpl) RegisterAdmin(ctx context.Context, user *dto.SignupRequest) error {
+	hashedPassword, err := a.password.GenerateFromPassword([]byte(user.Password), DefaultPasswordCost)
+	if err != nil {
+		return err
+	}
+
+	user.Password = string(hashedPassword)
+	userEntity := user.ToEntity()
+	userEntity.Role = config.ADMIN_ROLE
 
 	err = a.repository.RegisterUser(ctx, userEntity)
 	if err != nil {

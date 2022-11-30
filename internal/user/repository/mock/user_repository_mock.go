@@ -2,8 +2,9 @@ package repository
 
 import (
 	"context"
-	"github.com/stretchr/testify/mock"
 	"office-booking-backend/pkg/entity"
+
+	"github.com/stretchr/testify/mock"
 )
 
 type UserRepositoryMock struct {
@@ -20,8 +21,8 @@ func (u *UserRepositoryMock) GetFullUserByID(ctx context.Context, id string) (*e
 	return args.Get(0).(*entity.User), args.Error(1)
 }
 
-func (u *UserRepositoryMock) GetAllUsers(ctx context.Context, q string, limit int, offset int) (*entity.Users, int64, error) {
-	args := u.Called(ctx, q, limit, offset)
+func (u *UserRepositoryMock) GetAllUsers(ctx context.Context, q string, role int, limit int, offset int) (*entity.Users, int64, error) {
+	args := u.Called(ctx, q, role, limit, offset)
 	return args.Get(0).(*entity.Users), args.Get(1).(int64), args.Error(2)
 }
 

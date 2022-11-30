@@ -2663,6 +2663,10 @@ components:
         phone:
           type: string
           example: 081234567890
+        picture:
+          type: string
+          format: url
+          example: https://ik.imagekit.io/fortyfour/default-image.jpg
     UserDetail:
       type: object
       properties:

@@ -2,8 +2,6 @@ package impl
 
 import (
 	"context"
-	"github.com/google/uuid"
-	"golang.org/x/sync/errgroup"
 	"io"
 	"log"
 	service2 "office-booking-backend/internal/reservation/service"
@@ -13,6 +11,9 @@ import (
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/utils/imagekit"
+
+	"github.com/google/uuid"
+	"golang.org/x/sync/errgroup"
 )
 
 type UserServiceImpl struct {
@@ -40,9 +41,9 @@ func (u *UserServiceImpl) GetFullUserByID(ctx context.Context, id string) (*dto.
 	return fullUser, nil
 }
 
-func (u *UserServiceImpl) GetAllUsers(ctx context.Context, q string, limit int, page int) (*dto.BriefUsersResponse, int64, error) {
+func (u *UserServiceImpl) GetAllUsers(ctx context.Context, q string, role int, limit int, page int) (*dto.BriefUsersResponse, int64, error) {
 	offset := (page - 1) * limit
-	users, total, err := u.userRepository.GetAllUsers(ctx, q, limit, offset)
+	users, total, err := u.userRepository.GetAllUsers(ctx, q, role, limit, offset)
 	if err != nil {
 		log.Println("Error while getting users: ", err)
 		return nil, 0, err

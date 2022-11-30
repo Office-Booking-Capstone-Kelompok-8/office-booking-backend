@@ -8,7 +8,7 @@ import (
 
 type UserService interface {
 	GetFullUserByID(ctx context.Context, id string) (*dto.UserResponse, error)
-	GetAllUsers(ctx context.Context, q string, limit int, offset int) (*dto.BriefUsersResponse, int64, error)
+	GetAllUsers(ctx context.Context, q string, role int, limit int, offset int) (*dto.BriefUsersResponse, int64, error)
 	UpdateUserByID(ctx context.Context, id string, user *dto.UserUpdateRequest) error
 	DeleteUserByID(ctx context.Context, id string) error
 	UploadUserAvatar(ctx context.Context, id string, file io.Reader) error

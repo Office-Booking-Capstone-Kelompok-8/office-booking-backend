@@ -3,16 +3,17 @@ package repository
 import (
 	"context"
 	"errors"
-	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/stretchr/testify/suite"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 	"office-booking-backend/internal/user/repository"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"regexp"
 	"testing"
 	"time"
+
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/stretchr/testify/suite"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 type TestSuiteUserRepository struct {
@@ -164,7 +165,7 @@ func (s *TestSuiteUserRepository) TestGetAllUsers() {
 				s.mock.ExpectQuery(count).WillReturnRows(sqlmock.NewRows([]string{"count(*)"}).AddRow(1))
 			}
 
-			_, _, err := s.repo.GetAllUsers(context.Background(), "123", 1, 1)
+			_, _, err := s.repo.GetAllUsers(context.Background(), "123", 1, 1, 1)
 
 			s.Equal(tc.ExpectedErr, err)
 		})

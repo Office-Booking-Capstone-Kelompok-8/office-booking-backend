@@ -15,6 +15,7 @@ import (
 
 type Validator interface {
 	ValidateStruct(s interface{}) *ErrorsResponse
+	ValidateVar(field interface{}, tag string) *ErrorsResponse
 }
 
 type CustomValidator struct {

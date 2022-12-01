@@ -4,13 +4,41 @@ import (
 	"office-booking-backend/pkg/entity"
 )
 
+type AddFacilityRequest struct {
+	Name        string `json:"name" validate:"required,min=3,max=100"`
+	IconID      int    `json:"iconId" validate:"required"`
+	Description string `json:"description" validate:"omitempty,min=3,max=1000"`
+}
+
+func (f *AddFacilityRequest) ToEntity(buildingID string) *entity.Facility {
+	return &entity.Facility{
+		BuildingID:  buildingID,
+		Name:        f.Name,
+		CategoryID:  f.IconID,
+		Description: f.Description,
+	}
+}
+
+type AddFacilitiesRequest []AddFacilityRequest
+
+func (f *AddFacilitiesRequest) ToEntity(buildingID string) *entity.Facilities {
+	var facilities entity.Facilities
+	for _, facility := range *f {
+		facilities = append(facilities, *facility.ToEntity(buildingID))
+	}
+	return &facilities
+}
+
 type UpdateBuildingRequest struct {
-	Name        string          `json:"name" validate:"omitempty,min=3,max=100"`
-	Description string          `json:"description" validate:"omitempty,min=3,max=10000"`
-	Capacity    int             `json:"capacity" validate:"omitempty,gte=1,lte=1000"`
-	Prices      PriceRequest    `json:"price" validate:"omitempty,dive"`
-	Owner       string          `json:"owner" validate:"omitempty"`
-	Locations   LocationRequest `json:"location" validate:"omitempty,dive"`
+	Name        string                  `json:"name" validate:"omitempty,min=3,max=100"`
+	Description string                  `json:"description" validate:"omitempty,min=3,max=10000"`
+	Facilities  UpdateFacilitiesRequest `json:"facilities" validate:"omitempty,dive"`
+	Pictures    PicturesRequest         `json:"pictures" validate:"omitempty,dive"`
+	Capacity    int                     `json:"capacity" validate:"omitempty,gte=1,lte=1000"`
+	Prices      PriceRequest            `json:"price" validate:"omitempty,dive"`
+	Owner       string                  `json:"owner" validate:"omitempty"`
+	Locations   LocationRequest         `json:"location" validate:"omitempty,dive"`
+	IsPublished bool                    `json:"isPublished" validate:"omitempty"`
 }
 
 func (c *UpdateBuildingRequest) ToEntity(buildingID string) *entity.Building {
@@ -18,12 +46,15 @@ func (c *UpdateBuildingRequest) ToEntity(buildingID string) *entity.Building {
 		ID:           buildingID,
 		Name:         c.Name,
 		Description:  c.Description,
+		Facilities:   *c.Facilities.ToEntity(buildingID),
+		Pictures:     *c.Pictures.ToEntity(buildingID),
 		Capacity:     c.Capacity,
 		AnnualPrice:  c.Prices.AnnualPrice,
 		MonthlyPrice: c.Prices.MonthlyPrice,
 		Owner:        c.Owner,
 		CityID:       c.Locations.CityID,
 		DistrictID:   c.Locations.DistrictID,
+		IsPublished:  c.IsPublished,
 	}
 }
 
@@ -50,14 +81,14 @@ func (p *PicturesRequest) ToEntity(buildingID string) *entity.Pictures {
 	return &pics
 }
 
-type FacilityRequest struct {
-	ID          int    `json:"id" validate:"omitempty"`
-	Name        string `json:"name" validate:"required"`
-	IconID      int    `json:"iconId" validate:"required"`
+type UpdateFacilityRequest struct {
+	ID          int    `json:"facilityId" validate:"required"`
+	Name        string `json:"name" validate:"omitempty,min=3,max=100"`
+	IconID      int    `json:"iconId" validate:"omitempty"`
 	Description string `json:"description" validate:"omitempty,min=3,max=1000"`
 }
 
-func (f *FacilityRequest) ToEntity(buildingID string) *entity.Facility {
+func (f *UpdateFacilityRequest) ToEntity(buildingID string) *entity.Facility {
 	return &entity.Facility{
 		ID:          f.ID,
 		BuildingID:  buildingID,
@@ -67,9 +98,9 @@ func (f *FacilityRequest) ToEntity(buildingID string) *entity.Facility {
 	}
 }
 
-type FacilitiesRequest []FacilityRequest
+type UpdateFacilitiesRequest []UpdateFacilityRequest
 
-func (f *FacilitiesRequest) ToEntity(buildingID string) *entity.Facilities {
+func (f *UpdateFacilitiesRequest) ToEntity(buildingID string) *entity.Facilities {
 	var facilities entity.Facilities
 	for _, facility := range *f {
 		facilities = append(facilities, *facility.ToEntity(buildingID))

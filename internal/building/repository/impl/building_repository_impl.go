@@ -5,6 +5,7 @@ import (
 	"office-booking-backend/internal/building/repository"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -116,19 +117,62 @@ func (b *BuildingRepositoryImpl) CreateBuilding(ctx context.Context, building *e
 }
 
 func (b *BuildingRepositoryImpl) UpdateBuildingByID(ctx context.Context, building *entity.Building) error {
-	res := b.db.WithContext(ctx).
-		Session(&gorm.Session{FullSaveAssociations: true}).
-		Where("id = ?", building.ID).
-		Updates(building)
-	if res.Error != nil {
-		return res.Error
-	}
+	//res := b.db.WithContext(ctx).
+	//	Model(&entity.Building{}).
+	//	Where("id = ?", building.ID).
+	//	Updates(building)
+	//if res.Error != nil {
+	//	return res.Error
+	//}
+	//
+	//if res.RowsAffected == 0 {
+	//	return err2.ErrBuildingNotFound
+	//}
+	// return nil
 
-	if res.RowsAffected == 0 {
-		return err2.ErrBuildingNotFound
-	}
+	return b.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		err := tx.WithContext(ctx).
+			Model(&entity.Building{}).
+			Where("id = ?", building.ID).
+			Updates(building).Error
+		if err != nil {
+			switch {
+			case strings.Contains(err.Error(), "CONSTRAINT `fk_buildings_city`"):
+				return err2.ErrInavalidCityID
+			case strings.Contains(err.Error(), "CONSTRAINT `fk_buildings_district`"):
+				return err2.ErrInvalidDistrictID
+			default:
+				return err
+			}
+		}
 
-	return nil
+		for _, picture := range building.Pictures {
+			err := tx.WithContext(ctx).
+				Model(&entity.Picture{}).
+				Where("id = ?", picture.ID).
+				Where("building_id = ?", building.ID).
+				Updates(picture).Error
+			if err != nil {
+				return err
+			}
+		}
+
+		for _, facility := range building.Facilities {
+			err := tx.WithContext(ctx).
+				Model(&entity.Facility{}).
+				Where("id = ?", facility.ID).
+				Where("building_id = ?", building.ID).
+				Updates(facility).Error
+			if err != nil {
+				if strings.Contains(err.Error(), "CONSTRAINT `fk_facilities_category` FOREIGN KEY (`category_id`)") {
+					return err2.ErrInvalidCategoryID
+				}
+				return err
+			}
+		}
+
+		return nil
+	})
 }
 
 func (b *BuildingRepositoryImpl) CheckBuilding(ctx context.Context, buildingId string) (bool, error) {
@@ -173,6 +217,9 @@ func (b *BuildingRepositoryImpl) AddFacility(ctx context.Context, facility *enti
 		Model(&entity.Facility{}).
 		Create(facility).Error
 	if err != nil {
+		if strings.Contains(err.Error(), "CONSTRAINT `fk_facilities_category` FOREIGN KEY (`category_id`)") {
+			return err2.ErrInvalidCategoryID
+		}
 		return err
 	}
 

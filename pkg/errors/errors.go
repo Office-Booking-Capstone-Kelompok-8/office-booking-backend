@@ -51,6 +51,18 @@ var (
 	// ErrPictureNotFound is returned when the picture is not found
 	ErrPictureNotFound = errors.New("picture not found")
 
-	// ErrInvalidPicture is returned when the picture is invalid
+	// ErrFacilityNotFound is returned when the picture is invalid
 	ErrFacilityNotFound = errors.New("facility not found")
+
+	// ErrInvalidCategoryID is returned when the category for facility is not found
+	ErrInvalidCategoryID = errors.New("facility category id is invalid")
+
+	// ErrInavalidCityID is returned when the city is not found
+	ErrInavalidCityID = errors.New("city id is invalid")
+
+	// ErrInvalidDistrictID is returned when the district is not found
+	ErrInvalidDistrictID = errors.New("district id is invalid")
+
+	// ErrNotPublishWorthy is returned when the building is not publish worthy (e.g. no picture)
+	ErrNotPublishWorthy = errors.New("building is not publish worthy")
 )

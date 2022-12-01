@@ -50,7 +50,7 @@ type BriefBuildingResponse struct {
 	Prices      *Price    `json:"price"`
 	Owner       string    `json:"owner"`
 	Location    *Location `json:"location"`
-	IsPublished bool      `json:"is_published"`
+	IsPublished bool      `json:"isPublished"`
 }
 
 func NewBriefBuildingResponse(building *entity.Building) *BriefBuildingResponse {
@@ -88,10 +88,10 @@ func NewBriefBuildingsResponse(buildings *entity.Buildings) *BriefBuildingsRespo
 
 type Facility struct {
 	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	Icon        string `json:"icon"`
+	Name        string `json:"name" validate:"required,min=3,max=100"`
+	Icon        string `json:"icon" `
 	IconName    string `json:"iconName"`
-	Description string `json:"description"`
+	Description string `json:"description" validate:"omitempty,min=3,max=100"`
 }
 
 func NewFacility(facility *entity.Facility) *Facility {
@@ -115,15 +115,15 @@ func NewFacilities(facilities *entity.Facilities) *Facilities {
 }
 
 type Price struct {
-	AnnualPrice  int `json:"annual"`
-	MonthlyPrice int `json:"monthly"`
+	AnnualPrice  int `json:"annual" validate:"required"`
+	MonthlyPrice int `json:"monthly" validate:"required"`
 }
 
 type Picture struct {
-	ID    string `json:"id"`
-	Index int    `json:"index"`
-	Url   string `json:"url"`
-	Alt   string `json:"alt"`
+	ID    string `json:"id" validate:"required"`
+	Index int    `json:"index" validate:"required,gte=0,lte=9"`
+	Url   string `json:"url" validate:"required,url"`
+	Alt   string `json:"alt" validate:"omitempty,min=3,max=100"`
 }
 
 func NewPicture(picture *entity.Picture) *Picture {
@@ -195,16 +195,16 @@ func NewFullPublishedBuildingResponse(building *entity.Building) *FullPublishedB
 }
 
 type FullBuildingResponse struct {
-	ID          string      `json:"id"`
-	Name        string      `json:"name"`
-	Pictures    *Pictures   `json:"pictures"`
-	Description string      `json:"description"`
-	Facilities  *Facilities `json:"facilities"`
-	Capacity    int         `json:"capacity"`
-	Prices      *Price      `json:"price"`
-	Owner       string      `json:"owner"`
-	Locations   *Location   `json:"location"`
-	IsPublished bool        `json:"is_published"`
+	ID          string      `json:"id" validate:"required,uuid"`
+	Name        string      `json:"name" validate:"required,min=3,max=100"`
+	Pictures    *Pictures   `json:"pictures" validate:"required,min=1,dive"`
+	Description string      `json:"description" validate:"required,min=3,max=10000"`
+	Facilities  *Facilities `json:"facilities" validate:"required,min=1,dive"`
+	Capacity    int         `json:"capacity" validate:"required,min=1,max=100"`
+	Prices      *Price      `json:"price" validate:"required,dive"`
+	Owner       string      `json:"owner" validate:"required"`
+	Locations   *Location   `json:"location" validate:"required,dive"`
+	IsPublished bool        `json:"isPublished" `
 }
 
 func NewFullBuildingResponse(building *entity.Building) *FullBuildingResponse {

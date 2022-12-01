@@ -10,6 +10,7 @@ import (
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/utils/imagekit"
+	"office-booking-backend/pkg/utils/validator"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,12 +19,14 @@ import (
 type BuildingServiceImpl struct {
 	repo          repository.BuildingRepository
 	imgKitService imagekit.ImgKitService
+	validator     validator.Validator
 }
 
-func NewBuildingServiceImpl(repo repository.BuildingRepository, imgKitService imagekit.ImgKitService) service.BuildingService {
+func NewBuildingServiceImpl(repo repository.BuildingRepository, imgKitService imagekit.ImgKitService, validator validator.Validator) service.BuildingService {
 	return &BuildingServiceImpl{
 		repo:          repo,
 		imgKitService: imgKitService,
+		validator:     validator,
 	}
 }
 
@@ -171,7 +174,7 @@ func (b *BuildingServiceImpl) AddBuildingPicture(ctx context.Context, buildingID
 	return dto.NewAddPictureResponse(pictureEntity), nil
 }
 
-func (b *BuildingServiceImpl) AddBuildingFacility(ctx context.Context, buildingID string, facilities *dto.FacilitiesRequest) error {
+func (b *BuildingServiceImpl) AddBuildingFacility(ctx context.Context, buildingID string, facilities *dto.AddFacilitiesRequest) error {
 	facilitiesEntity := facilities.ToEntity(buildingID)
 	err := b.repo.AddFacility(ctx, facilitiesEntity)
 	if err != nil {
@@ -180,4 +183,20 @@ func (b *BuildingServiceImpl) AddBuildingFacility(ctx context.Context, buildingI
 	}
 
 	return nil
+}
+
+func (b *BuildingServiceImpl) ValidateBuilding(ctx context.Context, buildingID string) (*validator.ErrorsResponse, error) {
+	//	get building
+	building, err := b.repo.GetBuildingDetailByID(ctx, buildingID, false)
+	if err != nil {
+		log.Println("error when getting building detail by id: ", err)
+		return nil, err
+	}
+
+	if building.IsPublished == true {
+		return nil, nil
+	}
+
+	buildingDtp := dto.NewFullBuildingResponse(building)
+	return b.validator.ValidateStruct(buildingDtp), err2.ErrNotPublishWorthy
 }

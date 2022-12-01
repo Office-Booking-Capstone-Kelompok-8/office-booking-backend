@@ -52,7 +52,7 @@ func Init(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf map[strin
 	authController := authControllerPkg.NewAuthController(authService, validation)
 
 	buildingRepository := buildingRepositoryPkg.NewBuildingRepositoryImpl(db)
-	buildingService := buildingServicePkg.NewBuildingServiceImpl(buildingRepository, imagekitService)
+	buildingService := buildingServicePkg.NewBuildingServiceImpl(buildingRepository, imagekitService, validation)
 	buildingController := buildingControllerPkg.NewBuildingController(buildingService, validation)
 
 	// init routes

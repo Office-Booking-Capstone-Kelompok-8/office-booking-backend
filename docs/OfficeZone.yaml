@@ -854,6 +854,90 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
+  /admin/buildings:
+    get:
+      summary: Get all buildings in the system
+      description: Get all buildings in the system with custom filters
+      operationId: getBuildings
+      tags:
+        - Admin.Buildings
+      parameters:
+        - name: q
+          in: query
+          description: Search query string to filter buildings by name (*)
+          required: false
+          schema:
+            type: string
+            example: 'building'
+        - name: city
+          in: query
+          description: City ID to filter buildings by city (*)
+          required: false
+          schema:
+            type: integer
+        - name: district
+          in: query
+          description: District ID to filter buildings by district (*)
+          required: false
+          schema:
+            type: integer
+        - name: startDate
+          in: query
+          description: Start date to filter buildings by availability in yyyy-mm-dd format. Must be used together with endDate
+          required: false
+          schema:
+            type: string
+            format: date
+            example: '2020-01-01'
+        - name: endDate
+          in: query
+          description: End date to filter buildings by availability in yyyy-mm-dd format. Must be used together with startDate
+          required: false
+          schema:
+            type: string
+            format: date
+            example: '2020-01-01'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/page'
+
+      responses:
+        200:
+          description: Successfully retrieved buildings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: buildings retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BriefBuildingDetails'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+
+        400:
+          description: Bad parameter request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidParameterValue:
+                  description: Invalid parameter value provided
+                  value:
+                    message: Invalid parameter value
+                ParameterRequired:
+                  description: Required parameter not provided
+                  value:
+                    message: Parameter required
+        404:
+          $ref: '#/components/responses/BuildingNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
   /admin/buildings/{buildingID}/picture:
     post:
       summary: Upload a picture for a building
@@ -1008,6 +1092,37 @@ paths:
 
 
   /admin/buildings/{buildingID}:
+    get:
+      summary: Get building detail by ID
+      operationId: getBuildingByID
+      tags:
+        - Admin.Buildings
+      parameters:
+        - name: buildingID
+          in: path
+          description: ID of the building
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426655440000
+      responses:
+        200:
+          description: Successfully retrieved building
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building retrieved successfully
+                  data:
+                    $ref: '#/components/schemas/BuildingDetails'
+        404:
+          $ref: '#/components/responses/BuildingNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
     put:
       summary: Update a building
       operationId: updateBuilding
@@ -1034,6 +1149,41 @@ paths:
                 name:
                   type: string
                   example: Jakarta Convention Center
+                facilities:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                    - facilityId
+                    properties:
+                      facilityId:
+                        type: integer
+                        example: 5
+                      name:
+                        type: string
+                        example: Meeting Room
+                      iconId:
+                        type: integer
+                        example: 5
+                      description:
+                        type: string
+                        example: Meeting room with 10 seats
+                pictures:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                    - pictureId
+                    properties:
+                      pictureId:
+                        type: string
+                        example: 6asjfakjdshkasd
+                      index:
+                        type: integer
+                        example: 5
+                      alt:
+                        type: string
+                        example: Jakarta Convention Center
                 description:
                   type: string
                   example: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
@@ -1090,7 +1240,7 @@ paths:
                     type: string
                     example: building updated successfully
         400:
-          description: Conflict
+          description: Bad request
           content:
             application/json:
               schema:
@@ -1100,6 +1250,16 @@ paths:
                   $ref: '#/components/examples/InvalidDistrictID'
                 InvalidCityID:
                   $ref: '#/components/examples/InvalidCityID'
+                InvalidFacilityCategory:
+                  $ref: '#/components/examples/InvalidFacilityIconID'
+                InvalidPictureIndex:
+                  $ref: '#/components/examples/InvalidPictureIndex'
+                InvalidFacilityName:
+                  $ref: '#/components/examples/InvalidFacilityName'
+                InvalidFacilityDescription:
+                  $ref: '#/components/examples/InvalidFacilityDescription'
+                InvalidFacilityIconID:
+                  $ref: '#/components/examples/InvalidFacilityIconID'
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         403:
@@ -2192,9 +2352,9 @@ paths:
 
   /buildings:
     get:
-      summary: Get all buildings in the system
-      description: Get all buildings in the system with custom filters. (*) denotes required to be provided at least one of the filters
-      operationId: getBuildings
+      summary: Get all published buildings in the system
+      description: Get all buildings in the system with custom filters.
+      operationId: getPublishedBuildings
       tags:
         - Buildings
       parameters:
@@ -2250,7 +2410,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/BriefBuildingDetails'
+                      $ref: '#/components/schemas/BriefPublishedBuildingDetails'
                   meta:
                     $ref: '#/components/schemas/Meta'
 
@@ -2275,8 +2435,8 @@ paths:
           $ref: '#/components/responses/InternalServerError'
   /buildings/{buildingID}:
     get:
-      summary: Get building detail by ID
-      operationId: getBuildingByID
+      summary: Get published building detail by ID
+      operationId: getPublishedBuildingByID
       tags:
         - Buildings
       parameters:
@@ -2300,7 +2460,7 @@ paths:
                     type: string
                     example: building retrieved successfully
                   data:
-                    $ref: '#/components/schemas/BuildingDetails'
+                    $ref: '#/components/schemas/PublishedBuildingDetails'
         404:
           $ref: '#/components/responses/BuildingNotFound'
         500:
@@ -2507,6 +2667,40 @@ components:
         limit:
           type: integer
           example: 20
+    BriefPublishedBuildingDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+        name:
+          type: string
+          example: Jakarta Convention Center
+        picture:
+          type: string
+          example: https://ik.imagekit.io/fortyfour/default-image.jpg
+        price:
+          type: object
+          properties:
+            annual:
+              type: integer
+              example: 12000000
+            monthly:
+              type: integer
+              example: 1000000
+        owner:
+          type: string
+          example: PT. Graha Sidang Pratama
+        location:
+          type: object
+          properties:
+            city:
+              type: string
+              example: Jakarta Selatan
+            district:
+              type: string
+              example: Tanah Abang
     BriefBuildingDetails:
       type: object
       properties:
@@ -2541,7 +2735,10 @@ components:
             district:
               type: string
               example: Tanah Abang
-    BuildingDetails:
+        isPublished:
+          type: boolean
+          example: true
+    PublishedBuildingDetails:
       type: object
       properties:
         id:
@@ -2625,6 +2822,93 @@ components:
                 long:
                   type: number
                   example: 106.827153
+    BuildingDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+        name:
+          type: string
+          example: Jakarta Convention Center
+        pictures:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+              index:
+                type: integer
+                example: 1
+              url:
+                type: string
+                example: https://ik.imagekit.io/fortyfour/default-image.jpg
+              alt:
+                type: string
+                example: Jakarta Convention Center
+        description:
+          type: string
+          example: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas quis bibendum ipsum. Maecenas in ante at velit rhoncus facilisis vel lacinia turpis. Fusce blandit ac augue a tincidunt. Pellentesque tristique augue rhoncus tortor dapibus vulputate condimentum in dolor. Aenean imperdiet augue eu facilisis luctus. Vivamus pretium in mauris sed interdum. Pellentesque cursus sem eget turpis tempus, nec ultrices elit porta.
+        facilities:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                example: Meeting Room
+              icon:
+                type: string
+                example: https://ik.imagekit.io/fortyfour/default-image.jpg
+              iconName:
+                type: string
+                example: meeting-room
+              description:
+                type: string
+                example: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas quis bibendum ipsum.
+        capacity:
+          type: integer
+          example: 1000
+        price:
+          type: object
+          properties:
+            annual:
+              type: integer
+              example: 12000000
+            monthly:
+              type: integer
+              example: 1000000
+        owner:
+          type: string
+          example: PT. Graha Sidang Pratama
+        location:
+          type: object
+          properties:
+            address:
+              type: string
+              example: Jl. Jend. Sudirman Kav. 1
+            city:
+              type: string
+              example: Jakarta Selatan
+            district:
+              type: string
+              example: Tanah Abang
+            geo:
+              type: object
+              properties:
+                lat:
+                  type: number
+                  example: -6.1753924
+                long:
+                  type: number
+                  example: 106.827153
+        isPublished:
+          type: boolean
+          example: true
 
     ReservationsStat:
       type: object

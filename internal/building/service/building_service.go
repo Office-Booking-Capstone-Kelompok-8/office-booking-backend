@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"office-booking-backend/internal/building/dto"
+	"office-booking-backend/pkg/utils/validator"
 	"time"
 )
 
@@ -14,7 +15,8 @@ type BuildingService interface {
 	GetBuildingDetailByID(ctx context.Context, id string) (*dto.FullBuildingResponse, error)
 	GetFacilityCategories(ctx context.Context) (*dto.FacilityCategoriesResponse, error)
 	CreateEmptyBuilding(ctx context.Context, creatorID string) (string, error)
-	UpdateBuilding(ctx context.Context, building *dto.UpdateBuildingRequest, buildinID string) error
+	UpdateBuilding(ctx context.Context, building *dto.UpdateBuildingRequest, buildingID string) error
 	AddBuildingPicture(ctx context.Context, buildingID string, index int, alt string, picture io.Reader) (*dto.AddPictureResponse, error)
-	AddBuildingFacility(ctx context.Context, buildingID string, facilities *dto.FacilitiesRequest) error
+	AddBuildingFacility(ctx context.Context, buildingID string, facilities *dto.AddFacilitiesRequest) error
+	ValidateBuilding(ctx context.Context, buildingID string) (*validator.ErrorsResponse, error)
 }

@@ -218,7 +218,7 @@ func (b *BuildingController) RequestNewBuildingID(c *fiber.Ctx) error {
 	})
 }
 
-func (b *BuildingController) UploadBuildingPicture(c *fiber.Ctx) error {
+func (b *BuildingController) AddBuildingPicture(c *fiber.Ctx) error {
 	buildingID := c.Params("buildingID")
 
 	altText := c.FormValue("alt", "")
@@ -289,6 +289,15 @@ func (b *BuildingController) UpdateBuilding(c *fiber.Ctx) error {
 		})
 	}
 
+	if building.IsPublished == true {
+		if errs, err := b.buildingService.ValidateBuilding(c.Context(), buildingID); err != nil {
+			return c.Status(fiber.StatusConflict).JSON(response.BaseResponse{
+				Message: err.Error(),
+				Data:    errs,
+			})
+		}
+	}
+
 	if err := b.buildingService.UpdateBuilding(c.Context(), building, buildingID); err != nil {
 		switch err {
 		case err2.ErrBuildingNotFound:
@@ -310,12 +319,12 @@ func (b *BuildingController) UpdateBuilding(c *fiber.Ctx) error {
 func (b *BuildingController) AddBuildingFacilities(c *fiber.Ctx) error {
 	buildingID := c.Params("buildingID")
 
-	facilities := new(dto.FacilitiesRequest)
+	facilities := new(dto.AddFacilitiesRequest)
 	if err := c.BodyParser(facilities); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	if errs := b.validator.ValidateStruct(facilities); errs != nil {
+	if errs := b.validator.ValidateVar(facilities, "required,dive"); errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
 			Message: err2.ErrInvalidRequestBody.Error(),
 			Data:    errs,
@@ -325,7 +334,7 @@ func (b *BuildingController) AddBuildingFacilities(c *fiber.Ctx) error {
 		switch err {
 		case err2.ErrBuildingNotFound:
 			return fiber.NewError(fiber.StatusNotFound, err.Error())
-		case err2.ErrFacilityNotFound:
+		case err2.ErrInvalidCategoryID:
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		default:
 			return fiber.NewError(fiber.StatusInternalServerError, err.Error())

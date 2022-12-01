@@ -1,25 +1,23 @@
 package dto
 
-import "office-booking-backend/pkg/entity"
+import (
+	"office-booking-backend/pkg/entity"
+)
 
 type UpdateBuildingRequest struct {
-	Name        string            `json:"name" validate:"omitempty,min=3,max=100"`
-	Pictures    PicturesRequest   `json:"pictures" validate:"omitempty,dive"`
-	Description string            `json:"description" validate:"omitempty,min=3,max=10000"`
-	Facilities  FacilitiesRequest `json:"facilities" validate:"omitempty,dive"`
-	Capacity    int               `json:"capacity" validate:"omitempty,gte=1,lte=1000"`
-	Prices      PriceRequest      `json:"price" validate:"omitempty,dive"`
-	Owner       string            `json:"owner" validate:"omitempty"`
-	Locations   LocationRequest   `json:"location" validate:"omitempty,dive"`
+	Name        string          `json:"name" validate:"omitempty,min=3,max=100"`
+	Description string          `json:"description" validate:"omitempty,min=3,max=10000"`
+	Capacity    int             `json:"capacity" validate:"omitempty,gte=1,lte=1000"`
+	Prices      PriceRequest    `json:"price" validate:"omitempty,dive"`
+	Owner       string          `json:"owner" validate:"omitempty"`
+	Locations   LocationRequest `json:"location" validate:"omitempty,dive"`
 }
 
 func (c *UpdateBuildingRequest) ToEntity(buildingID string) *entity.Building {
 	return &entity.Building{
 		ID:           buildingID,
 		Name:         c.Name,
-		Pictures:     *c.Pictures.ToEntity(buildingID),
 		Description:  c.Description,
-		Facilities:   *c.Facilities.ToEntity(buildingID),
 		Capacity:     c.Capacity,
 		AnnualPrice:  c.Prices.AnnualPrice,
 		MonthlyPrice: c.Prices.MonthlyPrice,

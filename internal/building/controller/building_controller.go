@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"mime/multipart"
 	dto2 "office-booking-backend/internal/building/dto"
 	"office-booking-backend/internal/building/service"
 	err2 "office-booking-backend/pkg/errors"
@@ -220,24 +221,42 @@ func (b *BuildingController) RequestNewBuildingID(c *fiber.Ctx) error {
 func (b *BuildingController) UploadBuildingPicture(c *fiber.Ctx) error {
 	buildingID := c.Params("buildingID")
 
-	form, err := c.MultipartForm()
+	altText := c.FormValue("alt", "")
+	index := c.FormValue("index", "-1")
+	indexInt, err := strconv.Atoi(index)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	// Get file alt text from form
-	altText := form.Value["alt"][0]
-	if altText == "" {
-		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	fileHeader, err := c.FormFile("picture")
+	validatorDto := struct {
+		AltText string                `json:"alt" validate:"omitempty,min=3,max=100"`
+		Index   int                   `json:"index" validate:"required,gte=0,lte=9"`
+		Picture *multipart.FileHeader `json:"picture" validate:"multipartImage"`
+	}{
+		AltText: altText,
+		Index:   indexInt,
+		Picture: fileHeader,
 	}
 
-	// Get file from form
-	file, err := form.File["picture"][0].Open()
+	errs := b.validator.ValidateStruct(validatorDto)
+	if errs != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidRequestBody.Error(),
+			Data:    errs,
+		})
+	}
+
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	file, err := fileHeader.Open()
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	result, err := b.buildingService.AddBuildingPicture(c.Context(), buildingID, altText, file)
+	result, err := b.buildingService.AddBuildingPicture(c.Context(), buildingID, indexInt, altText, file)
 	if err != nil {
 		switch err {
 		case err2.ErrBuildingNotFound:
@@ -263,7 +282,7 @@ func (b *BuildingController) UpdateBuilding(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	if err := b.validator.Validate(building); err != nil {
+	if err := b.validator.ValidateStruct(building); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
 			Message: err2.ErrInvalidRequestBody.Error(),
 			Data:    err,

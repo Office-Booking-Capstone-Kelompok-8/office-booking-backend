@@ -123,7 +123,7 @@ func (b *BuildingServiceImpl) UpdateBuilding(ctx context.Context, building *dto.
 	return nil
 }
 
-func (b *BuildingServiceImpl) AddBuildingPicture(ctx context.Context, buildingID string, alt string, picture io.Reader) (*dto.AddPictureResponse, error) {
+func (b *BuildingServiceImpl) AddBuildingPicture(ctx context.Context, buildingID string, index int, alt string, picture io.Reader) (*dto.AddPictureResponse, error) {
 	//	check if building exists
 	exists, err := b.repo.CheckBuilding(ctx, buildingID)
 	if err != nil {
@@ -155,7 +155,7 @@ func (b *BuildingServiceImpl) AddBuildingPicture(ctx context.Context, buildingID
 	pictureEntity := &entity.Picture{
 		ID:           uploadResult.FileId,
 		BuildingID:   buildingID,
-		Index:        0,
+		Index:        index,
 		Url:          uploadResult.Url,
 		ThumbnailUrl: uploadResult.ThumbnailUrl,
 		Alt:          alt,

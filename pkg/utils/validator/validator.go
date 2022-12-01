@@ -1,17 +1,19 @@
 package validator
 
 import (
-	validation "github.com/go-playground/validator/v10"
+	"mime/multipart"
 	"reflect"
 	"strings"
+
+	validation "github.com/go-playground/validator/v10"
 )
 
 type Validator interface {
-	Validate(s interface{}) *ErrorsResponse
+	ValidateStruct(s interface{}) *ErrorsResponse
 }
 
 type CustomValidator struct {
-	validate *validation.Validate
+	Validate *validation.Validate
 }
 
 type ErrorResponse struct {
@@ -31,11 +33,20 @@ func NewValidator() Validator {
 		return name
 	})
 
-	return &CustomValidator{validate: validate}
+	validate.RegisterCustomTypeFunc(func(field reflect.Value) interface{} {
+		if file, ok := field.Interface().(multipart.File); ok {
+			return file
+		}
+		return nil
+	}, multipart.FileHeader{})
+
+	validate.RegisterValidation("multipartImage", isValidMultipartImage)
+
+	return &CustomValidator{Validate: validate}
 }
 
-func (c *CustomValidator) Validate(s interface{}) *ErrorsResponse {
-	err := c.validate.Struct(s)
+func (c *CustomValidator) ValidateStruct(s interface{}) *ErrorsResponse {
+	err := c.Validate.Struct(s)
 	if err == nil {
 		return nil
 	}
@@ -60,6 +71,10 @@ func (c *CustomValidator) Validate(s interface{}) *ErrorsResponse {
 			message = "must be a valid longitude"
 		case "uuid":
 			message = "must be a valid uuid"
+		case "multipartImage":
+			message = "must be a valid image"
+		default:
+			message = "invalid"
 		}
 		errors = append(errors, ErrorResponse{
 			Field:  err.Field(),
@@ -68,4 +83,14 @@ func (c *CustomValidator) Validate(s interface{}) *ErrorsResponse {
 	}
 
 	return &errors
+}
+
+func isValidMultipartImage(fl validation.FieldLevel) bool {
+	fileHeader, ok := fl.Field().Interface().(*multipart.FileHeader)
+	if !ok {
+		return false
+	}
+	types := fileHeader.Header.Get("Content-Type")
+	isImage := strings.HasPrefix(types, "image/")
+	return isImage
 }

@@ -2,8 +2,6 @@ package impl
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"office-booking-backend/internal/building/repository"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
@@ -118,66 +116,16 @@ func (b *BuildingRepositoryImpl) CreateBuilding(ctx context.Context, building *e
 }
 
 func (b *BuildingRepositoryImpl) UpdateBuildingByID(ctx context.Context, building *entity.Building) error {
-	marshaled, _ := json.Marshal(building)
-	fmt.Println(string(marshaled))
-
-	tx := b.db.WithContext(ctx).Begin()
-	res := tx.WithContext(ctx).
+	res := b.db.WithContext(ctx).
 		Model(&entity.Building{}).
 		Where("id = ?", building.ID).
 		Updates(building)
 	if res.Error != nil {
-		tx.Rollback()
 		return res.Error
 	}
 
 	if res.RowsAffected == 0 {
-		tx.Rollback()
 		return err2.ErrBuildingNotFound
-	}
-
-	for _, picture := range building.Pictures {
-		// Check if picture id is exist in database
-		var count int64
-		err := tx.WithContext(ctx).
-			Model(&entity.Picture{}).
-			Where("id = ?", picture.ID).
-			Count(&count).Error
-		if err != nil {
-			tx.Rollback()
-			return err
-		}
-
-		if count == 0 {
-			tx.Rollback()
-			return err2.ErrPictureNotFound
-		}
-
-		// if facility id is exist, update it
-		res := tx.WithContext(ctx).
-			Model(&entity.Picture{}).
-			Where("id = ?", picture.ID).
-			Updates(picture)
-		if res.Error != nil {
-			tx.Rollback()
-			return res.Error
-		}
-	}
-
-	for _, facility := range building.Facilities {
-		res := tx.WithContext(ctx).
-			Model(&entity.Facility{}).
-			Where("id = ?", facility.ID).
-			Save(facility)
-		if res.Error != nil {
-			tx.Rollback()
-			return res.Error
-		}
-	}
-
-	err := tx.Commit().Error
-	if err != nil {
-		return err
 	}
 
 	return nil

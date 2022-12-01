@@ -7,6 +7,7 @@ import (
 	buildingControllerPkg "office-booking-backend/internal/building/controller"
 	buildingRepositoryPkg "office-booking-backend/internal/building/repository/impl"
 	buildingServicePkg "office-booking-backend/internal/building/service/impl"
+	reservationControllerPkg "office-booking-backend/internal/reservation/controller"
 	reservationRepositoryPkg "office-booking-backend/internal/reservation/repository/impl"
 	reservationServicePkg "office-booking-backend/internal/reservation/service/impl"
 	userControllerPkg "office-booking-backend/internal/user/controller"
@@ -42,6 +43,8 @@ func Init(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf map[strin
 
 	reservationRepository := reservationRepositoryPkg.NewReservationRepositoryImpl(db)
 	reservationService := reservationServicePkg.NewReservationServiceImpl(reservationRepository)
+	reservationsService := reservationServicePkg.NewReservationsServiceImpl(reservationRepository)
+	reservationController := reservationControllerPkg.NewReservationController(reservationsService, validation)
 
 	userRepository := userRepositoryPkg.NewUserRepositoryImpl(db)
 	userService := userServicePkg.NewUserServiceImpl(userRepository, reservationService, imagekitService)
@@ -56,6 +59,6 @@ func Init(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf map[strin
 	buildingController := buildingControllerPkg.NewBuildingController(buildingService, validation)
 
 	// init routes
-	route := routes.NewRoutes(authController, userController, buildingController, accessTokenMiddleware, adminAccessTokenMiddleware)
+	route := routes.NewRoutes(authController, userController, buildingController, reservationController, accessTokenMiddleware, adminAccessTokenMiddleware)
 	route.Init(app)
 }

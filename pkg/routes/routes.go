@@ -3,6 +3,7 @@ package routes
 import (
 	ac "office-booking-backend/internal/auth/controller"
 	bc "office-booking-backend/internal/building/controller"
+	rc "office-booking-backend/internal/reservation/controller"
 	uc "office-booking-backend/internal/user/controller"
 	"office-booking-backend/pkg/middlewares"
 
@@ -13,15 +14,17 @@ type Routes struct {
 	authController             *ac.AuthController
 	userController             *uc.UserController
 	buildingController         *bc.BuildingController
+	reservationController      *rc.ReservationsController
 	accessTokenMiddleware      fiber.Handler
 	adminAccessTokenMiddleware fiber.Handler
 }
 
-func NewRoutes(authController *ac.AuthController, userControllerPkg *uc.UserController, buildingController *bc.BuildingController, accessTokenMiddleware fiber.Handler, adminAccessTokenMiddleware fiber.Handler) *Routes {
+func NewRoutes(authController *ac.AuthController, userControllerPkg *uc.UserController, buildingController *bc.BuildingController, reservationController *rc.ReservationsController, accessTokenMiddleware fiber.Handler, adminAccessTokenMiddleware fiber.Handler) *Routes {
 	return &Routes{
 		authController:             authController,
 		userController:             userControllerPkg,
 		buildingController:         buildingController,
+		reservationController:      reservationController,
 		accessTokenMiddleware:      accessTokenMiddleware,
 		adminAccessTokenMiddleware: adminAccessTokenMiddleware,
 	}
@@ -61,6 +64,10 @@ func (r *Routes) Init(app *fiber.App) {
 	aUser.Get("/:userID", r.userController.GetFullUserByID)
 	aUser.Put("/:userID", r.userController.UpdateUserByID)
 	aUser.Delete("/:userID", r.userController.DeleteUserByID)
+
+	// Admin.Reservations Routes
+	aReservation := admin.Group("/reservations")
+	aReservation.Get("/", r.reservationController.GetAllReservations)
 
 	// Buildings routes
 	building := v1.Group("/buildings")

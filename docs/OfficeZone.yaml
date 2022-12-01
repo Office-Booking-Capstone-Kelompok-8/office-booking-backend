@@ -73,6 +73,12 @@ paths:
                   message:
                     type: string
                     example: user created successfully
+                  data:
+                    type: object
+                    properties:
+                      uid:
+                        type: string
+                        example: 5f7f9c9c-8b9a-4b9c-9c9c-8b9a4b9c9c9c
         409:
           $ref: '#/components/responses/EmailAlreadyUsed'
         400:
@@ -546,7 +552,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: picture changed successfully
+                    example: user avatar updated successfully
         400:
           description: Bad request
           content:
@@ -1659,6 +1665,12 @@ paths:
                   message:
                     type: string
                     example: user created successfully
+                  data:
+                    type: object
+                    properties:
+                      uid:
+                        type: string
+                        example: 5f7f9c9c-8b9a-4b9c-9c9c-8b9a4b9c9c9c
         409:
           $ref: '#/components/responses/EmailAlreadyUsed'
         400:
@@ -1718,6 +1730,12 @@ paths:
                   message:
                     type: string
                     example: admin created successfully
+                  data:
+                    type: object
+                    properties:
+                      uid:
+                        type: string
+                        example: 5f7f9c9c-8b9a-4b9c-9c9c-8b9a4b9c9c9c
         409:
           $ref: '#/components/responses/EmailAlreadyUsed'
         400:
@@ -1895,7 +1913,59 @@ paths:
 
         500:
           $ref: '#/components/responses/InternalServerError'
-  
+
+  /admin/users/{userID}/picture:
+    put:
+      summary: Upload and change another user avatar
+      operationId: uploadAnotherUserPicture
+      security:
+        - access_token: [ ]
+      tags:
+        - Admin.Users
+      parameters:
+        - name: userID
+          in: path
+          description: ID of the user
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                picture:
+                  type: string
+                  format: binary
+        required: true
+      responses:
+        200:
+          description: Successfully changed user picture
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: user avatar updated successfully
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        404:
+          $ref: '#/components/responses/UserNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
   /admin/payments/logo:
     post:
       summary: Upload logo for payment

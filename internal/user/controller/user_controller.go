@@ -216,3 +216,34 @@ func (u *UserController) UpdateUserAvatar(c *fiber.Ctx) error {
 		Message: "user avatar updated successfully",
 	})
 }
+
+func (u *UserController) UpdateAnotherUserAvatar(c *fiber.Ctx) error {
+	uid := c.Params("userID", "")
+	form, err := c.MultipartForm()
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	file, err := form.File["picture"][0].Open()
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	if err := u.userService.UploadUserAvatar(c.Context(), uid, file); err != nil {
+		switch err {
+		case err2.ErrUserNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	err = file.Close()
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "user avatar updated successfully",
+	})
+}

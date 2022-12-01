@@ -2,6 +2,7 @@ package validator
 
 import (
 	"mime/multipart"
+	"net/textproto"
 	"reflect"
 	"strings"
 
@@ -34,8 +35,11 @@ func NewValidator() Validator {
 	})
 
 	validate.RegisterCustomTypeFunc(func(field reflect.Value) interface{} {
-		if file, ok := field.Interface().(multipart.File); ok {
-			return file
+		// register for multipart.FileHeader, so we can validate the file type from the header instead of the file itself
+		// this is because the file is not available in the request body, only the header,
+		//  furthermore, we don't want to return multipart.FileHeader again to the validator because it can trigger forever loop
+		if value, ok := field.Interface().(multipart.FileHeader); ok {
+			return value.Header
 		}
 		return nil
 	}, multipart.FileHeader{})
@@ -86,11 +90,11 @@ func (c *CustomValidator) ValidateStruct(s interface{}) *ErrorsResponse {
 }
 
 func isValidMultipartImage(fl validation.FieldLevel) bool {
-	fileHeader, ok := fl.Field().Interface().(*multipart.FileHeader)
+	header, ok := fl.Field().Interface().(textproto.MIMEHeader)
 	if !ok {
 		return false
 	}
-	types := fileHeader.Header.Get("Content-Type")
+	types := header.Get("Content-Type")
 	isImage := strings.HasPrefix(types, "image/")
 	return isImage
 }

@@ -66,6 +66,9 @@ func (s *TestSuiteAuthController) TestRegisterUser() {
 			ExpectedStatus: fiber.StatusCreated,
 			ExpectedBody: response.BaseResponse{
 				Message: "user registered successfully",
+				Data: map[string]interface{}{
+					"uid": "",
+				},
 			},
 		},
 		{
@@ -122,7 +125,7 @@ func (s *TestSuiteAuthController) TestRegisterUser() {
 			jsonBody, err := json.Marshal(tc.RequestBody)
 			s.NoError(err)
 
-			s.mockAuthService.On("RegisterUser", mock.Anything, mock.Anything).Return(tc.ServiceErr)
+			s.mockAuthService.On("RegisterUser", mock.Anything, mock.Anything).Return("", tc.ServiceErr)
 			s.mockValidator.On("Validate", mock.Anything).Return(tc.ValidatorReturn)
 
 			s.fiberApp.Post("/register", s.authController.RegisterUser)

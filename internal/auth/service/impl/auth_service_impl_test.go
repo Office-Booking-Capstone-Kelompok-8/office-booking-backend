@@ -79,7 +79,7 @@ func (s *TestSuiteAuthService) TestRegisterUser_Success() {
 	s.mockPass.On("GenerateFromPassword", []byte("password"), 10).Return([]byte("hashedPassword"), nil)
 	s.mockRepo.On("RegisterUser", mock.Anything, mock.Anything).Return(nil)
 
-	err := s.authService.RegisterUser(context.Background(), &dto.SignupRequest{
+	_, err := s.authService.RegisterUser(context.Background(), &dto.SignupRequest{
 		Email:    "email",
 		Password: "password",
 		Name:     "name",
@@ -92,7 +92,7 @@ func (s *TestSuiteAuthService) TestRegisterUser_Success() {
 func (s *TestSuiteAuthService) TestRegisterUser_FailHashing() {
 	s.mockPass.On("GenerateFromPassword", []byte("password"), 10).Return([]byte(nil), errors.New("error"))
 
-	err := s.authService.RegisterUser(context.Background(), &dto.SignupRequest{
+	_, err := s.authService.RegisterUser(context.Background(), &dto.SignupRequest{
 		Email:    "email",
 		Password: "password",
 		Name:     "name",
@@ -106,7 +106,7 @@ func (s *TestSuiteAuthService) TestRegisterUser_FailRegistering() {
 	s.mockPass.On("GenerateFromPassword", []byte("password"), 10).Return([]byte("hashedPassword"), nil)
 	s.mockRepo.On("RegisterUser", mock.Anything, mock.Anything).Return(errors.New("error"))
 
-	err := s.authService.RegisterUser(context.Background(), &dto.SignupRequest{
+	_, err := s.authService.RegisterUser(context.Background(), &dto.SignupRequest{
 		Email:    "email",
 		Password: "password",
 		Name:     "name",

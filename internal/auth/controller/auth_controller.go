@@ -37,8 +37,8 @@ func (a *AuthController) RegisterUser(c *fiber.Ctx) error {
 			Data:    errs,
 		})
 	}
-
-	if err := a.service.RegisterUser(c.Context(), user); err != nil {
+	uid, err := a.service.RegisterUser(c.Context(), user)
+	if err != nil {
 		if errors.Is(err, err2.ErrDuplicateEmail) {
 			return fiber.NewError(fiber.StatusConflict, err.Error())
 		}
@@ -47,6 +47,9 @@ func (a *AuthController) RegisterUser(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusCreated).JSON(response.BaseResponse{
 		Message: "user registered successfully",
+		Data: fiber.Map{
+			"uid": uid,
+		},
 	})
 }
 
@@ -64,7 +67,8 @@ func (a *AuthController) RegisterAdmin(c *fiber.Ctx) error {
 		})
 	}
 
-	if err := a.service.RegisterAdmin(c.Context(), user); err != nil {
+	uid, err := a.service.RegisterAdmin(c.Context(), user)
+	if err != nil {
 		if errors.Is(err, err2.ErrDuplicateEmail) {
 			return fiber.NewError(fiber.StatusConflict, err.Error())
 		}
@@ -73,6 +77,9 @@ func (a *AuthController) RegisterAdmin(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusCreated).JSON(response.BaseResponse{
 		Message: "admin registered successfully",
+		Data: fiber.Map{
+			"uid": uid,
+		},
 	})
 }
 

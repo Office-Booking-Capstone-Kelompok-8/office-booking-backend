@@ -11,14 +11,14 @@ type AuthServiceMock struct {
 	mock.Mock
 }
 
-func (m *AuthServiceMock) RegisterUser(ctx context.Context, user *dto.SignupRequest) error {
+func (m *AuthServiceMock) RegisterUser(ctx context.Context, user *dto.SignupRequest) (string, error) {
 	args := m.Called(ctx, user)
-	return args.Error(0)
+	return args.String(0), args.Error(1)
 }
 
-func (m *AuthServiceMock) RegisterAdmin(ctx context.Context, user *dto.SignupRequest) error {
+func (m *AuthServiceMock) RegisterAdmin(ctx context.Context, user *dto.SignupRequest) (string, error) {
 	args := m.Called(ctx, user)
-	return args.Error(0)
+	return args.String(0), args.Error(1)
 }
 
 func (m *AuthServiceMock) LoginUser(ctx context.Context, user *dto.LoginRequest) (*dto.TokenPair, error) {

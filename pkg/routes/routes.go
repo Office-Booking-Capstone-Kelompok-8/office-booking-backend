@@ -63,6 +63,7 @@ func (r *Routes) Init(app *fiber.App) {
 	aUser.Get("/:userID", r.userController.GetFullUserByID)
 	aUser.Put("/:userID", r.userController.UpdateUserByID)
 	aUser.Delete("/:userID", r.userController.DeleteUserByID)
+	aUser.Put("/:userID/picture", r.userController.UpdateAnotherUserAvatar)
 
 	// Buildings routes
 	building := v1.Group("/buildings")

@@ -48,10 +48,10 @@ func NewAuthServiceImpl(repository repository.AuthRepository, userRepo repositor
 	}
 }
 
-func (a *AuthServiceImpl) RegisterUser(ctx context.Context, user *dto.SignupRequest) error {
+func (a *AuthServiceImpl) RegisterUser(ctx context.Context, user *dto.SignupRequest) (string, error) {
 	hashedPassword, err := a.password.GenerateFromPassword([]byte(user.Password), DefaultPasswordCost)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	user.Password = string(hashedPassword)
@@ -60,16 +60,16 @@ func (a *AuthServiceImpl) RegisterUser(ctx context.Context, user *dto.SignupRequ
 	err = a.repository.RegisterUser(ctx, userEntity)
 	if err != nil {
 		log.Println(err)
-		return err
+		return "", err
 	}
 
-	return nil
+	return userEntity.ID, nil
 }
 
-func (a *AuthServiceImpl) RegisterAdmin(ctx context.Context, user *dto.SignupRequest) error {
+func (a *AuthServiceImpl) RegisterAdmin(ctx context.Context, user *dto.SignupRequest) (string, error) {
 	hashedPassword, err := a.password.GenerateFromPassword([]byte(user.Password), DefaultPasswordCost)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	user.Password = string(hashedPassword)
@@ -79,10 +79,10 @@ func (a *AuthServiceImpl) RegisterAdmin(ctx context.Context, user *dto.SignupReq
 	err = a.repository.RegisterUser(ctx, userEntity)
 	if err != nil {
 		log.Println(err)
-		return err
+		return "", err
 	}
 
-	return nil
+	return userEntity.ID, nil
 }
 
 func (a *AuthServiceImpl) LoginUser(ctx context.Context, user *dto.LoginRequest) (*dto.TokenPair, error) {

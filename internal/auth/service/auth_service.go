@@ -6,8 +6,8 @@ import (
 )
 
 type AuthService interface {
-	RegisterUser(ctx context.Context, user *dto.SignupRequest) error
-	RegisterAdmin(ctx context.Context, user *dto.SignupRequest) error
+	RegisterUser(ctx context.Context, user *dto.SignupRequest) (string, error)
+	RegisterAdmin(ctx context.Context, user *dto.SignupRequest) (string, error)
 	LoginUser(ctx context.Context, user *dto.LoginRequest) (*dto.TokenPair, error)
 	LogoutUser(ctx context.Context, uid string) error
 	RefreshToken(ctx context.Context, token *dto.RefreshTokenRequest) (*dto.TokenPair, error)

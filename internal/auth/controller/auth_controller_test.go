@@ -126,7 +126,7 @@ func (s *TestSuiteAuthController) TestRegisterUser() {
 			s.NoError(err)
 
 			s.mockAuthService.On("RegisterUser", mock.Anything, mock.Anything).Return("", tc.ServiceErr)
-			s.mockValidator.On("Validate", mock.Anything).Return(tc.ValidatorReturn)
+			s.mockValidator.On("ValidateStruct", mock.Anything).Return(tc.ValidatorReturn)
 
 			s.fiberApp.Post("/register", s.authController.RegisterUser)
 			r := httptest.NewRequest("POST", "/register", bytes.NewBuffer(jsonBody))
@@ -237,7 +237,7 @@ func (s *TestSuiteAuthController) TestLoginUser() {
 			s.NoError(err)
 
 			s.mockAuthService.On("LoginUser", mock.Anything, mock.Anything).Return(tc.ServiceReturn, tc.ServiceErr)
-			s.mockValidator.On("Validate", mock.Anything).Return(tc.ValidatorError)
+			s.mockValidator.On("ValidateStruct", mock.Anything).Return(tc.ValidatorError)
 
 			s.fiberApp.Post("/", s.authController.LoginUser)
 			r := httptest.NewRequest("POST", "/", bytes.NewBuffer(jsonBody))
@@ -405,7 +405,7 @@ func (s *TestSuiteAuthController) TestRefreshToken() {
 			s.NoError(err)
 
 			s.mockAuthService.On("RefreshToken", mock.Anything, mock.Anything).Return(tc.ServiceReturn, tc.ServiceErr)
-			s.mockValidator.On("Validate", mock.Anything).Return(tc.ValidatorError)
+			s.mockValidator.On("ValidateStruct", mock.Anything).Return(tc.ValidatorError)
 
 			s.fiberApp.Post("/", s.authController.RefreshToken)
 			r := httptest.NewRequest("POST", "/", bytes.NewBuffer(jsonBody))
@@ -505,7 +505,7 @@ func (s *TestSuiteAuthController) TestRequestOTP() {
 			s.NoError(err)
 
 			s.mockAuthService.On("RequestOTP", mock.Anything, mock.Anything).Return(tc.ServiceErr)
-			s.mockValidator.On("Validate", mock.Anything).Return(tc.ValidatorError)
+			s.mockValidator.On("ValidateStruct", mock.Anything).Return(tc.ValidatorError)
 
 			s.fiberApp.Post("/", s.authController.RequestOTP)
 			r := httptest.NewRequest("POST", "/", bytes.NewBuffer(jsonBody))
@@ -610,7 +610,7 @@ func (s *TestSuiteAuthController) TestVerifyOTP() {
 			s.NoError(err)
 
 			s.mockAuthService.On("VerifyOTP", mock.Anything, mock.Anything).Return(&key, tc.ServiceErr)
-			s.mockValidator.On("Validate", mock.Anything).Return(tc.ValidatorError)
+			s.mockValidator.On("ValidateStruct", mock.Anything).Return(tc.ValidatorError)
 
 			s.fiberApp.Post("/", s.authController.VerifyOTP)
 			r := httptest.NewRequest("POST", "/", bytes.NewBuffer(jsonBody))
@@ -731,7 +731,7 @@ func (s *TestSuiteAuthController) TestResetPassword() {
 			s.NoError(err)
 
 			s.mockAuthService.On("ResetPassword", mock.Anything, mock.Anything).Return(tc.ServiceErr)
-			s.mockValidator.On("Validate", mock.Anything).Return(tc.ValidatorError)
+			s.mockValidator.On("ValidateStruct", mock.Anything).Return(tc.ValidatorError)
 
 			s.fiberApp.Post("/", s.authController.ResetPassword)
 			r := httptest.NewRequest("POST", "/", bytes.NewBuffer(jsonBody))
@@ -847,7 +847,7 @@ func (s *TestSuiteAuthController) TestChangePassword() {
 			s.NoError(err)
 
 			s.mockAuthService.On("ChangePassword", mock.Anything, mock.Anything, mock.Anything).Return(tc.ServiceErr)
-			s.mockValidator.On("Validate", mock.Anything).Return(tc.ValidatorError)
+			s.mockValidator.On("ValidateStruct", mock.Anything).Return(tc.ValidatorError)
 
 			s.fiberApp.Put("/", func(ctx *fiber.Ctx) error {
 				ctx.Locals("user", token)

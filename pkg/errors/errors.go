@@ -45,6 +45,24 @@ var (
 	//	ErrPictureServiceFailed is returned when the picture service failed
 	ErrPictureServiceFailed = errors.New("picture service failed")
 
-	// ErrProfilePictureNotFound is returned when the profile picture is not found
-	ErrProfilePictureNotFound = errors.New("profile picture not found")
+	// ErrPicureLimitExceeded is returned when the picture limit is exceeded
+	ErrPicureLimitExceeded = errors.New("picture limit exceeded")
+
+	// ErrPictureNotFound is returned when the picture is not found
+	ErrPictureNotFound = errors.New("picture not found")
+
+	// ErrFacilityNotFound is returned when the picture is invalid
+	ErrFacilityNotFound = errors.New("facility not found")
+
+	// ErrInvalidCategoryID is returned when the category for facility is not found
+	ErrInvalidCategoryID = errors.New("facility category id is invalid")
+
+	// ErrInavalidCityID is returned when the city is not found
+	ErrInavalidCityID = errors.New("city id is invalid")
+
+	// ErrInvalidDistrictID is returned when the district is not found
+	ErrInvalidDistrictID = errors.New("district id is invalid")
+
+	// ErrNotPublishWorthy is returned when the building is not publish worthy (e.g. no picture)
+	ErrNotPublishWorthy = errors.New("building is not publish worthy")
 )

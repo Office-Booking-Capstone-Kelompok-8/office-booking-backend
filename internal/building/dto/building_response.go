@@ -2,7 +2,7 @@ package dto
 
 import "office-booking-backend/pkg/entity"
 
-type BriefBuildingResponse struct {
+type BriefPublishedBuildingResponse struct {
 	ID       string    `json:"id"`
 	Name     string    `json:"name"`
 	Pictures string    `json:"pictures"`
@@ -11,11 +11,16 @@ type BriefBuildingResponse struct {
 	Location *Location `json:"location"`
 }
 
-func NewBriefBuildingResponse(building *entity.Building) *BriefBuildingResponse {
-	return &BriefBuildingResponse{
+func NewBriefPublishedBuildingResponse(building *entity.Building) *BriefPublishedBuildingResponse {
+	pictureUrl := ""
+	if len(building.Pictures) > 0 {
+		pictureUrl = building.Pictures[0].ThumbnailUrl
+	}
+
+	return &BriefPublishedBuildingResponse{
 		ID:       building.ID,
 		Name:     building.Name,
-		Pictures: building.Pictures[0].ThumbnailUrl,
+		Pictures: pictureUrl,
 		Prices: &Price{
 			AnnualPrice:  building.AnnualPrice,
 			MonthlyPrice: building.MonthlyPrice,
@@ -25,6 +30,49 @@ func NewBriefBuildingResponse(building *entity.Building) *BriefBuildingResponse 
 			City:     building.City.Name,
 			District: building.District.Name,
 		},
+	}
+}
+
+type BriefPublishedBuildingsResponse []BriefPublishedBuildingResponse
+
+func NewBriefPublishedBuildingsResponse(buildings *entity.Buildings) *BriefPublishedBuildingsResponse {
+	var briefBuildings BriefPublishedBuildingsResponse
+	for _, building := range *buildings {
+		briefBuildings = append(briefBuildings, *NewBriefPublishedBuildingResponse(&building))
+	}
+	return &briefBuildings
+}
+
+type BriefBuildingResponse struct {
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	Pictures    string    `json:"pictures"`
+	Prices      *Price    `json:"price"`
+	Owner       string    `json:"owner"`
+	Location    *Location `json:"location"`
+	IsPublished bool      `json:"isPublished"`
+}
+
+func NewBriefBuildingResponse(building *entity.Building) *BriefBuildingResponse {
+	pictureUrl := ""
+	if len(building.Pictures) > 0 {
+		pictureUrl = building.Pictures[0].ThumbnailUrl
+	}
+
+	return &BriefBuildingResponse{
+		ID:       building.ID,
+		Name:     building.Name,
+		Pictures: pictureUrl,
+		Prices: &Price{
+			AnnualPrice:  building.AnnualPrice,
+			MonthlyPrice: building.MonthlyPrice,
+		},
+		Owner: building.Owner,
+		Location: &Location{
+			City:     building.City.Name,
+			District: building.District.Name,
+		},
+		IsPublished: building.IsPublished,
 	}
 }
 
@@ -39,14 +87,16 @@ func NewBriefBuildingsResponse(buildings *entity.Buildings) *BriefBuildingsRespo
 }
 
 type Facility struct {
-	Name        string `json:"name"`
-	Icon        string `json:"icon"`
+	ID          int    `json:"id"`
+	Name        string `json:"name" validate:"required,min=3,max=100"`
+	Icon        string `json:"icon" `
 	IconName    string `json:"iconName"`
-	Description string `json:"description"`
+	Description string `json:"description" validate:"omitempty,min=3,max=100"`
 }
 
 func NewFacility(facility *entity.Facility) *Facility {
 	return &Facility{
+		ID:          facility.ID,
 		Name:        facility.Name,
 		Icon:        facility.Category.Url,
 		IconName:    facility.Category.Name,
@@ -65,15 +115,15 @@ func NewFacilities(facilities *entity.Facilities) *Facilities {
 }
 
 type Price struct {
-	AnnualPrice  int `json:"annual"`
-	MonthlyPrice int `json:"monthly"`
+	AnnualPrice  int `json:"annual" validate:"required"`
+	MonthlyPrice int `json:"monthly" validate:"required"`
 }
 
 type Picture struct {
-	ID    string `json:"id"`
-	Index int    `json:"index"`
-	Url   string `json:"url"`
-	Alt   string `json:"alt"`
+	ID    string `json:"id" validate:"required"`
+	Index int    `json:"index" validate:"required,gte=0,lte=9"`
+	Url   string `json:"url" validate:"required,url"`
+	Alt   string `json:"alt" validate:"omitempty,min=3,max=100"`
 }
 
 func NewPicture(picture *entity.Picture) *Picture {
@@ -107,7 +157,7 @@ type Geo struct {
 	Latitude  float64 `json:"lat"`
 }
 
-type FullBuildingResponse struct {
+type FullPublishedBuildingResponse struct {
 	ID          string      `json:"id"`
 	Name        string      `json:"name"`
 	Pictures    *Pictures   `json:"pictures"`
@@ -117,6 +167,44 @@ type FullBuildingResponse struct {
 	Prices      *Price      `json:"price"`
 	Owner       string      `json:"owner"`
 	Locations   *Location   `json:"location"`
+}
+
+func NewFullPublishedBuildingResponse(building *entity.Building) *FullPublishedBuildingResponse {
+	return &FullPublishedBuildingResponse{
+		ID:          building.ID,
+		Name:        building.Name,
+		Pictures:    NewPictures(&building.Pictures),
+		Description: building.Description,
+		Facilities:  NewFacilities(&building.Facilities),
+		Capacity:    building.Capacity,
+		Prices: &Price{
+			AnnualPrice:  building.AnnualPrice,
+			MonthlyPrice: building.MonthlyPrice,
+		},
+		Owner: building.Owner,
+		Locations: &Location{
+			Address:  building.Address,
+			City:     building.City.Name,
+			District: building.District.Name,
+			Geo: &Geo{
+				Longitude: building.Longitude,
+				Latitude:  building.Latitude,
+			},
+		},
+	}
+}
+
+type FullBuildingResponse struct {
+	ID          string      `json:"id" validate:"required,uuid"`
+	Name        string      `json:"name" validate:"required,min=3,max=100"`
+	Pictures    *Pictures   `json:"pictures" validate:"required,min=1,dive"`
+	Description string      `json:"description" validate:"required,min=3,max=10000"`
+	Facilities  *Facilities `json:"facilities" validate:"required,min=1,dive"`
+	Capacity    int         `json:"capacity" validate:"required,min=1,max=100"`
+	Prices      *Price      `json:"price" validate:"required,dive"`
+	Owner       string      `json:"owner" validate:"required"`
+	Locations   *Location   `json:"location" validate:"required,dive"`
+	IsPublished bool        `json:"isPublished" `
 }
 
 func NewFullBuildingResponse(building *entity.Building) *FullBuildingResponse {
@@ -141,6 +229,7 @@ func NewFullBuildingResponse(building *entity.Building) *FullBuildingResponse {
 				Latitude:  building.Latitude,
 			},
 		},
+		IsPublished: building.IsPublished,
 	}
 }
 
@@ -166,4 +255,18 @@ func NewFacilityCategoriesResponse(categories *entity.Categories) *FacilityCateg
 		categoriesResponse = append(categoriesResponse, *NewFacilityCategoryResponse(&category))
 	}
 	return &categoriesResponse
+}
+
+type AddPictureResponse struct {
+	ID  string `json:"id"`
+	URL string `json:"url"`
+	Alt string `json:"alt"`
+}
+
+func NewAddPictureResponse(picture *entity.Picture) *AddPictureResponse {
+	return &AddPictureResponse{
+		ID:  picture.ID,
+		URL: picture.Url,
+		Alt: picture.Alt,
+	}
 }

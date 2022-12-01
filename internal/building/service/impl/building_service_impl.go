@@ -2,22 +2,51 @@ package impl
 
 import (
 	"context"
+	"io"
 	"log"
 	"office-booking-backend/internal/building/dto"
 	"office-booking-backend/internal/building/repository"
 	"office-booking-backend/internal/building/service"
+	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
+	"office-booking-backend/pkg/utils/imagekit"
+	"office-booking-backend/pkg/utils/validator"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type BuildingServiceImpl struct {
-	repo repository.BuildingRepository
+	repo          repository.BuildingRepository
+	imgKitService imagekit.ImgKitService
+	validator     validator.Validator
 }
 
-func NewBuildingServiceImpl(repo repository.BuildingRepository) service.BuildingService {
+func NewBuildingServiceImpl(repo repository.BuildingRepository, imgKitService imagekit.ImgKitService, validator validator.Validator) service.BuildingService {
 	return &BuildingServiceImpl{
-		repo: repo,
+		repo:          repo,
+		imgKitService: imgKitService,
+		validator:     validator,
 	}
+}
+
+func (b *BuildingServiceImpl) GetAllPublishedBuildings(ctx context.Context, q string, cityID int, districtID int, startDate time.Time, endDate time.Time, limit int, page int) (*dto.BriefPublishedBuildingsResponse, int64, error) {
+	//	check if start date is after end date
+	if startDate.After(endDate) {
+		return nil, 0, err2.ErrStartDateAfterEndDate
+	}
+
+	offset := (page - 1) * limit
+
+	//	get all buildings
+	buildings, count, err := b.repo.GetAllBuildings(ctx, q, cityID, districtID, startDate, endDate, limit, offset, true)
+	if err != nil {
+		log.Println("error when getting all buildings: ", err)
+		return nil, 0, err
+	}
+
+	buildingsResponse := dto.NewBriefPublishedBuildingsResponse(buildings)
+	return buildingsResponse, count, nil
 }
 
 func (b *BuildingServiceImpl) GetAllBuildings(ctx context.Context, q string, cityID int, districtID int, startDate time.Time, endDate time.Time, limit int, page int) (*dto.BriefBuildingsResponse, int64, error) {
@@ -29,7 +58,7 @@ func (b *BuildingServiceImpl) GetAllBuildings(ctx context.Context, q string, cit
 	offset := (page - 1) * limit
 
 	//	get all buildings
-	buildings, count, err := b.repo.GetAllBuildings(ctx, q, cityID, districtID, startDate, endDate, limit, offset)
+	buildings, count, err := b.repo.GetAllBuildings(ctx, q, cityID, districtID, startDate, endDate, limit, offset, false)
 	if err != nil {
 		log.Println("error when getting all buildings: ", err)
 		return nil, 0, err
@@ -39,8 +68,19 @@ func (b *BuildingServiceImpl) GetAllBuildings(ctx context.Context, q string, cit
 	return buildingsResponse, count, nil
 }
 
+func (b *BuildingServiceImpl) GetPublishedBuildingDetailByID(ctx context.Context, id string) (*dto.FullPublishedBuildingResponse, error) {
+	building, err := b.repo.GetBuildingDetailByID(ctx, id, true)
+	if err != nil {
+		log.Println("error when getting building detail by id: ", err)
+		return nil, err
+	}
+
+	buildingResponse := dto.NewFullPublishedBuildingResponse(building)
+	return buildingResponse, nil
+}
+
 func (b *BuildingServiceImpl) GetBuildingDetailByID(ctx context.Context, id string) (*dto.FullBuildingResponse, error) {
-	building, err := b.repo.GetBuildingDetailByID(ctx, id)
+	building, err := b.repo.GetBuildingDetailByID(ctx, id, false)
 	if err != nil {
 		log.Println("error when getting building detail by id: ", err)
 		return nil, err
@@ -59,5 +99,104 @@ func (b *BuildingServiceImpl) GetFacilityCategories(ctx context.Context) (*dto.F
 
 	facilityCategoriesResponse := dto.NewFacilityCategoriesResponse(facilityCategories)
 	return facilityCategoriesResponse, nil
+}
 
+func (b *BuildingServiceImpl) CreateEmptyBuilding(ctx context.Context, creatorID string) (string, error) {
+	building := new(entity.Building)
+	building.ID = uuid.New().String()
+	building.CreatedByID = creatorID
+	err := b.repo.CreateBuilding(ctx, building)
+	if err != nil {
+		log.Println("error when creating empty building: ", err)
+		return "", err
+	}
+
+	return building.ID, nil
+}
+
+func (b *BuildingServiceImpl) UpdateBuilding(ctx context.Context, building *dto.UpdateBuildingRequest, buildingID string) error {
+	buildingEntity := building.ToEntity(buildingID)
+
+	err := b.repo.UpdateBuildingByID(ctx, buildingEntity)
+	if err != nil {
+		log.Println("error when creating building: ", err)
+		return err
+	}
+
+	return nil
+}
+
+func (b *BuildingServiceImpl) AddBuildingPicture(ctx context.Context, buildingID string, index int, alt string, picture io.Reader) (*dto.AddPictureResponse, error) {
+	//	check if building exists
+	exists, err := b.repo.CheckBuilding(ctx, buildingID)
+	if err != nil {
+		log.Println("error when checking building: ", err)
+		return nil, err
+	}
+
+	if !exists {
+		return nil, err2.ErrBuildingNotFound
+	}
+
+	pictureCount, err := b.repo.CountBuildingPicturesByID(ctx, buildingID)
+	if err != nil {
+		log.Println("error when counting building pictures: ", err)
+		return nil, err
+	}
+
+	if pictureCount >= 10 {
+		return nil, err2.ErrPicureLimitExceeded
+	}
+
+	pictureKey := uuid.New().String()
+	uploadResult, err := b.imgKitService.UploadFile(ctx, picture, pictureKey, "buildings")
+	if err != nil {
+		log.Println("error when uploading file: ", err)
+		return nil, err2.ErrPictureServiceFailed
+	}
+
+	pictureEntity := &entity.Picture{
+		ID:           uploadResult.FileId,
+		BuildingID:   buildingID,
+		Index:        index,
+		Url:          uploadResult.Url,
+		ThumbnailUrl: uploadResult.ThumbnailUrl,
+		Alt:          alt,
+		Key:          pictureKey,
+	}
+
+	err = b.repo.AddPicture(ctx, pictureEntity)
+	if err != nil {
+		log.Println("error when adding building picture: ", err)
+		return nil, err
+	}
+
+	return dto.NewAddPictureResponse(pictureEntity), nil
+}
+
+func (b *BuildingServiceImpl) AddBuildingFacility(ctx context.Context, buildingID string, facilities *dto.AddFacilitiesRequest) error {
+	facilitiesEntity := facilities.ToEntity(buildingID)
+	err := b.repo.AddFacility(ctx, facilitiesEntity)
+	if err != nil {
+		log.Println("error when adding building facilities: ", err)
+		return err
+	}
+
+	return nil
+}
+
+func (b *BuildingServiceImpl) ValidateBuilding(ctx context.Context, buildingID string) (*validator.ErrorsResponse, error) {
+	//	get building
+	building, err := b.repo.GetBuildingDetailByID(ctx, buildingID, false)
+	if err != nil {
+		log.Println("error when getting building detail by id: ", err)
+		return nil, err
+	}
+
+	if building.IsPublished {
+		return nil, nil
+	}
+
+	buildingDtp := dto.NewFullBuildingResponse(building)
+	return b.validator.ValidateStruct(buildingDtp), err2.ErrNotPublishWorthy
 }

@@ -22,10 +22,10 @@ type UserServiceImpl struct {
 	imgKitService      imagekit.ImgKitService
 }
 
-func NewUserServiceImpl(userRepository repository.UserRepository, resevationService service2.ReservationService, imgKitService imagekit.ImgKitService) service.UserService {
+func NewUserServiceImpl(userRepository repository.UserRepository, reservationService service2.ReservationService, imgKitService imagekit.ImgKitService) service.UserService {
 	return &UserServiceImpl{
 		userRepository:     userRepository,
-		reservationService: resevationService,
+		reservationService: reservationService,
 		imgKitService:      imgKitService,
 	}
 }

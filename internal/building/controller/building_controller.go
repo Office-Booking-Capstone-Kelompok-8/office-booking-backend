@@ -289,7 +289,7 @@ func (b *BuildingController) UpdateBuilding(c *fiber.Ctx) error {
 		})
 	}
 
-	if building.IsPublished == true {
+	if building.IsPublished {
 		if errs, err := b.buildingService.ValidateBuilding(c.Context(), buildingID); err != nil {
 			return c.Status(fiber.StatusConflict).JSON(response.BaseResponse{
 				Message: err.Error(),

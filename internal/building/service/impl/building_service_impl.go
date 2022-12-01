@@ -193,7 +193,7 @@ func (b *BuildingServiceImpl) ValidateBuilding(ctx context.Context, buildingID s
 		return nil, err
 	}
 
-	if building.IsPublished == true {
+	if building.IsPublished {
 		return nil, nil
 	}
 

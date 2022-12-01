@@ -117,17 +117,18 @@ func (b *BuildingRepositoryImpl) CreateBuilding(ctx context.Context, building *e
 }
 
 func (b *BuildingRepositoryImpl) UpdateBuildingByID(ctx context.Context, building *entity.Building) error {
-	//res := b.db.WithContext(ctx).
-	//	Model(&entity.Building{}).
-	//	Where("id = ?", building.ID).
-	//	Updates(building)
-	//if res.Error != nil {
-	//	return res.Error
-	//}
+	// Standard version
+	// res := b.db.WithContext(ctx).
+	// 	Model(&entity.Building{}).
+	// 	Where("id = ?", building.ID).
+	// 	Updates(building)
+	// if res.Error != nil {
+	// 	return res.Error
+	// }
 	//
-	//if res.RowsAffected == 0 {
-	//	return err2.ErrBuildingNotFound
-	//}
+	// if res.RowsAffected == 0 {
+	// 	return err2.ErrBuildingNotFound
+	// }
 	// return nil
 
 	return b.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {

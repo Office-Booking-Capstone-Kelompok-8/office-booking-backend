@@ -15,4 +15,5 @@ type BuildingRepository interface {
 	CountBuildingPicturesByID(ctx context.Context, buildingId string) (int64, error)
 	CheckBuilding(ctx context.Context, buildingId string) (bool, error)
 	AddPicture(ctx context.Context, picture *entity.Picture) error
+	AddFacility(ctx context.Context, facility *entity.Facilities) error
 }

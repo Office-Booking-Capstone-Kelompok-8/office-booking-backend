@@ -1,6 +1,10 @@
 package validator
 
 import (
+	"fmt"
+	"github.com/go-playground/locales/en"
+	ut "github.com/go-playground/universal-translator"
+	en_trans "github.com/go-playground/validator/v10/translations/en"
 	"mime/multipart"
 	"net/textproto"
 	"reflect"
@@ -15,6 +19,7 @@ type Validator interface {
 
 type CustomValidator struct {
 	Validate *validation.Validate
+	trans    ut.Translator
 }
 
 type ErrorResponse struct {
@@ -46,7 +51,12 @@ func NewValidator() Validator {
 
 	validate.RegisterValidation("multipartImage", isValidMultipartImage)
 
-	return &CustomValidator{Validate: validate}
+	english := en.New()
+	uni := ut.New(english, english)
+	trans, _ := uni.GetTranslator("en")
+	_ = en_trans.RegisterDefaultTranslations(validate, trans)
+
+	return &CustomValidator{Validate: validate, trans: trans}
 }
 
 func (c *CustomValidator) ValidateStruct(s interface{}) *ErrorsResponse {
@@ -54,35 +64,28 @@ func (c *CustomValidator) ValidateStruct(s interface{}) *ErrorsResponse {
 	if err == nil {
 		return nil
 	}
-
+	fmt.Println(s)
 	var errors ErrorsResponse
 	for _, err := range err.(validation.ValidationErrors) {
-		var message string
-		switch err.Tag() {
-		case "required":
-			message = "required"
-		case "email":
-			message = "must be a valid email"
-		case "min":
-			message = "must be at least " + err.Param() + " characters"
-		case "gte":
-			message = "must be greater than or equal to " + err.Param()
-		case "lte":
-			message = "must be less than or equal to " + err.Param()
-		case "latitude":
-			message = "must be a valid latitude"
-		case "longitude":
-			message = "must be a valid longitude"
-		case "uuid":
-			message = "must be a valid uuid"
-		case "multipartImage":
-			message = "must be a valid image"
-		default:
-			message = "invalid"
-		}
 		errors = append(errors, ErrorResponse{
 			Field:  err.Field(),
-			Reason: message,
+			Reason: err.Translate(c.trans),
+		})
+	}
+
+	return &errors
+}
+
+func (c *CustomValidator) ValidateVar(field interface{}, tag string) *ErrorsResponse {
+	err := c.Validate.Var(field, tag)
+	if err == nil {
+		return nil
+	}
+	var errors ErrorsResponse
+	for _, err := range err.(validation.ValidationErrors) {
+		errors = append(errors, ErrorResponse{
+			Field:  err.Field(),
+			Reason: err.Translate(c.trans),
 		})
 	}
 

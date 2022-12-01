@@ -929,6 +929,78 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
   
+  /admin/buildings/{buildingID}/facilities:
+    post:
+      summary: Add a facility to a building
+      operationId: addBuildingFacility
+      security:
+        - access_token: []
+      tags:
+        - Admin.Buildings
+      parameters:
+        - name: buildingID
+          in: path
+          description: ID of the building to be added with facility
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                required:
+                  - name
+                  - iconId
+                properties:
+                  name:
+                    type: string
+                    example: Meeting Room
+                  iconId:
+                    type: integer
+                    example: 5
+                  description:
+                    type: string
+                    example: Meeting room with 10 seats 
+        required: true
+      responses:
+        201:
+          description: Successfully added building facility
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building facility added successfully
+        400:
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidFacilityName:
+                  $ref: '#/components/examples/InvalidFacilityName'
+                InvalidFacilityDescription:
+                  $ref: '#/components/examples/InvalidFacilityDescription'
+                InvalidFacilityIconID:
+                  $ref: '#/components/examples/InvalidFacilityIconID'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+
   /admin/buildings/{buildingID}:
     put:
       summary: Update a building
@@ -956,40 +1028,9 @@ paths:
                 name:
                   type: string
                   example: Jakarta Convention Center
-                picture:
-                  type: array
-                  items:
-                    type: object
-                    required:
-                      - index
-                      - pictureID
-                    properties:
-                      index:
-                        type: integer
-                        example: 0
-                      pictureID:
-                        type: string
-                        example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
                 description:
                   type: string
                   example: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                facilities:
-                  type: array
-                  items:
-                    type: object
-                    required:
-                      - name
-                      - iconID
-                    properties:
-                      name:
-                        type: string
-                        example: Wifi
-                      iconID:
-                        type: integer
-                        example: 1
-                      description:
-                        type: string
-                        example: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
                 capacity:
                   type: integer
                   example: 1000
@@ -1049,8 +1090,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/BaseResponse'
               examples:
-                InvalidPictureID:
-                  $ref: '#/components/examples/InvalidPictureID'
                 InvalidDistrictID:
                   $ref: '#/components/examples/InvalidDistrictID'
                 InvalidCityID:
@@ -2691,7 +2730,25 @@ components:
         data:
           - field: picture
             message: must be a valid picture
-
+    InvalidFacilityDescription:
+      description: Invalid facility description
+      value:
+        message: invalid request body
+        data:
+          - field: description
+            message: must be at least 3 characters
+    InvalidFacilityName:
+      description: Invalid facility name
+      value:
+        message: invalid request body
+        data:
+          - field: name
+            message: must be at least 3 characters
+    InvalidFacilityIconID:
+      description: Invalid facility icon id
+      value:
+        message: invalid facility icon id
+        
   securitySchemes:
     access_token:
       type: http

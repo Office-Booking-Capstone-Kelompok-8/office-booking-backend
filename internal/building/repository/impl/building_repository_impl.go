@@ -117,7 +117,7 @@ func (b *BuildingRepositoryImpl) CreateBuilding(ctx context.Context, building *e
 
 func (b *BuildingRepositoryImpl) UpdateBuildingByID(ctx context.Context, building *entity.Building) error {
 	res := b.db.WithContext(ctx).
-		Model(&entity.Building{}).
+		Session(&gorm.Session{FullSaveAssociations: true}).
 		Where("id = ?", building.ID).
 		Updates(building)
 	if res.Error != nil {
@@ -161,6 +161,17 @@ func (b *BuildingRepositoryImpl) AddPicture(ctx context.Context, picture *entity
 	err := b.db.WithContext(ctx).
 		Model(&entity.Picture{}).
 		Create(picture).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (b *BuildingRepositoryImpl) AddFacility(ctx context.Context, facility *entity.Facilities) error {
+	err := b.db.WithContext(ctx).
+		Model(&entity.Facility{}).
+		Create(facility).Error
 	if err != nil {
 		return err
 	}

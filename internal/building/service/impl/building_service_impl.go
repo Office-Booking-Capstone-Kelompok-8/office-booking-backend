@@ -170,3 +170,14 @@ func (b *BuildingServiceImpl) AddBuildingPicture(ctx context.Context, buildingID
 
 	return dto.NewAddPictureResponse(pictureEntity), nil
 }
+
+func (b *BuildingServiceImpl) AddBuildingFacility(ctx context.Context, buildingID string, facilities *dto.FacilitiesRequest) error {
+	facilitiesEntity := facilities.ToEntity(buildingID)
+	err := b.repo.AddFacility(ctx, facilitiesEntity)
+	if err != nil {
+		log.Println("error when adding building facilities: ", err)
+		return err
+	}
+
+	return nil
+}

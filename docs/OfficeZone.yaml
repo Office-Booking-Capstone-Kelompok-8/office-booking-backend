@@ -872,13 +872,15 @@ paths:
               type: object
               required:
                 - picture
-                - buildingID
-                - alt
+                - index
               properties:
                 picture:
                   type: string
                   format: binary
                   description: Picture of the building
+                index:
+                  type: integer
+                  description: Index of the picture
                 alt:
                   type: string
                   description: Alternative text for the picture
@@ -907,6 +909,19 @@ paths:
                       alt:
                         type: string
                         example: Jakarta Convention Center
+        400:
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidPictureIndex:
+                  $ref: '#/components/examples/InvalidPictureIndex'
+                InvalidPicture:
+                  $ref: '#/components/examples/InvalidPicture'
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         403:
@@ -2502,8 +2517,6 @@ components:
                   type: number
                   example: 106.827153
 
-              
-
     ReservationsStat:
       type: object
       properties:
@@ -2664,6 +2677,20 @@ components:
       description: End date is before start date
       value:
         message: invalid date range
+    InvalidPictureIndex:
+      description: Invalid picture index
+      value:
+        message: invalid request body
+        data:
+          - field: index
+            message: must be greater than or equal to 0
+    InvalidPicture:
+      description: Invalid picture
+      value:
+        message: invalid request body
+        data:
+          - field: picture
+            message: must be a valid picture
 
   securitySchemes:
     access_token:

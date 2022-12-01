@@ -198,5 +198,19 @@ func (b *BuildingServiceImpl) ValidateBuilding(ctx context.Context, buildingID s
 	}
 
 	buildingDtp := dto.NewFullBuildingResponse(building)
-	return b.validator.ValidateStruct(buildingDtp), err2.ErrNotPublishWorthy
+	errs := b.validator.ValidateStruct(buildingDtp)
+
+	indexZero := false
+	for _, picture := range building.Pictures {
+		if picture.Index == 0 {
+			indexZero = true
+			break
+		}
+	}
+
+	if !indexZero {
+		errs.AddError("pictures", "main image is required")
+	}
+
+	return errs, err2.ErrNotPublishWorthy
 }

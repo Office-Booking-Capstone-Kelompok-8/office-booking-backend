@@ -64,5 +64,5 @@ var (
 	ErrInvalidDistrictID = errors.New("district id is invalid")
 
 	// ErrNotPublishWorthy is returned when the building is not publish worthy (e.g. no picture)
-	ErrNotPublishWorthy = errors.New("building is not publish worthy")
+	ErrNotPublishWorthy = errors.New("building is not valid, please check the required fields")
 )

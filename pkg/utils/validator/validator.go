@@ -30,6 +30,13 @@ type ErrorResponse struct {
 
 type ErrorsResponse []ErrorResponse
 
+func (e *ErrorsResponse) AddError(field string, reason string) {
+	*e = append(*e, ErrorResponse{
+		Field:  field,
+		Reason: reason,
+	})
+}
+
 func NewValidator() Validator {
 	validate := validation.New()
 	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {

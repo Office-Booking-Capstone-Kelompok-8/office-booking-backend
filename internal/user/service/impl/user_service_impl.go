@@ -94,10 +94,18 @@ func (u *UserServiceImpl) DeleteUserByID(ctx context.Context, id string) error {
 		return err2.ErrUserHasReservation
 	}
 
-	err = u.userRepository.DeleteUserByID(ctx, id)
+	picId, err := u.userRepository.DeleteUserByID(ctx, id)
 	if err != nil {
 		log.Println("Error while deleting user by id: ", err)
 		return err
+	}
+
+	if picId != "" {
+		err = u.imgKitService.DeleteFile(ctx, picId)
+		if err != nil {
+			log.Println("Error while deleting user avatar: ", err)
+			return err
+		}
 	}
 
 	return nil

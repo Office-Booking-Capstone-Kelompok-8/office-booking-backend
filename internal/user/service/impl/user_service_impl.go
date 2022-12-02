@@ -11,6 +11,7 @@ import (
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/utils/imagekit"
+	"office-booking-backend/pkg/utils/ptr"
 
 	"github.com/google/uuid"
 	"golang.org/x/sync/errgroup"
@@ -59,7 +60,7 @@ func (u *UserServiceImpl) UpdateUserByID(ctx context.Context, id string, user *d
 	userEntity.Detail.UserID = id
 
 	if userEntity.Email != "" {
-		userEntity.IsVerified = false
+		userEntity.IsVerified = ptr.Bool(false)
 	}
 
 	errGroup, c := errgroup.WithContext(ctx)

@@ -13,7 +13,7 @@ type User struct {
 	Email      string `gorm:"unique"`
 	Password   string `gorm:"not null"`
 	Role       int    `gorm:"default:1"`
-	IsVerified bool   `gorm:"default:false"`
+	IsVerified *bool  `gorm:"default:false"`
 	Detail     UserDetail
 	CreatedAt  time.Time      `gorm:"autoCreateTime"`
 	UpdatedAt  time.Time      `gorm:"autoUpdateTime"`

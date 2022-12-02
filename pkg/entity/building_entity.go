@@ -27,7 +27,7 @@ type Building struct {
 	Latitude     float64
 	CreatedByID  string         `gorm:"type:varchar(36); default:null;"`
 	CreatedBy    User           `gorm:"foreignKey:CreatedByID"`
-	IsPublished  bool           `gorm:"default:false"`
+	IsPublished  *bool          `gorm:"default:false"`
 	CreatedAt    time.Time      `gorm:"autoCreateTime"`
 	UpdatedAt    time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
@@ -60,7 +60,7 @@ type Picture struct {
 	ID           string `gorm:"primaryKey; type:varchar(36); not null"`
 	Key          string `gorm:"type:varchar(36); not null"`
 	BuildingID   string `gorm:"type:varchar(36); not null" `
-	Index        int
+	Index        *int
 	Url          string
 	ThumbnailUrl string
 	Alt          string

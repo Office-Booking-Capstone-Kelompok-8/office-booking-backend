@@ -2,6 +2,8 @@ package impl
 
 import (
 	"context"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
 	mockReservationSrv "office-booking-backend/internal/reservation/service/mock"
 	"office-booking-backend/internal/user/dto"
 	mockRepo "office-booking-backend/internal/user/repository/mock"
@@ -9,10 +11,8 @@ import (
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	mockImageKitSrv "office-booking-backend/pkg/utils/imagekit"
+	"office-booking-backend/pkg/utils/ptr"
 	"testing"
-
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/suite"
 )
 
 type TestSuiteUserService struct {
@@ -74,9 +74,15 @@ func (s *TestSuiteUserService) TestUpdateUserByID() {
 		ExpectedErr   error
 	}{
 		{
-			Name:          "Success",
-			User:          &dto.UserUpdateRequest{},
-			UserEntitty:   &entity.User{},
+			Name: "Success",
+			User: &dto.UserUpdateRequest{},
+			UserEntitty: &entity.User{
+				ID:         "asdasdasd",
+				Email:      "123@123.com",
+				Password:   "asdasd",
+				Role:       1,
+				IsVerified: ptr.Bool(true),
+			},
 			UserRepoErr:   nil,
 			DetailRepoErr: nil,
 			ExpectedErr:   nil,
@@ -88,7 +94,7 @@ func (s *TestSuiteUserService) TestUpdateUserByID() {
 			},
 			UserEntitty: &entity.User{
 				Email:      "123@mail.com",
-				IsVerified: false,
+				IsVerified: ptr.Bool(false),
 			},
 			UserRepoErr:   nil,
 			DetailRepoErr: nil,
@@ -121,8 +127,8 @@ func (s *TestSuiteUserService) TestUpdateUserByID() {
 	} {
 		s.SetupTest()
 		s.Run(tc.Name, func() {
-			s.mockRepo.On("UpdateUserByID", mock.Anything, tc.UserEntitty).Return(tc.UserRepoErr)
-			s.mockRepo.On("UpdateUserDetailByID", mock.Anything, &tc.UserEntitty.Detail).Return(tc.DetailRepoErr)
+			s.mockRepo.On("UpdateUserByID", mock.Anything, mock.Anything).Return(tc.UserRepoErr)
+			s.mockRepo.On("UpdateUserDetailByID", mock.Anything, mock.Anything).Return(tc.DetailRepoErr)
 			err := s.userService.UpdateUserByID(context.Background(), "", tc.User)
 			s.Equal(tc.ExpectedErr, err)
 		})

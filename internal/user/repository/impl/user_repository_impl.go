@@ -2,12 +2,11 @@ package repository
 
 import (
 	"context"
+	"gorm.io/gorm"
 	"office-booking-backend/internal/user/repository"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"strings"
-
-	"gorm.io/gorm"
 )
 
 type UserRepositoryImpl struct {
@@ -121,17 +120,47 @@ func (u *UserRepositoryImpl) UpdateUserDetailByID(ctx context.Context, userDetai
 	return nil
 }
 
-func (u *UserRepositoryImpl) DeleteUserByID(ctx context.Context, id string) error {
-	res := u.db.WithContext(ctx).Delete(&entity.User{ID: id})
-	if res.Error != nil {
-		return res.Error
-	}
+func (u *UserRepositoryImpl) DeleteUserByID(ctx context.Context, id string) (string, error) {
+	// res := u.db.WithContext(ctx).Delete(&entity.User{ID: id})
+	// if res.Error != nil {
+	// 	return res.Error
+	// }
+	//
+	// if res.RowsAffected == 0 {
+	// 	return err2.ErrUserNotFound
+	// }
+	//
+	// return nil
 
-	if res.RowsAffected == 0 {
-		return err2.ErrUserNotFound
-	}
+	var pictureId string
+	err := u.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		err := tx.Model(&entity.UserDetail{}).
+			Select("picture_id").
+			Where("user_id = ?", id).
+			First(&pictureId).Error
+		if err != nil {
+			return err
+		}
 
-	return nil
+		err = tx.Unscoped().Delete(&entity.UserDetail{UserID: id}).Error
+		if err != nil {
+			return err
+		}
+
+		err = tx.Unscoped().Delete(&entity.User{ID: id}).Error
+		if err != nil {
+			return err
+		}
+
+		err = tx.Unscoped().Delete(&entity.ProfilePicture{ID: pictureId}).Error
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return pictureId, err
 }
 
 func (u *UserRepositoryImpl) GetUserProfilePictureID(ctx context.Context, id string) (*entity.ProfilePicture, error) {

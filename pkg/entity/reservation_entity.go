@@ -14,8 +14,8 @@ type Reservation struct {
 	Building    Building
 	StartDate   time.Time `gorm:"type:datetime"`
 	EndDate     time.Time `gorm:"type:datetime"`
-	UserID      string    `gorm:"type:varchar(36); not null"`
-	User        User
+	UserID      string    `gorm:"type:varchar(36); "`
+	User        User      `gorm:"constraint:OnUpdate:NO ACTION,OnDelete:SET NULL;"`
 	StatusID    int
 	Status      Status
 }

@@ -36,9 +36,9 @@ func (u *UserRepositoryMock) UpdateUserDetailByID(ctx context.Context, userDetai
 	return args.Error(0)
 }
 
-func (u *UserRepositoryMock) DeleteUserByID(ctx context.Context, id string) error {
+func (u *UserRepositoryMock) DeleteUserByID(ctx context.Context, id string) (string, error) {
 	args := u.Called(ctx, id)
-	return args.Error(0)
+	return args.String(0), args.Error(1)
 }
 
 func (u *UserRepositoryMock) GetUserProfilePictureID(ctx context.Context, id string) (*entity.ProfilePicture, error) {

@@ -138,6 +138,9 @@ func (u *UserRepositoryImpl) DeleteUserByID(ctx context.Context, id string) (str
 			Select("picture_id").
 			Where("user_id = ?", id).
 			First(&pictureId).Error
+		if err != nil {
+			return err
+		}
 
 		err = tx.Unscoped().Delete(&entity.UserDetail{UserID: id}).Error
 		if err != nil {

@@ -345,3 +345,21 @@ func (b *BuildingController) AddBuildingFacilities(c *fiber.Ctx) error {
 		Message: "building facilities added successfully",
 	})
 }
+
+func (b *BuildingController) DeleteBuildingPicture(c *fiber.Ctx) error {
+	buildingID := c.Params("buildingID")
+	pictureID := c.Params("pictureID")
+
+	if err := b.buildingService.DeleteBuildingPicture(c.Context(), buildingID, pictureID); err != nil {
+		switch err {
+		case err2.ErrPictureNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "building picture deleted successfully",
+	})
+}

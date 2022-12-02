@@ -312,6 +312,23 @@ func changeNextPictureToIndexZero(ctx context.Context, tx *gorm.DB, buildingID s
 	}
 }
 
+func (b *BuildingRepositoryImpl) DeleteBuildingFacilityByID(ctx context.Context, buildingID string, facilityID int) error {
+	res := b.db.WithContext(ctx).
+		Model(&entity.Facility{}).
+		Where("id = ?", facilityID).
+		Where("building_id = ?", buildingID).
+		Delete(&entity.Facility{})
+	if res.Error != nil {
+		return res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return err2.ErrFacilityNotFound
+	}
+
+	return nil
+}
+
 func (b *BuildingRepositoryImpl) DeleteBuildingByID(ctx context.Context, buildingID string) error {
 	res := b.db.WithContext(ctx).
 		Where("id = ?", buildingID).

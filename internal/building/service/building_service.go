@@ -20,5 +20,6 @@ type BuildingService interface {
 	AddBuildingFacility(ctx context.Context, buildingID string, facilities *dto.AddFacilitiesRequest) error
 	ValidateBuilding(ctx context.Context, buildingID string) (*validator.ErrorsResponse, error)
 	DeleteBuildingPicture(ctx context.Context, buildingID string, pictureID string) error
+	DeleteBuildingFacility(ctx context.Context, buildingID string, facilityID int) error
 	DeleteBuilding(ctx context.Context, buildingID string) error
 }

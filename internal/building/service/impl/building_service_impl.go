@@ -234,6 +234,16 @@ func (b *BuildingServiceImpl) DeleteBuildingPicture(ctx context.Context, buildin
 	return nil
 }
 
+func (b *BuildingServiceImpl) DeleteBuildingFacility(ctx context.Context, buildingID string, facilityID int) error {
+	err := b.repo.DeleteBuildingFacilityByID(ctx, buildingID, facilityID)
+	if err != nil {
+		log.Println("error when deleting building facility: ", err)
+		return err
+	}
+
+	return nil
+}
+
 func (b *BuildingServiceImpl) DeleteBuilding(ctx context.Context, buildingID string) error {
 	count, err := b.reservationRepo.CountBuildingActiveReservations(ctx, buildingID)
 	if err != nil {

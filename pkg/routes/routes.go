@@ -75,6 +75,7 @@ func (r *Routes) Init(app *fiber.App) {
 	aBuilding.Post("/:buildingID/pictures", r.buildingController.AddBuildingPicture)
 	aBuilding.Delete("/:buildingID/pictures/:pictureID", r.buildingController.DeleteBuildingPicture)
 	aBuilding.Post("/:buildingID/facilities", r.buildingController.AddBuildingFacilities)
+	aBuilding.Delete("/:buildingID/facilities/:facilityID", r.buildingController.DeleteBuildingFacility)
 
 	// Buildings routes
 	building := v1.Group("/buildings")

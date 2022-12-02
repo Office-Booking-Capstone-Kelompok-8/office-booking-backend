@@ -364,6 +364,28 @@ func (b *BuildingController) DeleteBuildingPicture(c *fiber.Ctx) error {
 	})
 }
 
+func (b *BuildingController) DeleteBuildingFacility(c *fiber.Ctx) error {
+	buildingID := c.Params("buildingID")
+	facilityID := c.Params("facilityID")
+	facilityIDInt, err := strconv.Atoi(facilityID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidFacilityID.Error())
+	}
+
+	if err := b.buildingService.DeleteBuildingFacility(c.Context(), buildingID, facilityIDInt); err != nil {
+		switch err {
+		case err2.ErrFacilityNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "building facility deleted successfully",
+	})
+}
+
 func (b *BuildingController) DeleteBuilding(c *fiber.Ctx) error {
 	buildingID := c.Params("buildingID")
 

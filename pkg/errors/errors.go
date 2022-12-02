@@ -68,4 +68,7 @@ var (
 
 	// ErrBuildingHasReservation is returned when the building has an active reservation
 	ErrBuildingHasReservation = errors.New("building has active reservation")
+
+	// ErrInvalidFacilityID is returned when the facility is invalid
+	ErrInvalidFacilityID = errors.New("facility id is invalid")
 )

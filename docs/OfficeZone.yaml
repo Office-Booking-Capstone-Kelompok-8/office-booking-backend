@@ -1323,6 +1323,16 @@ paths:
           $ref: '#/components/responses/RolesNotSupported'
         404:
           $ref: '#/components/responses/BuildingNotFound'
+        409:
+          description: Conflict resource, for trying to delete building that has been booked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building has active reservation
         500:
           $ref: '#/components/responses/InternalServerError'
 

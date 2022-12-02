@@ -2,9 +2,11 @@ package impl
 
 import (
 	"context"
+	"fmt"
 	"office-booking-backend/internal/building/repository"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
+	"office-booking-backend/pkg/utils/ptr"
 	"strings"
 	"time"
 
@@ -148,6 +150,7 @@ func (b *BuildingRepositoryImpl) UpdateBuildingByID(ctx context.Context, buildin
 		}
 
 		for _, picture := range building.Pictures {
+			fmt.Println(picture)
 			err := tx.WithContext(ctx).
 				Model(&entity.Picture{}).
 				Where("id = ?", picture.ID).
@@ -228,21 +231,85 @@ func (b *BuildingRepositoryImpl) AddFacility(ctx context.Context, facility *enti
 }
 
 func (b *BuildingRepositoryImpl) DeleteBuildingPicturesByID(ctx context.Context, buildingID string, pictureID string) error {
-	res := b.db.WithContext(ctx).
-		Unscoped().
-		Model(&entity.Picture{}).
-		Where("id = ?", pictureID).
-		Where("building_id = ?", buildingID).
-		Delete(&entity.Picture{})
-	if res.Error != nil {
-		return res.Error
-	}
+	// res := b.db.WithContext(ctx).
+	// 	Unscoped().
+	// 	Model(&entity.Picture{}).
+	// 	Where("id = ?", pictureID).
+	// 	Where("building_id = ?", buildingID).
+	// 	Delete(&entity.Picture{})
+	// if res.Error != nil {
+	// 	return res.Error
+	// }
 
-	if res.RowsAffected == 0 {
-		return err2.ErrPictureNotFound
+	// if res.RowsAffected == 0 {
+	// 	return err2.ErrPictureNotFound
+	// }
+
+	err := b.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// Get picture that will be deleted
+		var picture entity.Picture
+		err := tx.WithContext(ctx).
+			Model(&entity.Picture{}).
+			Where("id = ?", pictureID).
+			Where("building_id = ?", buildingID).
+			First(&picture).Error
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return err2.ErrPictureNotFound
+			}
+			return err
+		}
+
+		err = tx.WithContext(ctx).
+			Unscoped().
+			Model(&entity.Picture{}).
+			Where("id = ?", pictureID).
+			Where("building_id = ?", buildingID).
+			Delete(&entity.Picture{}).Error
+		if err != nil {
+			return err
+		}
+
+		if *picture.Index == 0 {
+			return changeNextPictureToIndexZero(ctx, tx, buildingID)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return err
 	}
 
 	return nil
+}
+
+func changeNextPictureToIndexZero(ctx context.Context, tx *gorm.DB, buildingID string) error {
+	nextPicture := entity.Picture{}
+	err := tx.WithContext(ctx).
+		Model(&entity.Picture{}).
+		Where("building_id = ?", buildingID).
+		Order("`pictures`.`index` ASC").
+		First(&nextPicture).Error
+	fmt.Println("nextPicture", nextPicture)
+	if err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return err
+		}
+
+		// change building isPublished to false
+		return tx.WithContext(ctx).
+			Model(&entity.Building{}).
+			Where("id = ?", buildingID).
+			Updates(entity.Building{IsPublished: ptr.Bool(true)}).Error
+	} else {
+		fmt.Println("nextPicture", nextPicture.ID, "changed to index 0")
+		// change next picture index to 0
+		return tx.WithContext(ctx).
+			Model(&entity.Picture{}).
+			Select("index").
+			Where("id = ?", nextPicture.ID).
+			Update("index", 0).Error
+	}
 }
 
 func (b *BuildingRepositoryImpl) DeleteBuildingByID(ctx context.Context, buildingID string) error {

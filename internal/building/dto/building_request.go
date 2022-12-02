@@ -54,12 +54,12 @@ func (c *UpdateBuildingRequest) ToEntity(buildingID string) *entity.Building {
 		Owner:        c.Owner,
 		CityID:       c.Locations.CityID,
 		DistrictID:   c.Locations.DistrictID,
-		IsPublished:  c.IsPublished,
+		IsPublished:  &c.IsPublished,
 	}
 }
 
 type PictureRequest struct {
-	Index     int    `json:"index" validate:"required,gte=0,lte=10"`
+	Index     int    `json:"index" validate:"gte=0,lte=9"`
 	PictureID string `json:"pictureId" validate:"required"`
 }
 
@@ -67,7 +67,7 @@ func (p *PictureRequest) ToEntity(buildingID string) *entity.Picture {
 	return &entity.Picture{
 		ID:         p.PictureID,
 		BuildingID: buildingID,
-		Index:      p.Index,
+		Index:      &p.Index,
 	}
 }
 

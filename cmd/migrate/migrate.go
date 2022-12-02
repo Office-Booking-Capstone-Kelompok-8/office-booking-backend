@@ -6,6 +6,7 @@ import (
 	"office-booking-backend/pkg/database/mysql"
 	"office-booking-backend/pkg/entity"
 	"office-booking-backend/pkg/utils/password"
+	"office-booking-backend/pkg/utils/ptr"
 	"os"
 
 	"github.com/google/uuid"
@@ -90,7 +91,7 @@ func InitAdmin(db *gorm.DB) error {
 		Email:      "admin@mail.fortyfourvisual.com",
 		Password:   string(pass), // admin123
 		Role:       2,
-		IsVerified: true,
+		IsVerified: ptr.Bool(true),
 		Detail: entity.UserDetail{
 			Name:      "Admin",
 			Phone:     "081234567890",

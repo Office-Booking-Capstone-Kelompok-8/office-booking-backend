@@ -2672,6 +2672,16 @@ components:
               message:
                 type: string
                 example: payment not found
+    PictureNotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: picture not found
     InvalidOrMissingToken:
       description: Invalid or expired JWT
       content:

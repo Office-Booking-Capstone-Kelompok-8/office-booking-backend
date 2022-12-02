@@ -161,7 +161,7 @@ func (b *BuildingServiceImpl) AddBuildingPicture(ctx context.Context, buildingID
 	pictureEntity := &entity.Picture{
 		ID:           uploadResult.FileId,
 		BuildingID:   buildingID,
-		Index:        index,
+		Index:        &index,
 		Url:          uploadResult.Url,
 		ThumbnailUrl: uploadResult.ThumbnailUrl,
 		Alt:          alt,
@@ -196,7 +196,7 @@ func (b *BuildingServiceImpl) ValidateBuilding(ctx context.Context, buildingID s
 		return nil, err
 	}
 
-	if building.IsPublished {
+	if *building.IsPublished {
 		return nil, nil
 	}
 
@@ -205,7 +205,7 @@ func (b *BuildingServiceImpl) ValidateBuilding(ctx context.Context, buildingID s
 
 	indexZero := false
 	for _, picture := range building.Pictures {
-		if picture.Index == 0 {
+		if *picture.Index == 0 {
 			indexZero = true
 			break
 		}

@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/go-redis/redis/v9"
-	"github.com/golang-jwt/jwt/v4"
 	"office-booking-backend/internal/auth/dto"
 	mockRepo "office-booking-backend/internal/auth/repository/mock"
 	mockToken "office-booking-backend/internal/auth/service/mock"
@@ -15,8 +13,12 @@ import (
 	err2 "office-booking-backend/pkg/errors"
 	mockMail "office-booking-backend/pkg/utils/mail"
 	mockPass "office-booking-backend/pkg/utils/password"
+	"office-booking-backend/pkg/utils/ptr"
 	mockRand "office-booking-backend/pkg/utils/random"
 	"testing"
+
+	"github.com/go-redis/redis/v9"
+	"github.com/golang-jwt/jwt/v4"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -126,7 +128,7 @@ func (s *TestSuiteAuthService) TestLoginUser() {
 		Email:      "someEmail@mail.com",
 		Password:   "somePassword",
 		Role:       1,
-		IsVerified: false,
+		IsVerified: ptr.Bool(true),
 		Detail:     entity.UserDetail{},
 	}
 	tokenPair := &dto.TokenPair{
@@ -397,7 +399,7 @@ func (s *TestSuiteAuthService) TestRefreshToken() {
 			CheckReturn: true,
 			RepoReturn: &entity.User{
 				ID:         "someId",
-				IsVerified: false,
+				IsVerified: ptr.Bool(true),
 			},
 			GenerateReturn: &dto.TokenPair{
 				AccessToken:  "someAccessToken",

@@ -72,7 +72,7 @@ func NewBriefBuildingResponse(building *entity.Building) *BriefBuildingResponse 
 			City:     building.City.Name,
 			District: building.District.Name,
 		},
-		IsPublished: building.IsPublished,
+		IsPublished: *building.IsPublished,
 	}
 }
 
@@ -121,7 +121,7 @@ type Price struct {
 
 type Picture struct {
 	ID    string `json:"id" validate:"required"`
-	Index int    `json:"index" validate:"required,gte=0,lte=9"`
+	Index int    `json:"index" validate:"gte=0,lte=9"`
 	Url   string `json:"url" validate:"required,url"`
 	Alt   string `json:"alt" validate:"omitempty,min=3,max=100"`
 }
@@ -129,7 +129,7 @@ type Picture struct {
 func NewPicture(picture *entity.Picture) *Picture {
 	return &Picture{
 		ID:    picture.ID,
-		Index: picture.Index,
+		Index: *picture.Index,
 		Url:   picture.Url,
 		Alt:   picture.Alt,
 	}
@@ -229,7 +229,7 @@ func NewFullBuildingResponse(building *entity.Building) *FullBuildingResponse {
 				Latitude:  building.Latitude,
 			},
 		},
-		IsPublished: building.IsPublished,
+		IsPublished: *building.IsPublished,
 	}
 }
 

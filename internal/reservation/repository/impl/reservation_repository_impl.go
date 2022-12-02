@@ -20,10 +20,24 @@ func NewReservationRepositoryImpl(db *gorm.DB) repository.ReservationRepository 
 
 func (r *ReservationRepositoryImpl) CountUserActiveReservations(ctx context.Context, userID string) (int64, error) {
 	var count int64
-	// Count user active reservations with status id not 3 (rejected), 4 (canceled) or 6 (completed) and not expired
+	// Count user active reservations with status id not 2 (rejected), 3 (canceled) or 5 (completed) and not expired
 	err := r.db.WithContext(ctx).
 		Model(&entity.Reservation{}).
-		Where("user_id = ? AND status_id NOT IN (3, 4, 6) AND end_date > ?", userID, time.Now()).
+		Where("user_id = ? AND status_id NOT IN (2, 3, 5) AND end_date > ?", userID, time.Now()).
+		Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+func (r *ReservationRepositoryImpl) CountBuildingActiveReservations(ctx context.Context, buildingID string) (int64, error) {
+	var count int64
+	// Count building active reservations with status id not 2 (rejected), 3 (canceled) or 5 (completed) and not expired
+	err := r.db.WithContext(ctx).
+		Model(&entity.Reservation{}).
+		Where("building_id = ? AND status_id NOT IN (2, 3, 5) AND end_date > ?", buildingID, time.Now()).
 		Count(&count).Error
 	if err != nil {
 		return 0, err

@@ -363,3 +363,22 @@ func (b *BuildingController) DeleteBuildingPicture(c *fiber.Ctx) error {
 		Message: "building picture deleted successfully",
 	})
 }
+
+func (b *BuildingController) DeleteBuilding(c *fiber.Ctx) error {
+	buildingID := c.Params("buildingID")
+
+	if err := b.buildingService.DeleteBuilding(c.Context(), buildingID); err != nil {
+		switch err {
+		case err2.ErrBuildingNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		case err2.ErrBuildingHasReservation:
+			return fiber.NewError(fiber.StatusConflict, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "building deleted successfully",
+	})
+}

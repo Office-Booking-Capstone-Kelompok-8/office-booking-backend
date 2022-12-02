@@ -244,3 +244,18 @@ func (b *BuildingRepositoryImpl) DeleteBuildingPicturesByID(ctx context.Context,
 
 	return nil
 }
+
+func (b *BuildingRepositoryImpl) DeleteBuildingByID(ctx context.Context, buildingID string) error {
+	res := b.db.WithContext(ctx).
+		Where("id = ?", buildingID).
+		Delete(&entity.Building{})
+	if res.Error != nil {
+		return res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return err2.ErrBuildingNotFound
+	}
+
+	return nil
+}

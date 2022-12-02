@@ -71,6 +71,7 @@ func (r *Routes) Init(app *fiber.App) {
 	aBuilding.Get("/id", r.buildingController.RequestNewBuildingID)
 	aBuilding.Get("/:buildingID", r.buildingController.GetBuildingDetailByID)
 	aBuilding.Put("/:buildingID", r.buildingController.UpdateBuilding)
+	aBuilding.Delete("/:buildingID", r.buildingController.DeleteBuilding)
 	aBuilding.Post("/:buildingID/pictures", r.buildingController.AddBuildingPicture)
 	aBuilding.Delete("/:buildingID/pictures/:pictureID", r.buildingController.DeleteBuildingPicture)
 	aBuilding.Post("/:buildingID/facilities", r.buildingController.AddBuildingFacilities)

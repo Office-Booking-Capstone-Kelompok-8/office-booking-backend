@@ -65,4 +65,7 @@ var (
 
 	// ErrNotPublishWorthy is returned when the building is not publish worthy (e.g. no picture)
 	ErrNotPublishWorthy = errors.New("building is not valid, please check the required fields")
+
+	// ErrBuildingHasReservation is returned when the building has an active reservation
+	ErrBuildingHasReservation = errors.New("building has active reservation")
 )

@@ -17,4 +17,5 @@ type BuildingRepository interface {
 	CountBuildingPicturesByID(ctx context.Context, buildingID string) (int64, error)
 	IsBuildingExist(ctx context.Context, buildingID string) (bool, error)
 	DeleteBuildingPicturesByID(ctx context.Context, buildingID string, pictureID string) error
+	DeleteBuildingByID(ctx context.Context, buildingID string) error
 }

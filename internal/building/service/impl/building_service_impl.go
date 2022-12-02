@@ -7,6 +7,7 @@ import (
 	"office-booking-backend/internal/building/dto"
 	"office-booking-backend/internal/building/repository"
 	"office-booking-backend/internal/building/service"
+	repository2 "office-booking-backend/internal/reservation/repository"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/utils/imagekit"
@@ -17,16 +18,18 @@ import (
 )
 
 type BuildingServiceImpl struct {
-	repo          repository.BuildingRepository
-	imgKitService imagekit.ImgKitService
-	validator     validator.Validator
+	repo            repository.BuildingRepository
+	reservationRepo repository2.ReservationRepository
+	imgKitService   imagekit.ImgKitService
+	validator       validator.Validator
 }
 
-func NewBuildingServiceImpl(repo repository.BuildingRepository, imgKitService imagekit.ImgKitService, validator validator.Validator) service.BuildingService {
+func NewBuildingServiceImpl(repo repository.BuildingRepository, reservationRepo repository2.ReservationRepository, imgKitService imagekit.ImgKitService, validator validator.Validator) service.BuildingService {
 	return &BuildingServiceImpl{
-		repo:          repo,
-		imgKitService: imgKitService,
-		validator:     validator,
+		repo:            repo,
+		reservationRepo: reservationRepo,
+		imgKitService:   imgKitService,
+		validator:       validator,
 	}
 }
 
@@ -226,6 +229,26 @@ func (b *BuildingServiceImpl) DeleteBuildingPicture(ctx context.Context, buildin
 	if err != nil {
 		log.Println("error when deleting file: ", err)
 		return err2.ErrPictureServiceFailed
+	}
+
+	return nil
+}
+
+func (b *BuildingServiceImpl) DeleteBuilding(ctx context.Context, buildingID string) error {
+	count, err := b.reservationRepo.CountBuildingActiveReservations(ctx, buildingID)
+	if err != nil {
+		log.Println("error when counting building active reservations: ", err)
+		return err
+	}
+
+	if count > 0 {
+		return err2.ErrBuildingHasReservation
+	}
+
+	err = b.repo.DeleteBuildingByID(ctx, buildingID)
+	if err != nil {
+		log.Println("error when deleting building: ", err)
+		return err
 	}
 
 	return nil

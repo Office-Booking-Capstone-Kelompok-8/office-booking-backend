@@ -120,26 +120,22 @@ func InitStatus(db *gorm.DB) error {
 		},
 		{
 			ID:      2,
-			Message: "Accepted",
-		},
-		{
-			ID:      3,
 			Message: "Rejected",
 		},
 		{
-			ID:      4,
+			ID:      3,
 			Message: "Canceled",
 		},
 		{
-			ID:      5,
+			ID:      4,
 			Message: "Awaiting Payment",
 		},
 		{
-			ID:      6,
+			ID:      5,
 			Message: "Active",
 		},
 		{
-			ID:      7,
+			ID:      6,
 			Message: "Completed",
 		},
 	}

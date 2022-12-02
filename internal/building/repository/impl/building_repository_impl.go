@@ -176,7 +176,7 @@ func (b *BuildingRepositoryImpl) UpdateBuildingByID(ctx context.Context, buildin
 	})
 }
 
-func (b *BuildingRepositoryImpl) CheckBuilding(ctx context.Context, buildingId string) (bool, error) {
+func (b *BuildingRepositoryImpl) IsBuildingExist(ctx context.Context, buildingId string) (bool, error) {
 	var count int64
 	err := b.db.WithContext(ctx).
 		Model(&entity.Building{}).
@@ -222,6 +222,24 @@ func (b *BuildingRepositoryImpl) AddFacility(ctx context.Context, facility *enti
 			return err2.ErrInvalidCategoryID
 		}
 		return err
+	}
+
+	return nil
+}
+
+func (b *BuildingRepositoryImpl) DeleteBuildingPicturesByID(ctx context.Context, buildingID string, pictureID string) error {
+	res := b.db.WithContext(ctx).
+		Unscoped().
+		Model(&entity.Picture{}).
+		Where("id = ?", pictureID).
+		Where("building_id = ?", buildingID).
+		Delete(&entity.Picture{})
+	if res.Error != nil {
+		return res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return err2.ErrPictureNotFound
 	}
 
 	return nil

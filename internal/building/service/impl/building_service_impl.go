@@ -128,7 +128,7 @@ func (b *BuildingServiceImpl) UpdateBuilding(ctx context.Context, building *dto.
 
 func (b *BuildingServiceImpl) AddBuildingPicture(ctx context.Context, buildingID string, index int, alt string, picture io.Reader) (*dto.AddPictureResponse, error) {
 	//	check if building exists
-	exists, err := b.repo.CheckBuilding(ctx, buildingID)
+	exists, err := b.repo.IsBuildingExist(ctx, buildingID)
 	if err != nil {
 		log.Println("error when checking building: ", err)
 		return nil, err
@@ -213,4 +213,20 @@ func (b *BuildingServiceImpl) ValidateBuilding(ctx context.Context, buildingID s
 	}
 
 	return errs, err2.ErrNotPublishWorthy
+}
+
+func (b *BuildingServiceImpl) DeleteBuildingPicture(ctx context.Context, buildingID string, pictureID string) error {
+	err := b.repo.DeleteBuildingPicturesByID(ctx, buildingID, pictureID)
+	if err != nil {
+		log.Println("error when deleting building picture: ", err)
+		return err
+	}
+
+	err = b.imgKitService.DeleteFile(ctx, pictureID)
+	if err != nil {
+		log.Println("error when deleting file: ", err)
+		return err2.ErrPictureServiceFailed
+	}
+
+	return nil
 }

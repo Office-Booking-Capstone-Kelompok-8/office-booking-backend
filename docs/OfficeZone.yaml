@@ -938,7 +938,7 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  /admin/buildings/{buildingID}/picture:
+  /admin/buildings/{buildingID}/pictures:
     post:
       summary: Upload a picture for a building
       operationId: uploadBuildingPicture
@@ -1323,6 +1323,50 @@ paths:
           $ref: '#/components/responses/RolesNotSupported'
         404:
           $ref: '#/components/responses/BuildingNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/buildings/{buildingID}/pictures/{pictureID}:
+    delete:
+      summary: Delete a picture from a building
+      operationId: deleteBuildingPicture
+      security:
+        - access_token: []
+      tags:
+        - Admin.Buildings
+      parameters:
+        - name: buildingID
+          in: path
+          description: ID of the building to be deleted
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+        - name: pictureID
+          in: path
+          description: ID of the picture to be deleted
+          required: true
+          schema:
+            type: string
+            example: 6asjfakjdshkasd
+      responses:
+        200:
+          description: Successfully deleted picture
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building picture deleted successfully
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        404:
+          $ref: '#/components/responses/PictureNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
 

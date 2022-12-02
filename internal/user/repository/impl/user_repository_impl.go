@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"gorm.io/gorm"
 	"office-booking-backend/internal/user/repository"
 	"office-booking-backend/pkg/entity"
@@ -132,14 +133,19 @@ func (u *UserRepositoryImpl) DeleteUserByID(ctx context.Context, id string) (str
 	//
 	// return nil
 
-	var pictureId string
+	var pictureId sql.NullString
 	err := u.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		err := tx.Model(&entity.UserDetail{}).
 			Select("picture_id").
 			Where("user_id = ?", id).
 			First(&pictureId).Error
+		isHaveProfilePicture := true
 		if err != nil {
-			return err
+			if err != gorm.ErrRecordNotFound {
+				return err
+			}
+
+			isHaveProfilePicture = false
 		}
 
 		err = tx.Unscoped().Delete(&entity.UserDetail{UserID: id}).Error
@@ -152,15 +158,17 @@ func (u *UserRepositoryImpl) DeleteUserByID(ctx context.Context, id string) (str
 			return err
 		}
 
-		err = tx.Unscoped().Delete(&entity.ProfilePicture{ID: pictureId}).Error
-		if err != nil {
-			return err
+		if isHaveProfilePicture {
+			err = tx.Unscoped().Where("id = ?", pictureId.String).Delete(&entity.ProfilePicture{}).Error
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
 	})
 
-	return pictureId, err
+	return pictureId.String, err
 }
 
 func (u *UserRepositoryImpl) GetUserProfilePictureID(ctx context.Context, id string) (*entity.ProfilePicture, error) {

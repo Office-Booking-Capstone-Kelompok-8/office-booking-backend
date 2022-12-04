@@ -30,3 +30,8 @@ func (r *ReservationRepositoryMock) AddBuildingReservation(ctx context.Context, 
 	args := r.Called(ctx, reservation)
 	return args.Error(0)
 }
+
+func (r *ReservationRepositoryMock) GetUserReservations(ctx context.Context, userID string, offset int, limit int) (*entity.Reservations, int64, error) {
+	args := r.Called(ctx, userID, offset, limit)
+	return args.Get(0).(*entity.Reservations), args.Get(1).(int64), args.Error(2)
+}

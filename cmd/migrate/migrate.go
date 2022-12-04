@@ -34,12 +34,12 @@ func main() {
 	err := db.AutoMigrate(
 		&entity.User{},
 		&entity.UserDetail{},
+		&entity.Building{},
 		&entity.ProfilePicture{},
 		&entity.Category{},
 		&entity.Facility{},
 		&entity.City{},
 		&entity.District{},
-		&entity.Building{},
 		&entity.Picture{},
 		&entity.Payment{},
 		&entity.PaymentPicture{},

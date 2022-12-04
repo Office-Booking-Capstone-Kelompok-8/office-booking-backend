@@ -802,7 +802,7 @@ paths:
 
   /reservations/{reservationID}:
     delete:
-      summary: Delete a reservation
+      summary: Cancel a reservation
       operationId: deleteReservation
       security:
         - access_token: []
@@ -819,7 +819,7 @@ paths:
             example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
       responses:
         200:
-          description: Successfully deleted reservation
+          description: Successfully cancel reservation
           content:
             application/json:
               schema:
@@ -827,11 +827,31 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: reservation deleted successfully
+                    example: Reservation canceled successfully
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          description: User is not authorized to cancel the reservation of other user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: you don't have permission to perform the action
         404:
           $ref: '#/components/responses/ReservationNotFound'
+        409:
+          description: The reservation is still active
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: reservation is still active
         500:
           $ref: '#/components/responses/InternalServerError'
 

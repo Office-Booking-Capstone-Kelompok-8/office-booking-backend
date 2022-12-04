@@ -30,3 +30,13 @@ func (r *ReservationServiceMock) CreateReservation(ctx context.Context, userID s
 	args := r.Called(ctx, userID, reservation)
 	return args.Get(0).(string), args.Error(1)
 }
+
+func (r *ReservationServiceMock) DeleteReservationByID(ctx context.Context, reservationID string) error {
+	args := r.Called(ctx, reservationID)
+	return args.Error(0)
+}
+
+func (r *ReservationServiceMock) CancelReservation(ctx context.Context, userID string, reservationID string) error {
+	args := r.Called(ctx, userID, reservationID)
+	return args.Error(0)
+}

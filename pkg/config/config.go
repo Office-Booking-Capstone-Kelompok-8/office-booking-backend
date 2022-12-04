@@ -35,6 +35,10 @@ const (
 	DEFAULT_USER_AVATAR = "https://ik.imagekit.io/fortyfour/default-image.jpg"
 )
 
+const (
+	DATE_RESPONSE_FORMAT = "2006-01-02 15:04:05"
+)
+
 func LoadConfig() map[string]string {
 	env := make(map[string]string)
 

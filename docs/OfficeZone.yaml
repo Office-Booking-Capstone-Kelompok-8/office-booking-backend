@@ -644,6 +644,24 @@ paths:
         - access_token: []
       tags:
         - EndUser.Reservations
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of reservations per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
       responses:
         200:
           description: successfully retrieved reservations
@@ -694,6 +712,8 @@ paths:
                             message:
                               type: string
                               example: Pending
+                  Mete:
+                    $ref: '#/components/schemas/Meta'
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         404:
@@ -763,18 +783,12 @@ paths:
               examples:
                 InvalidRequestBody:
                   $ref: '#/components/examples/InvalidRequestBody'
-                InvalidStartDate:
-                  $ref: '#/components/examples/InvalidStartDate'
-                InvalidEndDate:
-                  $ref: '#/components/examples/InvalidEndDate'
                 InvalidDateRange:
                   $ref: '#/components/examples/InvalidDateRange'
-                InvalidBuildingID:
-                  $ref: '#/components/examples/InvalidBuildingID'
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         409:
-          description: Reservation date range is not available
+          description: The building to be reserved is not available
           content:
             application/json:
               schema:
@@ -782,7 +796,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: reservation date range is not available
+                    example: building is not available
         500:
           $ref: '#/components/responses/InternalServerError'
 
@@ -1621,7 +1635,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: reservation date range is not available
+                    example: building is not available
         500:
           $ref: '#/components/responses/InternalServerError'    
   /admin/reservations/{reservationID}:
@@ -1730,7 +1744,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: reservation date range is not available
+                    example: building is not available
         500:
           $ref: '#/components/responses/InternalServerError'
     delete:

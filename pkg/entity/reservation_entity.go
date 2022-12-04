@@ -16,7 +16,7 @@ type Reservation struct {
 	EndDate     time.Time `gorm:"type:datetime"`
 	UserID      string    `gorm:"type:varchar(36); "`
 	User        User      `gorm:"constraint:OnUpdate:NO ACTION,OnDelete:SET NULL;"`
-	StatusID    int
+	StatusID    int       `gorm:"type:int; default:1"`
 	Status      Status
 }
 
@@ -24,6 +24,8 @@ func (r *Reservation) BeforeCreate(*gorm.DB) (err error) {
 	r.ID = uuid.New().String()
 	return
 }
+
+type Reservations []Reservation
 
 type Status struct {
 	ID      int `gorm:"primaryKey; type:int; not null"`

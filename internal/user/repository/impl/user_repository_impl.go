@@ -3,11 +3,12 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"gorm.io/gorm"
 	"office-booking-backend/internal/user/repository"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
 type UserRepositoryImpl struct {
@@ -184,4 +185,16 @@ func (u *UserRepositoryImpl) GetUserProfilePictureID(ctx context.Context, id str
 	}
 
 	return &userDetail.Picture, nil
+}
+
+func (u *UserRepositoryImpl) DeleteUserProfilePicture(ctx context.Context, pictureID string) error {
+	res := u.db.WithContext(ctx).
+		Unscoped().
+		Where("id = ?", pictureID).
+		Delete(&entity.ProfilePicture{})
+	if res.Error != nil {
+		return res.Error
+	}
+
+	return nil
 }

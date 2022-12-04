@@ -62,3 +62,32 @@ func (r *ReservationRepositoryImpl) IsBuildingAvailable(ctx context.Context, bui
 
 	return count == 0, nil
 }
+
+func (r *ReservationRepositoryImpl) GetUserReservations(ctx context.Context, userID string, offset int, limit int) (*entity.Reservations, int64, error) {
+	var count int64
+	var reservations entity.Reservations
+
+	err := r.db.WithContext(ctx).
+		Model(&entity.Reservation{}).
+		Joins("Status").
+		Joins("Building").
+		Where("user_id = ?", userID).
+		Offset(offset).
+		Limit(limit).
+		Find(&reservations).
+		Count(&count).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return &reservations, count, nil
+}
+
+func (r *ReservationRepositoryImpl) AddBuildingReservation(ctx context.Context, reservation *entity.Reservation) error {
+	err := r.db.WithContext(ctx).Create(reservation).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -3,6 +3,7 @@ package routes
 import (
 	ac "office-booking-backend/internal/auth/controller"
 	bc "office-booking-backend/internal/building/controller"
+	rc "office-booking-backend/internal/reservation/controller"
 	uc "office-booking-backend/internal/user/controller"
 	"office-booking-backend/pkg/middlewares"
 
@@ -13,15 +14,17 @@ type Routes struct {
 	authController             *ac.AuthController
 	userController             *uc.UserController
 	buildingController         *bc.BuildingController
+	reservationController      *rc.ReservationController
 	accessTokenMiddleware      fiber.Handler
 	adminAccessTokenMiddleware fiber.Handler
 }
 
-func NewRoutes(authController *ac.AuthController, userControllerPkg *uc.UserController, buildingController *bc.BuildingController, accessTokenMiddleware fiber.Handler, adminAccessTokenMiddleware fiber.Handler) *Routes {
+func NewRoutes(authController *ac.AuthController, userControllerPkg *uc.UserController, buildingController *bc.BuildingController, reservationController *rc.ReservationController, accessTokenMiddleware fiber.Handler, adminAccessTokenMiddleware fiber.Handler) *Routes {
 	return &Routes{
 		authController:             authController,
 		userController:             userControllerPkg,
 		buildingController:         buildingController,
+		reservationController:      reservationController,
 		accessTokenMiddleware:      accessTokenMiddleware,
 		adminAccessTokenMiddleware: adminAccessTokenMiddleware,
 	}
@@ -51,6 +54,11 @@ func (r *Routes) Init(app *fiber.App) {
 	user.Put("/", r.userController.UpdateLoggedUser)
 	user.Put("/picture", r.userController.UpdateUserAvatar)
 	user.Put("/change-password", r.authController.ChangePassword)
+
+	// Enduser.Reservation routes
+	reservation := v1.Group("/reservations", r.accessTokenMiddleware)
+	reservation.Get("/", r.reservationController.GetUserReservations)
+	reservation.Post("/", r.reservationController.CreateReservation)
 
 	// Admin routes
 	admin := v1.Group("/admin", r.adminAccessTokenMiddleware)

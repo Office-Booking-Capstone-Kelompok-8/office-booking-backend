@@ -274,6 +274,36 @@ func (b *BuildingController) AddBuildingPicture(c *fiber.Ctx) error {
 	})
 }
 
+func (b *BuildingController) AddBuildingFacilities(c *fiber.Ctx) error {
+	buildingID := c.Params("buildingID")
+
+	facilities := new(dto.AddFacilitiesRequest)
+	if err := c.BodyParser(facilities); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	if errs := b.validator.ValidateVar(facilities, "required,dive"); errs != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidRequestBody.Error(),
+			Data:    errs,
+		})
+	}
+	if err := b.buildingService.AddBuildingFacility(c.Context(), buildingID, facilities); err != nil {
+		switch err {
+		case err2.ErrBuildingNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		case err2.ErrInvalidCategoryID:
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "building facilities added successfully",
+	})
+}
+
 func (b *BuildingController) UpdateBuilding(c *fiber.Ctx) error {
 	buildingID := c.Params("buildingID")
 
@@ -313,36 +343,6 @@ func (b *BuildingController) UpdateBuilding(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
 		Message: "building updated successfully",
-	})
-}
-
-func (b *BuildingController) AddBuildingFacilities(c *fiber.Ctx) error {
-	buildingID := c.Params("buildingID")
-
-	facilities := new(dto.AddFacilitiesRequest)
-	if err := c.BodyParser(facilities); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
-	}
-
-	if errs := b.validator.ValidateVar(facilities, "required,dive"); errs != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
-			Message: err2.ErrInvalidRequestBody.Error(),
-			Data:    errs,
-		})
-	}
-	if err := b.buildingService.AddBuildingFacility(c.Context(), buildingID, facilities); err != nil {
-		switch err {
-		case err2.ErrBuildingNotFound:
-			return fiber.NewError(fiber.StatusNotFound, err.Error())
-		case err2.ErrInvalidCategoryID:
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		default:
-			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
-		}
-	}
-
-	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
-		Message: "building facilities added successfully",
 	})
 }
 

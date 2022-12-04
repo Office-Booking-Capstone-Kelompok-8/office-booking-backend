@@ -71,4 +71,7 @@ var (
 
 	// ErrInvalidFacilityID is returned when the facility is invalid
 	ErrInvalidFacilityID = errors.New("facility id is invalid")
+
+	// ErrBuildingNotAvailable is returned when the building is not available for the given time
+	ErrBuildingNotAvailable = errors.New("building is not available")
 )

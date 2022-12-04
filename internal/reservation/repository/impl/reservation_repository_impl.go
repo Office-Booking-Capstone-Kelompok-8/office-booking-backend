@@ -1,11 +1,12 @@
 package impl
 
 import (
-	"golang.org/x/net/context"
-	"gorm.io/gorm"
 	"office-booking-backend/internal/reservation/repository"
 	"office-booking-backend/pkg/entity"
 	"time"
+
+	"golang.org/x/net/context"
+	"gorm.io/gorm"
 )
 
 type ReservationRepositoryImpl struct {
@@ -44,4 +45,20 @@ func (r *ReservationRepositoryImpl) CountBuildingActiveReservations(ctx context.
 	}
 
 	return count, nil
+}
+
+func (r *ReservationRepositoryImpl) IsBuildingAvailable(ctx context.Context, buildingID string, start time.Time, end time.Time) (bool, error) {
+	var count int64
+	// Count building active reservations with status id not 2 (rejected), 3 (canceled) or 5 (completed)
+	// and not in the same time range as the new reservation
+	err := r.db.WithContext(ctx).
+		Model(&entity.Reservation{}).
+		Where("building_id = ? AND status_id NOT IN (2, 3, 5)", buildingID).
+		Where("start_date <= ? AND end_date >= ?", end, start).
+		Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+
+	return count == 0, nil
 }

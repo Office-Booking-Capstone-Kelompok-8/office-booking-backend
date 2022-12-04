@@ -3,6 +3,7 @@ package impl
 import (
 	"office-booking-backend/internal/reservation/repository"
 	"office-booking-backend/pkg/entity"
+	err2 "office-booking-backend/pkg/errors"
 	"time"
 
 	"golang.org/x/net/context"
@@ -83,10 +84,59 @@ func (r *ReservationRepositoryImpl) GetUserReservations(ctx context.Context, use
 	return &reservations, count, nil
 }
 
+func (r *ReservationRepositoryImpl) GetReservationByID(ctx context.Context, reservationID string) (*entity.Reservation, error) {
+	var reservation entity.Reservation
+
+	err := r.db.WithContext(ctx).
+		Model(&entity.Reservation{}).
+		Joins("Status").
+		Joins("Building").
+		Where("`reservations`.`id` = ?", reservationID).
+		First(&reservation).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &reservation, nil
+}
+
 func (r *ReservationRepositoryImpl) AddBuildingReservation(ctx context.Context, reservation *entity.Reservation) error {
 	err := r.db.WithContext(ctx).Create(reservation).Error
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (r *ReservationRepositoryImpl) UpdateReservation(ctx context.Context, reservation *entity.Reservation) error {
+	res := r.db.WithContext(ctx).
+		Model(entity.Reservation{}).
+		Where("id = ?", reservation.ID).
+		Updates(reservation)
+	if res.Error != nil {
+		return res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return err2.ErrReservationNotFound
+	}
+
+	return nil
+}
+
+func (r *ReservationRepositoryImpl) DeleteReservationByID(ctx context.Context, reservationID string) error {
+	res := r.db.WithContext(ctx).
+		Model(entity.Reservation{}).
+		Where("id = ?", reservationID).
+		Delete(entity.Reservation{})
+	if res.Error != nil {
+		return res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return err2.ErrReservationNotFound
 	}
 
 	return nil

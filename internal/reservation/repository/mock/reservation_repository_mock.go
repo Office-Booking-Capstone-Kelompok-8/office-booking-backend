@@ -35,3 +35,18 @@ func (r *ReservationRepositoryMock) GetUserReservations(ctx context.Context, use
 	args := r.Called(ctx, userID, offset, limit)
 	return args.Get(0).(*entity.Reservations), args.Get(1).(int64), args.Error(2)
 }
+
+func (r *ReservationRepositoryMock) GetReservationByID(ctx context.Context, reservationID string) (*entity.Reservation, error) {
+	args := r.Called(ctx, reservationID)
+	return args.Get(0).(*entity.Reservation), args.Error(1)
+}
+
+func (r *ReservationRepositoryMock) DeleteReservationByID(ctx context.Context, reservationID string) error {
+	args := r.Called(ctx, reservationID)
+	return args.Error(0)
+}
+
+func (r *ReservationRepositoryMock) UpdateReservation(ctx context.Context, reservation *entity.Reservation) error {
+	args := r.Called(ctx, reservation)
+	return args.Error(0)
+}

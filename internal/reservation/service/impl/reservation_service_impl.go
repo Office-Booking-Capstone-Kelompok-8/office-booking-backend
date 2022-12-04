@@ -7,6 +7,7 @@ import (
 	"office-booking-backend/internal/reservation/dto"
 	"office-booking-backend/internal/reservation/repository"
 	"office-booking-backend/internal/reservation/service"
+	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"time"
 
@@ -103,4 +104,47 @@ func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, userID s
 	}
 
 	return reservationEntity.ID, nil
+}
+
+func (r *ReservationServiceImpl) CancelReservation(ctx context.Context, userID string, reservationID string) error {
+	reservation, err := r.repo.GetReservationByID(ctx, reservationID)
+	if err != nil {
+		log.Println("error while getting reservation by id: ", err)
+		return err
+	}
+
+	if reservation == nil {
+		return err2.ErrReservationNotFound
+	}
+
+	if reservation.UserID != userID {
+		return err2.ErrNoPermission
+	}
+
+	if reservation.StatusID == 5 {
+		return err2.ErrReservationActive
+	}
+
+	newReservation := &entity.Reservation{
+		ID:       reservationID,
+		StatusID: 3,
+	}
+
+	err = r.repo.UpdateReservation(ctx, newReservation)
+	if err != nil {
+		log.Println("error while updating reservation: ", err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *ReservationServiceImpl) DeleteReservationByID(ctx context.Context, reservationID string) error {
+	err := r.repo.DeleteReservationByID(ctx, reservationID)
+	if err != nil {
+		log.Println("error while deleting reservation by id: ", err)
+		return err
+	}
+
+	return nil
 }

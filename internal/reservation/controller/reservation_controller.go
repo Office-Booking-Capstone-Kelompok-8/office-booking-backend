@@ -96,3 +96,29 @@ func (r *ReservationController) CreateReservation(c *fiber.Ctx) error {
 		},
 	})
 }
+
+func (r *ReservationController) CancelReservation(c *fiber.Ctx) error {
+	token := c.Locals("user").(*jwt.Token)
+	claims := token.Claims.(jwt.MapClaims)
+	userID := claims["uid"].(string)
+
+	reservationID := c.Params("reservationID")
+
+	err := r.service.CancelReservation(c.Context(), userID, reservationID)
+	if err != nil {
+		switch err {
+		case err2.ErrReservationNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		case err2.ErrNoPermission:
+			return fiber.NewError(fiber.StatusForbidden, err.Error())
+		case err2.ErrReservationActive:
+			return fiber.NewError(fiber.StatusConflict, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "Reservation canceled successfully",
+	})
+}

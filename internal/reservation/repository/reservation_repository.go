@@ -11,6 +11,9 @@ type ReservationRepository interface {
 	CountUserActiveReservations(ctx context.Context, userID string) (int64, error)
 	CountBuildingActiveReservations(ctx context.Context, buildingID string) (int64, error)
 	GetUserReservations(ctx context.Context, userID string, offset int, limit int) (*entity.Reservations, int64, error)
+	GetReservationByID(ctx context.Context, reservationID string) (*entity.Reservation, error)
 	IsBuildingAvailable(ctx context.Context, buildingID string, start time.Time, end time.Time) (bool, error)
 	AddBuildingReservation(ctx context.Context, reservation *entity.Reservation) error
+	UpdateReservation(ctx context.Context, reservation *entity.Reservation) error
+	DeleteReservationByID(ctx context.Context, reservationID string) error
 }

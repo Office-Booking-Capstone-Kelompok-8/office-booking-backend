@@ -58,6 +58,10 @@ func (r *ReservationServiceImpl) GetUserReservations(ctx context.Context, userID
 }
 
 func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, userID string, reservation *dto.AddReservartionRequest) (string, error) {
+	if reservation.StartDate.After(reservation.EndDate.ToTime()) {
+		return "", err2.ErrStartDateAfterEndDate
+	}
+
 	errGroup := errgroup.Group{}
 	errGroup.Go(func() error {
 		isPublished, err := r.buildingRepo.IsBuildingPublished(ctx, reservation.BuildingID)

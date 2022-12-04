@@ -45,3 +45,8 @@ func (u *UserRepositoryMock) GetUserProfilePictureID(ctx context.Context, id str
 	args := u.Called(ctx, id)
 	return args.Get(0).(*entity.ProfilePicture), args.Error(1)
 }
+
+func (u *UserRepositoryMock) DeleteUserProfilePicture(ctx context.Context, pictureID string) error {
+	args := u.Called(ctx, pictureID)
+	return args.Error(0)
+}

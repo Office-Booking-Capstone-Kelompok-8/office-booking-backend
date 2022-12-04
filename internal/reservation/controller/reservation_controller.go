@@ -35,7 +35,7 @@ func (r *ReservationController) GetUserReservations(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
 	}
 
-	limit := c.Query("limit", "10")
+	limit := c.Query("limit", "20")
 	limitInt, err := strconv.Atoi(limit)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())

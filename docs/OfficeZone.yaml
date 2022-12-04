@@ -644,6 +644,24 @@ paths:
         - access_token: []
       tags:
         - EndUser.Reservations
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of reservations per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
       responses:
         200:
           description: successfully retrieved reservations
@@ -694,6 +712,8 @@ paths:
                             message:
                               type: string
                               example: Pending
+                  Mete:
+                    $ref: '#/components/schemas/Meta'
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         404:

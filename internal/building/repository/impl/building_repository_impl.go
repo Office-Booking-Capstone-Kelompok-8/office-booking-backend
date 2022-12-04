@@ -238,7 +238,10 @@ func (b *BuildingRepositoryImpl) AddFacility(ctx context.Context, facility *enti
 		Model(&entity.Facility{}).
 		Create(facility).Error
 	if err != nil {
-		if strings.Contains(err.Error(), "CONSTRAINT `fk_facilities_category` FOREIGN KEY (`category_id`)") {
+		switch {
+		case strings.Contains(err.Error(), "CONSTRAINT `fk_buildings_facilities` FOREIGN KEY (`building_id`)"):
+			return err2.ErrBuildingNotFound
+		case strings.Contains(err.Error(), "CONSTRAINT `fk_facilities_category` FOREIGN KEY (`category_id`)"):
 			return err2.ErrInvalidCategoryID
 		}
 		return err

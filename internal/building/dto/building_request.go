@@ -35,6 +35,7 @@ type UpdateBuildingRequest struct {
 	Facilities  UpdateFacilitiesRequest `json:"facilities" validate:"omitempty,dive"`
 	Pictures    PicturesRequest         `json:"pictures" validate:"omitempty,dive"`
 	Capacity    int                     `json:"capacity" validate:"omitempty,gte=1,lte=1000"`
+	Size        int                     `json:"size" validate:"omitempty,gte=1,lte=1000"`
 	Prices      PriceRequest            `json:"price" validate:"omitempty,dive"`
 	Owner       string                  `json:"owner" validate:"omitempty"`
 	Locations   LocationRequest         `json:"location" validate:"omitempty,dive"`
@@ -46,14 +47,18 @@ func (c *UpdateBuildingRequest) ToEntity(buildingID string) *entity.Building {
 		ID:           buildingID,
 		Name:         c.Name,
 		Description:  c.Description,
-		Facilities:   *c.Facilities.ToEntity(buildingID),
 		Pictures:     *c.Pictures.ToEntity(buildingID),
 		Capacity:     c.Capacity,
 		AnnualPrice:  c.Prices.AnnualPrice,
 		MonthlyPrice: c.Prices.MonthlyPrice,
+		Facilities:   *c.Facilities.ToEntity(buildingID),
 		Owner:        c.Owner,
+		Size:         c.Size,
 		CityID:       c.Locations.CityID,
 		DistrictID:   c.Locations.DistrictID,
+		Address:      c.Locations.Address,
+		Longitude:    c.Locations.Geo.Longitude,
+		Latitude:     c.Locations.Geo.Latitude,
 		IsPublished:  &c.IsPublished,
 	}
 }

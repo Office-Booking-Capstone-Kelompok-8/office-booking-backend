@@ -215,7 +215,11 @@ func (b *BuildingServiceImpl) ValidateBuilding(ctx context.Context, buildingID s
 		errs.AddError("pictures", "main image is required")
 	}
 
-	return errs, err2.ErrNotPublishWorthy
+	if errs != nil {
+		return errs, err2.ErrNotPublishWorthy
+	}
+
+	return nil, nil
 }
 
 func (b *BuildingServiceImpl) DeleteBuildingPicture(ctx context.Context, buildingID string, pictureID string) error {

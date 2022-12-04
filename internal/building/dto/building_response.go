@@ -201,6 +201,7 @@ type FullBuildingResponse struct {
 	Description string      `json:"description" validate:"required,min=3,max=10000"`
 	Facilities  *Facilities `json:"facilities" validate:"required,min=1,dive"`
 	Capacity    int         `json:"capacity" validate:"required,min=1,max=100"`
+	Size        int         `json:"size" validate:"required,min=1,max=10000"`
 	Prices      *Price      `json:"price" validate:"required,dive"`
 	Owner       string      `json:"owner" validate:"required"`
 	Locations   *Location   `json:"location" validate:"required,dive"`
@@ -215,6 +216,7 @@ func NewFullBuildingResponse(building *entity.Building) *FullBuildingResponse {
 		Description: building.Description,
 		Facilities:  NewFacilities(&building.Facilities),
 		Capacity:    building.Capacity,
+		Size:        building.Size,
 		Prices: &Price{
 			AnnualPrice:  building.AnnualPrice,
 			MonthlyPrice: building.MonthlyPrice,

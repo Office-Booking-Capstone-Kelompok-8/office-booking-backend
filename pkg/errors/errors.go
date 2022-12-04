@@ -75,9 +75,9 @@ var (
 	// ErrBuildingNotAvailable is returned when the building is not available for the given time
 	ErrBuildingNotAvailable = errors.New("building is not available")
 
-	//ErrReservationNotFound is returned when the reservation is not found
+	// ErrReservationNotFound is returned when the reservation is not found
 	ErrReservationNotFound = errors.New("reservation not found")
 
-	//ErrReservationActive is returned when the reservation is still active
+	// ErrReservationActive is returned when the reservation is still active
 	ErrReservationActive = errors.New("reservation is still active")
 )

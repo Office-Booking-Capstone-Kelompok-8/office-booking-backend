@@ -128,9 +128,9 @@ func (r *ReservationRepositoryImpl) UpdateReservation(ctx context.Context, reser
 
 func (r *ReservationRepositoryImpl) DeleteReservationByID(ctx context.Context, reservationID string) error {
 	res := r.db.WithContext(ctx).
-		Model(entity.Reservation{}).
+		Model(&entity.Reservation{}).
 		Where("id = ?", reservationID).
-		Delete(entity.Reservation{})
+		Delete(&entity.Reservation{})
 	if res.Error != nil {
 		return res.Error
 	}

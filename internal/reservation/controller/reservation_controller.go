@@ -78,8 +78,6 @@ func (r *ReservationController) CreateReservation(c *fiber.Ctx) error {
 	reservationID, err := r.service.CreateReservation(c.Context(), userID, reservation)
 	if err != nil {
 		switch err {
-		case err2.ErrStartDateAfterEndDate:
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		case err2.ErrBuildingNotFound:
 			return fiber.NewError(fiber.StatusNotFound, err.Error())
 		case err2.ErrBuildingNotAvailable:
@@ -114,8 +112,6 @@ func (r *ReservationController) CreateAdminReservation(c *fiber.Ctx) error {
 	reservationID, err := r.service.CreateAdminReservation(c.Context(), reservation)
 	if err != nil {
 		switch err {
-		case err2.ErrStartDateAfterEndDate:
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		case err2.ErrBuildingNotFound:
 			return fiber.NewError(fiber.StatusNotFound, err.Error())
 		case err2.ErrBuildingNotAvailable:

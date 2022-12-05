@@ -21,8 +21,8 @@ func (r *ReservationServiceMock) GetUserReservations(ctx context.Context, userID
 	return args.Get(0).(*dto.BriefReservationsResponse), args.Get(1).(int64), args.Error(2)
 }
 
-func (r *ReservationServiceMock) IsBuildingAvailable(ctx context.Context, buildingID string, start time.Time, end time.Time) (bool, error) {
-	args := r.Called(ctx, buildingID, start, end)
+func (r *ReservationServiceMock) IsBuildingAvailable(ctx context.Context, buildingID string, startDate time.Time, duration int) (bool, error) {
+	args := r.Called(ctx, buildingID, startDate, duration)
 	return args.Get(0).(bool), args.Error(1)
 }
 

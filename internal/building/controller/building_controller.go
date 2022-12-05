@@ -33,7 +33,7 @@ func (b *BuildingController) GetAllPublishedBuildings(c *fiber.Ctx) error {
 	city := c.Query("city", "0")
 	district := c.Query("district", "0")
 	startDate := c.Query("startDate", "0001-01-01")
-	duration := c.Query("duration", "1")
+	duration := c.Query("duration", "0")
 	limit := c.Query("limit", "20")
 	page := c.Query("page", "1")
 
@@ -70,6 +70,10 @@ func (b *BuildingController) GetAllPublishedBuildings(c *fiber.Ctx) error {
 
 	buildings, total, err := b.buildingService.GetAllPublishedBuildings(c.Context(), q, cityInt, districtInt, startDateParsed, durationInt, limitInt, pageInt)
 	if err != nil {
+		if errors.Is(err, err2.ErrInvalidDateRange) {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
@@ -89,7 +93,7 @@ func (b *BuildingController) GetAllBuildings(c *fiber.Ctx) error {
 	city := c.Query("city", "0")
 	district := c.Query("district", "0")
 	startDate := c.Query("startDate", "0001-01-01")
-	duration := c.Query("duration", "1")
+	duration := c.Query("duration", "0")
 	limit := c.Query("limit", "20")
 	page := c.Query("page", "1")
 
@@ -126,6 +130,9 @@ func (b *BuildingController) GetAllBuildings(c *fiber.Ctx) error {
 
 	buildings, total, err := b.buildingService.GetAllBuildings(c.Context(), q, cityInt, districtInt, startDateParsed, durationInt, limitInt, pageInt)
 	if err != nil {
+		if errors.Is(err, err2.ErrInvalidDateRange) {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 

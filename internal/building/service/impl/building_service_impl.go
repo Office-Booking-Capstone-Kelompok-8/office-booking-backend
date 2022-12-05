@@ -35,7 +35,7 @@ func NewBuildingServiceImpl(repo repository.BuildingRepository, reservationRepo 
 
 func calculateEndDate(startDate time.Time, duration int) (time.Time, error) {
 	//	XNOR operation to check if both startDate and duration are zero or not
-	if !(startDate.IsZero() == (duration == 1)) {
+	if !(startDate.IsZero() == (duration == 0)) {
 		return time.Time{}, err2.ErrInvalidDateRange
 	}
 

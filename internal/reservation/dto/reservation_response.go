@@ -104,10 +104,14 @@ type BriefTenantResponse struct {
 }
 
 func NewBriefTenantResponse(user entity.User) *BriefTenantResponse {
+	url := user.Detail.Picture.Url
+	if url == "" {
+		url = config.DEFAULT_USER_AVATAR
+	}
 	return &BriefTenantResponse{
 		ID:      user.ID,
 		Name:    user.Detail.Name,
 		Email:   user.Email,
-		Picture: user.Detail.Picture.Url,
+		Picture: url,
 	}
 }

@@ -85,24 +85,50 @@ func (r *ReservationRepositoryImpl) GetUserReservations(ctx context.Context, use
 }
 
 func (r *ReservationRepositoryImpl) GetReservationByID(ctx context.Context, reservationID string) (*entity.Reservation, error) {
-	var reservation entity.Reservation
-	err := r.db.WithContext(ctx).
-		Model(&entity.Reservation{}).
-		Joins("Status").
-		Joins("Building").
-		Preload("Building.Pictures").
-		Preload("Building.District").
-		Preload("Building.City").
-		Joins("User").
-		Preload("User.Detail").
-		Where("`reservations`.`id` = ?", reservationID).
-		First(&reservation).Error
+	query := `
+	SELECT r.id, r.company_name, r.building_id, r.start_date, r.end_date, r.user_id, r.status_id, r.created_at, r.updated_at,
+       s.id, s.message, b.id, b.name, b.address, p.thumbnail_url, c.name, d.name, u.id, u.email, ud.name, pp.url
+	FROM reservations r
+    	JOIN statuses s ON s.id = r.status_id
+    	JOIN buildings b ON b.id = r.building_id
+    	JOIN pictures p ON p.id = (
+    	        SELECT p1.id FROM pictures p1
+    	        WHERE b.id = p1.building_id AND
+    	              p1.index = 0
+    	        LIMIT 1
+    	    )
+    	JOIN cities c ON c.id = b.city_id
+    	JOIN districts d ON d.id = b.district_id
+    	JOIN users u ON u.id = r.user_id
+    	JOIN user_details ud ON u.id = ud.user_id
+    	LEFT JOIN profile_pictures pp ON ud.picture_id = pp.id
+	WHERE r.deleted_at IS NULL AND r.id = ?	
+	`
+	rows, err := r.db.WithContext(ctx).Raw(query, reservationID).Rows()
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, err2.ErrReservationNotFound
-		}
 		return nil, err
 	}
+	defer func() {
+		err = rows.Close()
+	}()
+
+	if !rows.Next() {
+		return nil, err2.ErrReservationNotFound
+	}
+
+	var reservation entity.Reservation
+	NullAbleProfilePicture := &entity.NullAbleProfilePicture{}
+	reservation.Building.Pictures = append(reservation.Building.Pictures, entity.Picture{})
+	err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate,
+		&reservation.UserID, &reservation.StatusID, &reservation.CreatedAt, &reservation.UpdatedAt, &reservation.Status.ID, &reservation.Status.Message,
+		&reservation.Building.ID, &reservation.Building.Name, &reservation.Building.Address, &reservation.Building.Pictures[0].ThumbnailUrl,
+		&reservation.Building.City.Name, &reservation.Building.District.Name, &reservation.User.ID, &reservation.User.Email, &reservation.User.Detail.Name,
+		&NullAbleProfilePicture.Url)
+	if err != nil {
+		return nil, err
+	}
+
+	reservation.User.Detail.Picture = NullAbleProfilePicture.ConvertToProfilePicture()
 
 	return &reservation, nil
 }

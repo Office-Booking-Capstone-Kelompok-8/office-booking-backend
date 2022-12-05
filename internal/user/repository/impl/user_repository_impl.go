@@ -39,24 +39,28 @@ func (u *UserRepositoryImpl) GetFullUserByEmail(ctx context.Context, email strin
 }
 
 func (u *UserRepositoryImpl) GetFullUserByID(ctx context.Context, id string) (*entity.User, error) {
-	user := &entity.User{}
-	NullAbleProfilePicture := &entity.NullAbleProfilePicture{}
-	query := "SELECT u.id,u.email,u.role,u.is_verified,u.created_at,u.updated_at,u.deleted_at," +
-		"d.user_id ,d.name,d.phone ,d.picture_id ,d.created_at ,d.updated_at ,d.deleted_at," +
-		"pp.id, pp.url FROM users u " +
-		"JOIN user_details d ON u.id = d.user_id AND d.deleted_at IS NULL " +
-		"LEFT JOIN profile_pictures pp ON d.picture_id = pp.id " +
-		"WHERE u.deleted_at IS NULL AND u.id = ? ORDER BY u.id "
+	query := `
+		SELECT u.id, u.email, u.role, u.is_verified, u.created_at, u.updated_at, u.deleted_at,
+			d.user_id, d.name, d.phone, d.picture_id, d.created_at, d.updated_at, d.deleted_at,
+			pp.id, pp.url 
+		FROM users u 
+			JOIN user_details d ON u.id = d.user_id AND d.deleted_at IS NULL
+			LEFT JOIN profile_pictures pp ON d.picture_id = pp.id
+		WHERE u.deleted_at IS NULL AND u.id = ? ORDER BY u.id`
 	rows, err := u.db.WithContext(ctx).Raw(query, id).Rows()
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err = rows.Close()
+	}()
 
 	if !rows.Next() {
 		return nil, err2.ErrUserNotFound
 	}
 
+	user := &entity.User{}
+	NullAbleProfilePicture := &entity.NullAbleProfilePicture{}
 	err = rows.Scan(&user.ID, &user.Email, &user.Role, &user.IsVerified, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt,
 		&user.Detail.UserID, &user.Detail.Name, &user.Detail.Phone, &NullAbleProfilePicture.ID, &user.Detail.CreatedAt, &user.Detail.UpdatedAt, &user.Detail.DeletedAt,
 		&NullAbleProfilePicture.ID, &NullAbleProfilePicture.Url)

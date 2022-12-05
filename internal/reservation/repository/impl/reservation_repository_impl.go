@@ -86,15 +86,21 @@ func (r *ReservationRepositoryImpl) GetUserReservations(ctx context.Context, use
 
 func (r *ReservationRepositoryImpl) GetReservationByID(ctx context.Context, reservationID string) (*entity.Reservation, error) {
 	var reservation entity.Reservation
-
 	err := r.db.WithContext(ctx).
 		Model(&entity.Reservation{}).
 		Joins("Status").
 		Joins("Building").
+		Preload("Building.Pictures").
+		Preload("Building.District").
+		Preload("Building.City").
+		Joins("User").
+		Preload("User.Detail").
 		Where("`reservations`.`id` = ?", reservationID).
-		First(&reservation).
-		Error
+		First(&reservation).Error
 	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, err2.ErrReservationNotFound
+		}
 		return nil, err
 	}
 

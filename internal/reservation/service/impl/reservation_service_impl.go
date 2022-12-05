@@ -58,6 +58,17 @@ func (r *ReservationServiceImpl) GetUserReservations(ctx context.Context, userID
 	return reservationDto, count, nil
 }
 
+func (r *ReservationServiceImpl) GetReservationByID(ctx context.Context, reservationID string) (*dto.FullAdminReservationResponse, error) {
+	reservation, err := r.repo.GetReservationByID(ctx, reservationID)
+	if err != nil {
+		log.Println("error while getting reservation by id: ", err)
+		return nil, err
+	}
+
+	reservationDto := dto.NewFullAdminReservationResponse(reservation)
+	return reservationDto, nil
+}
+
 func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, userID string, reservation *dto.AddReservartionRequest) (string, error) {
 	if reservation.StartDate.After(reservation.EndDate.ToTime()) {
 		return "", err2.ErrStartDateAfterEndDate

@@ -10,14 +10,14 @@ type AddAdminReservartionRequest struct {
 	BuildingID  string `json:"buildingId" validate:"required"`
 	CompanyName string `json:"companyName" validate:"required"`
 	StartDate   Date   `json:"startDate" validate:"required"`
-	EndDate     Date   `json:"endDate" validate:"required,gtfield=StartDate"`
+	Duration    int    `json:"duration" validate:"required,gte=1"`
 }
 
 type AddReservartionRequest struct {
 	BuildingID  string `json:"buildingId" validate:"required"`
 	CompanyName string `json:"companyName" validate:"required"`
 	StartDate   Date   `json:"startDate" validate:"required"`
-	EndDate     Date   `json:"endDate" validate:"required,gtfield=StartDate"`
+	Duration    int    `json:"duration" validate:"required,gte=1"`
 }
 
 type Date struct {
@@ -43,7 +43,7 @@ func (a *AddReservartionRequest) ToEntity(userID string) *entity.Reservation {
 		BuildingID:  a.BuildingID,
 		CompanyName: a.CompanyName,
 		StartDate:   a.StartDate.ToTime(),
-		EndDate:     a.EndDate.ToTime(),
+		EndDate:     a.StartDate.AddDate(0, a.Duration, 0),
 	}
 }
 
@@ -53,6 +53,6 @@ func (a *AddAdminReservartionRequest) ToEntity() *entity.Reservation {
 		BuildingID:  a.BuildingID,
 		CompanyName: a.CompanyName,
 		StartDate:   a.StartDate.ToTime(),
-		EndDate:     a.EndDate.ToTime(),
+		EndDate:     a.StartDate.AddDate(0, a.Duration, 0),
 	}
 }

@@ -36,8 +36,9 @@ func (r *ReservationServiceImpl) CountUserActiveReservations(ctx context.Context
 	return count, nil
 }
 
-func (r *ReservationServiceImpl) IsBuildingAvailable(ctx context.Context, buildingID string, start time.Time, end time.Time) (bool, error) {
-	isAvailable, err := r.repo.IsBuildingAvailable(ctx, buildingID, start, end)
+func (r *ReservationServiceImpl) IsBuildingAvailable(ctx context.Context, buildingID string, startDate time.Time, duration int) (bool, error) {
+	endDate := startDate.AddDate(0, duration, 0)
+	isAvailable, err := r.repo.IsBuildingAvailable(ctx, buildingID, startDate, endDate)
 	if err != nil {
 		log.Println("error while checking building availability: ", err)
 		return false, err
@@ -70,10 +71,6 @@ func (r *ReservationServiceImpl) GetReservationByID(ctx context.Context, reserva
 }
 
 func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, userID string, reservation *dto.AddReservartionRequest) (string, error) {
-	if reservation.StartDate.After(reservation.EndDate.ToTime()) {
-		return "", err2.ErrStartDateAfterEndDate
-	}
-
 	errGroup := errgroup.Group{}
 	errGroup.Go(func() error {
 		isPublished, err := r.buildingRepo.IsBuildingPublished(ctx, reservation.BuildingID)
@@ -90,7 +87,8 @@ func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, userID s
 	})
 
 	errGroup.Go(func() error {
-		isAvailable, err := r.repo.IsBuildingAvailable(ctx, reservation.BuildingID, reservation.StartDate.ToTime(), reservation.EndDate.ToTime())
+		endDate := reservation.StartDate.AddDate(0, reservation.Duration, 0)
+		isAvailable, err := r.repo.IsBuildingAvailable(ctx, reservation.BuildingID, reservation.StartDate.ToTime(), endDate)
 		if err != nil {
 			log.Println("error while checking building availability: ", err)
 			return err
@@ -118,10 +116,6 @@ func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, userID s
 }
 
 func (r *ReservationServiceImpl) CreateAdminReservation(ctx context.Context, reservation *dto.AddAdminReservartionRequest) (string, error) {
-	if reservation.StartDate.After(reservation.EndDate.ToTime()) {
-		return "", err2.ErrStartDateAfterEndDate
-	}
-
 	errGroup := errgroup.Group{}
 	errGroup.Go(func() error {
 		isPublished, err := r.buildingRepo.IsBuildingPublished(ctx, reservation.BuildingID)
@@ -138,7 +132,8 @@ func (r *ReservationServiceImpl) CreateAdminReservation(ctx context.Context, res
 	})
 
 	errGroup.Go(func() error {
-		isAvailable, err := r.repo.IsBuildingAvailable(ctx, reservation.BuildingID, reservation.StartDate.ToTime(), reservation.EndDate.ToTime())
+		endDate := reservation.StartDate.AddDate(0, reservation.Duration, 0)
+		isAvailable, err := r.repo.IsBuildingAvailable(ctx, reservation.BuildingID, reservation.StartDate.ToTime(), endDate)
 		if err != nil {
 			log.Println("error while checking building availability: ", err)
 			return err

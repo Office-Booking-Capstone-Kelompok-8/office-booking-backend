@@ -33,14 +33,27 @@ func NewBuildingServiceImpl(repo repository.BuildingRepository, reservationRepo 
 	}
 }
 
-func (b *BuildingServiceImpl) GetAllPublishedBuildings(ctx context.Context, q string, cityID int, districtID int, startDate time.Time, endDate time.Time, limit int, page int) (*dto.BriefPublishedBuildingsResponse, int64, error) {
-	//	check if start date is after end date
-	if startDate.After(endDate) {
-		return nil, 0, err2.ErrStartDateAfterEndDate
+func calculateEndDate(startDate time.Time, duration int) (time.Time, error) {
+	//	XNOR operation to check if both startDate and duration are zero or not
+	if !(startDate.IsZero() == (duration == 0)) {
+		return time.Time{}, err2.ErrInvalidDateRange
+	}
+
+	var endDate time.Time
+	if !startDate.IsZero() {
+		endDate = startDate.AddDate(0, duration, 0)
+	}
+
+	return endDate, nil
+}
+
+func (b *BuildingServiceImpl) GetAllPublishedBuildings(ctx context.Context, q string, cityID int, districtID int, startDate time.Time, duration int, limit int, page int) (*dto.BriefPublishedBuildingsResponse, int64, error) {
+	endDate, err := calculateEndDate(startDate, duration)
+	if err != nil {
+		return nil, 0, err
 	}
 
 	offset := (page - 1) * limit
-
 	//	get all buildings
 	buildings, count, err := b.repo.GetAllBuildings(ctx, q, cityID, districtID, startDate, endDate, limit, offset, true)
 	if err != nil {
@@ -52,10 +65,10 @@ func (b *BuildingServiceImpl) GetAllPublishedBuildings(ctx context.Context, q st
 	return buildingsResponse, count, nil
 }
 
-func (b *BuildingServiceImpl) GetAllBuildings(ctx context.Context, q string, cityID int, districtID int, startDate time.Time, endDate time.Time, limit int, page int) (*dto.BriefBuildingsResponse, int64, error) {
-	//	check if start date is after end date
-	if startDate.After(endDate) {
-		return nil, 0, err2.ErrStartDateAfterEndDate
+func (b *BuildingServiceImpl) GetAllBuildings(ctx context.Context, q string, cityID int, districtID int, startDate time.Time, duration int, limit int, page int) (*dto.BriefBuildingsResponse, int64, error) {
+	endDate, err := calculateEndDate(startDate, duration)
+	if err != nil {
+		return nil, 0, err
 	}
 
 	offset := (page - 1) * limit

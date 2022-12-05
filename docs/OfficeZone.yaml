@@ -1787,7 +1787,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: reservation deleted successfully
+                    example: Reservation deleted successfully
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         403:

@@ -158,3 +158,21 @@ func (r *ReservationController) CancelReservation(c *fiber.Ctx) error {
 		Message: "Reservation canceled successfully",
 	})
 }
+
+func (r *ReservationController) DeleteReservation(c *fiber.Ctx) error {
+	reservationID := c.Params("reservationID")
+
+	err := r.service.DeleteReservationByID(c.Context(), reservationID)
+	if err != nil {
+		switch err {
+		case err2.ErrReservationNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "Reservation deleted successfully",
+	})
+}

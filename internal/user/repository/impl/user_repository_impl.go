@@ -74,6 +74,7 @@ func (u *UserRepositoryImpl) GetAllUsers(ctx context.Context, q string, role int
 	var count int64
 
 	query := u.db.WithContext(ctx).
+		Joins("Detail").
 		Preload("Detail.Picture")
 	if q != "" {
 		query = query.Where("`Detail`.`name` LIKE ?", "%"+q+"%")

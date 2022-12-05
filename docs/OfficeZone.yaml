@@ -1634,20 +1634,14 @@ paths:
               examples:
                 InvalidRequestBody:
                   $ref: '#/components/examples/InvalidRequestBody'
-                InvalidStartDate:
-                  $ref: '#/components/examples/InvalidStartDate'
-                InvalidEndDate:
-                  $ref: '#/components/examples/InvalidEndDate'
                 InvalidDateRange:
                   $ref: '#/components/examples/InvalidDateRange'
-                InvalidBuildingID:
-                  $ref: '#/components/examples/InvalidBuildingID'
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         403:
           $ref: '#/components/responses/RolesNotSupported'
         409:
-          description: Reservation date range is not available
+          description: The building to be reserved is not available
           content:
             application/json:
               schema:
@@ -1657,7 +1651,8 @@ paths:
                     type: string
                     example: building is not available
         500:
-          $ref: '#/components/responses/InternalServerError'    
+          $ref: '#/components/responses/InternalServerError'
+
   /admin/reservations/{reservationID}:
     put:
       summary: Update a reservation

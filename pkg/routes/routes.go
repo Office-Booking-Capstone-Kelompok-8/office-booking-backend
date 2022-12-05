@@ -86,12 +86,15 @@ func (r *Routes) Init(app *fiber.App) {
 	aBuilding.Post("/:buildingID/facilities", r.buildingController.AddBuildingFacilities)
 	aBuilding.Delete("/:buildingID/facilities/:facilityID", r.buildingController.DeleteBuildingFacility)
 
+	// Admin.Reservation routes
+	aReservation := admin.Group("/reservations")
+	aReservation.Post("/", r.reservationController.CreateAdminReservation)
+
 	// Buildings routes
 	building := v1.Group("/buildings")
 	building.Get("/", r.buildingController.GetAllPublishedBuildings)
 	building.Get("/:buildingID", r.buildingController.GetPublishedBuildingDetailByID)
 	building.Get("/facilities/category", r.buildingController.GetFacilityCategories)
-
 }
 
 func ping(c *fiber.Ctx) error {

@@ -45,3 +45,8 @@ func (r *ReservationServiceMock) CancelReservation(ctx context.Context, userID s
 	args := r.Called(ctx, userID, reservationID)
 	return args.Error(0)
 }
+
+func (r *ReservationServiceMock) UpdateReservation(ctx context.Context, reservationID string, reservation *dto.UpdateReservationRequest) error {
+	args := r.Called(ctx, reservationID, reservation)
+	return args.Error(0)
+}

@@ -80,4 +80,16 @@ var (
 
 	// ErrReservationActive is returned when the reservation is still active
 	ErrReservationActive = errors.New("reservation is still active")
+
+	// ErrStartDateBeforeToday is returned when the start date is before today
+	ErrStartDateBeforeToday = errors.New("start date must be after today")
+
+	// ErrInvalidStatus is returned when the status is invalid
+	ErrInvalidStatus = errors.New("status id is invalid")
+
+	// ErrInvalidRole is returned when the role is invalid
+	ErrInvalidBuildingID = errors.New("building id is invalid")
+
+	// ErrInvalidUserID is returned when the user id is invalid
+	ErrInvalidUserID = errors.New("user id is invalid")
 )

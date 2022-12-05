@@ -14,5 +14,6 @@ type ReservationService interface {
 	CreateReservation(ctx context.Context, userID string, reservation *dto.AddReservartionRequest) (string, error)
 	CreateAdminReservation(ctx context.Context, reservation *dto.AddAdminReservartionRequest) (string, error)
 	CancelReservation(ctx context.Context, userID string, reservationID string) error
+	UpdateReservation(ctx context.Context, reservationID string, reservation *dto.UpdateReservationRequest) error
 	DeleteReservationByID(ctx context.Context, reservationID string) error
 }

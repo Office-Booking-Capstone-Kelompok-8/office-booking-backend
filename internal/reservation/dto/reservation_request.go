@@ -7,15 +7,15 @@ import (
 
 type AddAdminReservartionRequest struct {
 	UserID      string `json:"userId" validate:"required,uuid"`
-	BuildingID  string `json:"buildingId" validate:"required"`
-	CompanyName string `json:"companyName" validate:"required"`
+	BuildingID  string `json:"buildingId" validate:"required,uuid"`
+	CompanyName string `json:"companyName" validate:"required,min=3,max=255"`
 	StartDate   Date   `json:"startDate" validate:"required"`
 	EndDate     Date   `json:"endDate" validate:"required,gtfield=StartDate"`
 }
 
 type AddReservartionRequest struct {
-	BuildingID  string `json:"buildingId" validate:"required"`
-	CompanyName string `json:"companyName" validate:"required"`
+	BuildingID  string `json:"buildingId" validate:"required,uuid"`
+	CompanyName string `json:"companyName" validate:"required,min=3,max=255"`
 	StartDate   Date   `json:"startDate" validate:"required"`
 	EndDate     Date   `json:"endDate" validate:"required,gtfield=StartDate"`
 }
@@ -54,5 +54,24 @@ func (a *AddAdminReservartionRequest) ToEntity() *entity.Reservation {
 		CompanyName: a.CompanyName,
 		StartDate:   a.StartDate.ToTime(),
 		EndDate:     a.EndDate.ToTime(),
+	}
+}
+
+type UpdateReservationRequest struct {
+	UserID      string `json:"userId" validate:"omitempty,uuid"`
+	BuildingID  string `json:"buildingId" validate:"omitempty,uuid"`
+	CompanyName string `json:"companyName" validate:"omitempty,min=3,max=255"`
+	StartDate   Date   `json:"startDate" validate:"omitempty"`
+	EndDate     Date   `json:"endDate" validate:"omitempty,gtfield=StartDate"`
+}
+
+func (u *UpdateReservationRequest) ToEntity(reservationID string) *entity.Reservation {
+	return &entity.Reservation{
+		ID:          reservationID,
+		UserID:      u.UserID,
+		BuildingID:  u.BuildingID,
+		CompanyName: u.CompanyName,
+		StartDate:   u.StartDate.ToTime(),
+		EndDate:     u.EndDate.ToTime(),
 	}
 }

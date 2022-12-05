@@ -4,6 +4,7 @@ import (
 	"office-booking-backend/internal/reservation/repository"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
+	"strings"
 	"time"
 
 	"golang.org/x/net/context"
@@ -116,6 +117,15 @@ func (r *ReservationRepositoryImpl) UpdateReservation(ctx context.Context, reser
 		Where("id = ?", reservation.ID).
 		Updates(reservation)
 	if res.Error != nil {
+		switch {
+		case strings.Contains(res.Error.Error(), "CONSTRAINT `fk_reservations_building`"):
+			return err2.ErrBuildingNotFound
+		case strings.Contains(res.Error.Error(), "CONSTRAINT `fk_reservations_user`"):
+			return err2.ErrUserNotFound
+		case strings.Contains(res.Error.Error(), "CONSTRAINT `fk_reservations_status`"):
+			return err2.ErrInvalidStatus
+		}
+
 		return res.Error
 	}
 

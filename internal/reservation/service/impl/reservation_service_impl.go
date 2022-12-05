@@ -59,6 +59,10 @@ func (r *ReservationServiceImpl) GetUserReservations(ctx context.Context, userID
 }
 
 func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, userID string, reservation *dto.AddReservartionRequest) (string, error) {
+	if reservation.StartDate.Before(time.Now()) {
+		return "", err2.ErrStartDateBeforeToday
+	}
+
 	if reservation.StartDate.After(reservation.EndDate.ToTime()) {
 		return "", err2.ErrStartDateAfterEndDate
 	}
@@ -178,6 +182,77 @@ func (r *ReservationServiceImpl) CancelReservation(ctx context.Context, userID s
 		StatusID: 3,
 	}
 
+	err = r.repo.UpdateReservation(ctx, newReservation)
+	if err != nil {
+		log.Println("error while updating reservation: ", err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *ReservationServiceImpl) UpdateReservation(ctx context.Context, reservationID string, reservation *dto.UpdateReservationRequest) error {
+	// check if reservation request is valid
+	if !reservation.StartDate.IsZero() && !reservation.EndDate.IsZero() && reservation.StartDate.After(reservation.EndDate.ToTime()) {
+		return err2.ErrStartDateAfterEndDate
+	}
+
+	savedReservation, err := r.repo.GetReservationByID(ctx, reservationID)
+	if err != nil {
+		log.Println("error while getting reservation by id: ", err)
+		return err
+	}
+
+	if savedReservation == nil {
+		return err2.ErrReservationNotFound
+	}
+
+	// check if requested end date is after saved start date if request contains end date
+	if !reservation.EndDate.IsZero() && reservation.EndDate.After(savedReservation.StartDate) {
+		return err2.ErrStartDateAfterEndDate
+	}
+
+	// check if requested start date is before saved end date if request contains start date
+	if !reservation.StartDate.IsZero() && reservation.StartDate.Before(savedReservation.EndDate) {
+		return err2.ErrStartDateAfterEndDate
+	}
+
+	if reservation.BuildingID != "" {
+		errGroup := errgroup.Group{}
+		errGroup.Go(func() error {
+			isPublished, err := r.buildingRepo.IsBuildingPublished(ctx, reservation.BuildingID)
+			if err != nil {
+				log.Println("error while checking building availability: ", err)
+				return err
+			}
+
+			if !isPublished {
+				return err2.ErrBuildingNotAvailable
+			}
+
+			return nil
+		})
+
+		errGroup.Go(func() error {
+			isAvailable, err := r.repo.IsBuildingAvailable(ctx, reservation.BuildingID, reservation.StartDate.ToTime(), reservation.EndDate.ToTime())
+			if err != nil {
+				log.Println("error while checking building availability: ", err)
+				return err
+			}
+
+			if !isAvailable {
+				return err2.ErrBuildingNotAvailable
+			}
+
+			return nil
+		})
+
+		if err := errGroup.Wait(); err != nil {
+			return err
+		}
+	}
+
+	newReservation := reservation.ToEntity(reservationID)
 	err = r.repo.UpdateReservation(ctx, newReservation)
 	if err != nil {
 		log.Println("error while updating reservation: ", err)

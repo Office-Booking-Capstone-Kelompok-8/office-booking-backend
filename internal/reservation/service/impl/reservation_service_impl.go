@@ -106,6 +106,54 @@ func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, userID s
 	return reservationEntity.ID, nil
 }
 
+func (r *ReservationServiceImpl) CreateAdminReservation(ctx context.Context, reservation *dto.AddAdminReservartionRequest) (string, error) {
+	if reservation.StartDate.After(reservation.EndDate.ToTime()) {
+		return "", err2.ErrStartDateAfterEndDate
+	}
+
+	errGroup := errgroup.Group{}
+	errGroup.Go(func() error {
+		isPublished, err := r.buildingRepo.IsBuildingPublished(ctx, reservation.BuildingID)
+		if err != nil {
+			log.Println("error while checking building availability: ", err)
+			return err
+		}
+
+		if !isPublished {
+			return err2.ErrBuildingNotAvailable
+		}
+
+		return nil
+	})
+
+	errGroup.Go(func() error {
+		isAvailable, err := r.repo.IsBuildingAvailable(ctx, reservation.BuildingID, reservation.StartDate.ToTime(), reservation.EndDate.ToTime())
+		if err != nil {
+			log.Println("error while checking building availability: ", err)
+			return err
+		}
+
+		if !isAvailable {
+			return err2.ErrBuildingNotAvailable
+		}
+
+		return nil
+	})
+
+	if err := errGroup.Wait(); err != nil {
+		return "", err
+	}
+
+	reservationEntity := reservation.ToEntity()
+	err := r.repo.AddBuildingReservation(ctx, reservationEntity)
+	if err != nil {
+		log.Println("error while creating reservation: ", err)
+		return "", err
+	}
+
+	return reservationEntity.ID, nil
+}
+
 func (r *ReservationServiceImpl) CancelReservation(ctx context.Context, userID string, reservationID string) error {
 	reservation, err := r.repo.GetReservationByID(ctx, reservationID)
 	if err != nil {

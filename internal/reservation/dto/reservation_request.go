@@ -5,6 +5,14 @@ import (
 	"time"
 )
 
+type AddAdminReservartionRequest struct {
+	UserID      string `json:"userId" validate:"required,uuid"`
+	BuildingID  string `json:"buildingId" validate:"required"`
+	CompanyName string `json:"companyName" validate:"required"`
+	StartDate   Date   `json:"startDate" validate:"required"`
+	EndDate     Date   `json:"endDate" validate:"required,gtfield=StartDate"`
+}
+
 type AddReservartionRequest struct {
 	BuildingID  string `json:"buildingId" validate:"required"`
 	CompanyName string `json:"companyName" validate:"required"`
@@ -32,6 +40,16 @@ func (d *Date) ToTime() time.Time {
 func (a *AddReservartionRequest) ToEntity(userID string) *entity.Reservation {
 	return &entity.Reservation{
 		UserID:      userID,
+		BuildingID:  a.BuildingID,
+		CompanyName: a.CompanyName,
+		StartDate:   a.StartDate.ToTime(),
+		EndDate:     a.EndDate.ToTime(),
+	}
+}
+
+func (a *AddAdminReservartionRequest) ToEntity() *entity.Reservation {
+	return &entity.Reservation{
+		UserID:      a.UserID,
 		BuildingID:  a.BuildingID,
 		CompanyName: a.CompanyName,
 		StartDate:   a.StartDate.ToTime(),

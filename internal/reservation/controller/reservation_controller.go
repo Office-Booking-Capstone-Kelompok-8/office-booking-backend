@@ -97,6 +97,42 @@ func (r *ReservationController) CreateReservation(c *fiber.Ctx) error {
 	})
 }
 
+func (r *ReservationController) CreateAdminReservation(c *fiber.Ctx) error {
+	reservation := new(dto.AddAdminReservartionRequest)
+	if err := c.BodyParser(reservation); err != nil {
+		fmt.Println(err)
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	if errs := r.validator.ValidateStruct(reservation); errs != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidRequestBody.Error(),
+			Data:    errs,
+		})
+	}
+
+	reservationID, err := r.service.CreateAdminReservation(c.Context(), reservation)
+	if err != nil {
+		switch err {
+		case err2.ErrStartDateAfterEndDate:
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		case err2.ErrBuildingNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		case err2.ErrBuildingNotAvailable:
+			return fiber.NewError(fiber.StatusConflict, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(response.BaseResponse{
+		Message: "Reservation created successfully",
+		Data: fiber.Map{
+			"reservationID": reservationID,
+		},
+	})
+}
+
 func (r *ReservationController) CancelReservation(c *fiber.Ctx) error {
 	token := c.Locals("user").(*jwt.Token)
 	claims := token.Claims.(jwt.MapClaims)

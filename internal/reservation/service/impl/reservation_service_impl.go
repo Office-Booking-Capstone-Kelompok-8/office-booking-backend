@@ -215,6 +215,79 @@ func (r *ReservationServiceImpl) CancelReservation(ctx context.Context, userID s
 	return nil
 }
 
+func (r *ReservationServiceImpl) UpdateReservation(ctx context.Context, reservationID string, reservation *dto.UpdateReservationRequest) error {
+	savedReservation, err := r.repo.GetReservationByID(ctx, reservationID)
+	if err != nil {
+		log.Println("error while getting reservation by id: ", err)
+		return err
+	}
+	if savedReservation == nil {
+		return err2.ErrReservationNotFound
+	}
+
+	if reservation.BuildingID != "" || !reservation.StartDate.IsZero() || reservation.Duration > 0 {
+		buildingID := savedReservation.BuildingID
+		if reservation.BuildingID != "" {
+			buildingID = reservation.BuildingID
+		}
+
+		startDate := savedReservation.StartDate
+		if !reservation.StartDate.IsZero() {
+			startDate = reservation.StartDate.ToTime()
+		} else {
+			// if start date is not provided, we will use the saved start date so we can calculate the end date correctly
+			reservation.StartDate.Time = savedReservation.StartDate
+		}
+
+		endDate := savedReservation.EndDate
+		if reservation.Duration != 0 {
+			endDate = startDate.AddDate(0, reservation.Duration, 0)
+		}
+
+		errGroup := errgroup.Group{}
+		errGroup.Go(func() error {
+			isPublished, err := r.buildingRepo.IsBuildingPublished(ctx, buildingID)
+			if err != nil {
+				log.Println("error while checking building availability: ", err)
+				return err
+			}
+
+			if !isPublished {
+				return err2.ErrBuildingNotAvailable
+			}
+
+			return nil
+		})
+
+		errGroup.Go(func() error {
+			isAvailable, err := r.repo.IsBuildingAvailable(ctx, buildingID, startDate, endDate, reservationID)
+			if err != nil {
+				log.Println("error while checking building availability: ", err)
+				return err
+			}
+
+			if !isAvailable {
+				return err2.ErrBuildingNotAvailable
+			}
+
+			return nil
+		})
+
+		if err := errGroup.Wait(); err != nil {
+			return err
+		}
+	}
+
+	newReservation := reservation.ToEntity(reservationID)
+	err = r.repo.UpdateReservation(ctx, newReservation)
+	if err != nil {
+		log.Println("error while updating reservation: ", err)
+		return err
+	}
+
+	return nil
+}
+
 func (r *ReservationServiceImpl) DeleteReservationByID(ctx context.Context, reservationID string) error {
 	err := r.repo.DeleteReservationByID(ctx, reservationID)
 	if err != nil {

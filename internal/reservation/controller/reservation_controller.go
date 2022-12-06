@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"office-booking-backend/internal/reservation/dto"
 	"office-booking-backend/internal/reservation/service"
 	err2 "office-booking-backend/pkg/errors"
@@ -105,7 +104,6 @@ func (r *ReservationController) CreateReservation(c *fiber.Ctx) error {
 
 	reservation := new(dto.AddReservartionRequest)
 	if err := c.BodyParser(reservation); err != nil {
-		fmt.Println(err)
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
@@ -119,8 +117,10 @@ func (r *ReservationController) CreateReservation(c *fiber.Ctx) error {
 	reservationID, err := r.service.CreateReservation(c.Context(), userID, reservation)
 	if err != nil {
 		switch err {
+		case err2.ErrStartDateBeforeToday:
+			fallthrough
 		case err2.ErrBuildingNotFound:
-			return fiber.NewError(fiber.StatusNotFound, err.Error())
+			return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidBuildingID.Error())
 		case err2.ErrBuildingNotAvailable:
 			return fiber.NewError(fiber.StatusConflict, err.Error())
 		default:
@@ -139,7 +139,6 @@ func (r *ReservationController) CreateReservation(c *fiber.Ctx) error {
 func (r *ReservationController) CreateAdminReservation(c *fiber.Ctx) error {
 	reservation := new(dto.AddAdminReservartionRequest)
 	if err := c.BodyParser(reservation); err != nil {
-		fmt.Println(err)
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
@@ -154,7 +153,7 @@ func (r *ReservationController) CreateAdminReservation(c *fiber.Ctx) error {
 	if err != nil {
 		switch err {
 		case err2.ErrBuildingNotFound:
-			return fiber.NewError(fiber.StatusNotFound, err.Error())
+			return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidBuildingID.Error())
 		case err2.ErrBuildingNotAvailable:
 			return fiber.NewError(fiber.StatusConflict, err.Error())
 		default:
@@ -193,6 +192,44 @@ func (r *ReservationController) CancelReservation(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
 		Message: "Reservation canceled successfully",
+	})
+}
+
+func (r *ReservationController) UpdateReservation(c *fiber.Ctx) error {
+	reservationID := c.Params("reservationID")
+
+	reservation := new(dto.UpdateReservationRequest)
+	if err := c.BodyParser(reservation); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	if errs := r.validator.ValidateStruct(reservation); errs != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidRequestBody.Error(),
+			Data:    errs,
+		})
+	}
+
+	err := r.service.UpdateReservation(c.Context(), reservationID, reservation)
+	if err != nil {
+		switch err {
+		case err2.ErrReservationNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		case err2.ErrBuildingNotAvailable:
+			return fiber.NewError(fiber.StatusConflict, err.Error())
+		case err2.ErrInvalidStatus:
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		case err2.ErrBuildingNotFound:
+			return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidBuildingID.Error())
+		case err2.ErrUserNotFound:
+			return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidUserID.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "Reservation updated successfully",
 	})
 }
 

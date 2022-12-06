@@ -784,6 +784,8 @@ paths:
                   $ref: '#/components/examples/InvalidRequestBody'
                 InvalidDateRange:
                   $ref: '#/components/examples/InvalidDateRange'
+                InvalidBuildingID:
+                  $ref: '#/components/examples/InvalidBuildingID'
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         409:
@@ -1732,6 +1734,8 @@ paths:
                   $ref: '#/components/examples/InvalidRequestBody'
                 InvalidDateRange:
                   $ref: '#/components/examples/InvalidDateRange'
+                InvalidBuildingID:
+                  $ref: '#/components/examples/InvalidBuildingID'
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         403:
@@ -1880,44 +1884,42 @@ paths:
               type: object
               minProperties: 1
               properties:
-                companyName:
+                userID:
                   type: string
-                  example: Alterra
+                  format: uuid
+                  example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
                 buildingID:
                   type: string
                   format: uuid
                   example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
+                companyName:
+                  type: string
+                  example: Alterra
                 startDate:
                   type: string
                   format: date
-                  description: Start date of the reservation with format YYYY-MM-DD
+                  description: Start date of the reservation with format YYYY-MM-DD, if provided, duration must be also provided
                   example: 2020-01-01
                 duration:
                   type: integer
                   description: Duration of the reservation in months
                   example: 1
-                status:
+                statusId:
                   type: string
                   enum:
-                    - pending
-                    - payment
-                    - approved
-                    - rejected
-                    - cancelled
-                    - finished
+                    - 1
+                    - 2
+                    - 3
+                    - 4
+                    - 5
                     - null
                   description: >
                     status of the reservation
-                    * `pending` - reservation is waiting for manual approval from admin
-                    * `payment` - reservation is waiting for payment
-                    * `approved` - reservation is approved
-                    * `rejected` - reservation is rejected
-                    * `cancelled` - reservation is cancelled
-                    * `finished` - reservation is finished
-                message:
-                  type: string
-                  description: Message from admin to user
-                  example: Your reservation is approved
+                    * `1` - reservation is waiting for manual approval from admin
+                    * `2` - reservation is waiting for payment
+                    * `3` - reservation is rejected
+                    * `4` - reservation is cancelled
+                    * `5` - reservation is finished
         required: true
       responses:
         200:
@@ -1945,6 +1947,10 @@ paths:
                   $ref: '#/components/examples/InvalidDateRange'
                 InvalidBuildingID:
                   $ref: '#/components/examples/InvalidBuildingID'
+                InvalidUserID:
+                  $ref: '#/components/examples/InvalidUserID'
+                InvalidStatus:
+                  $ref: '#/components/examples/InvalidStatusID'
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         403:
@@ -3414,7 +3420,6 @@ components:
       description: invalid OTP, either expired or not found
       value:
         message: invalid OTP
-
     InvalidPictureID:
       description: picture id is invalid either because it is not a valid uuid or it does not exist in the database
       value:
@@ -3431,6 +3436,14 @@ components:
       description: building id is invalid either because it is not a valid id or it does not exist in the database
       value:
         message: building id is invalid
+    InvalidUserID:
+      description: user id is invalid either because it is not a valid id or it does not exist in the database
+      value:
+        message: user id is invalid
+    InvalidStatusID:
+      description: status is invalid either because it is not a valid status
+      value:
+        message: status id is invalid
     InvalidStartDate:
       description: Start date is in invalid format
       value:
@@ -3438,7 +3451,7 @@ components:
     InvalidDateRange:
       description: End date is before start date
       value:
-        message: invalid date range
+        message: start date must be before end date
     InvalidPictureIndex:
       description: Invalid picture index
       value:
@@ -3471,7 +3484,7 @@ components:
       description: Invalid facility icon id
       value:
         message: invalid facility icon id
-        
+
   securitySchemes:
     access_token:
       type: http

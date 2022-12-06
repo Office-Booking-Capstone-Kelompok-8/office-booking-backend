@@ -5,6 +5,7 @@ import (
 	"office-booking-backend/internal/reservation/repository"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
+	"strings"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -64,15 +65,20 @@ func (r *ReservationRepositoryImpl) CountUserReservation(ctx context.Context, us
 	return count, nil
 }
 
-func (r *ReservationRepositoryImpl) IsBuildingAvailable(ctx context.Context, buildingID string, start time.Time, end time.Time) (bool, error) {
+func (r *ReservationRepositoryImpl) IsBuildingAvailable(ctx context.Context, buildingID string, start time.Time, end time.Time, excludedReservationID ...string) (bool, error) {
 	var count int64
 	// Count building active reservations with status id not 2 (rejected), 3 (canceled) or 5 (completed)
 	// and not in the same time range as the new reservation
-	err := r.db.WithContext(ctx).
+	query := r.db.WithContext(ctx).
 		Model(&entity.Reservation{}).
 		Where("building_id = ? AND status_id NOT IN (2, 3, 5)", buildingID).
-		Where("start_date <= ? AND end_date >= ?", end, start).
-		Count(&count).Error
+		Where("start_date <= ? AND end_date >= ?", end, start)
+
+	for _, id := range excludedReservationID {
+		query = query.Where("id != ?", id)
+	}
+
+	err := query.Count(&count).Error
 	if err != nil {
 		return false, err
 	}
@@ -289,6 +295,15 @@ func (r *ReservationRepositoryImpl) UpdateReservation(ctx context.Context, reser
 		Where("id = ?", reservation.ID).
 		Updates(reservation)
 	if res.Error != nil {
+		switch {
+		case strings.Contains(res.Error.Error(), "CONSTRAINT `fk_reservations_building`"):
+			return err2.ErrBuildingNotFound
+		case strings.Contains(res.Error.Error(), "CONSTRAINT `fk_reservations_user`"):
+			return err2.ErrUserNotFound
+		case strings.Contains(res.Error.Error(), "CONSTRAINT `fk_reservations_status`"):
+			return err2.ErrInvalidStatus
+		}
+
 		return res.Error
 	}
 

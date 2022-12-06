@@ -70,6 +70,28 @@ func (r *ReservationServiceImpl) GetUserReservations(ctx context.Context, userID
 	return reservationDto, count, nil
 }
 
+func (r *ReservationServiceImpl) GetReservations(ctx context.Context, filter *dto.ReservationQueryParam) (*dto.BriefAdminReservationsResponse, int64, error) {
+	count, err := r.repo.CountReservation(ctx, filter)
+	if err != nil {
+		log.Println("error while counting reservations: ", err)
+		return nil, 0, err
+	}
+
+	if count == 0 {
+		return nil, 0, nil
+	}
+
+	filter.Offset = (filter.Page - 1) * filter.Limit
+	reservations, err := r.repo.GetReservations(ctx, filter)
+	if err != nil {
+		log.Println("error while getting reservations: ", err)
+		return nil, 0, err
+	}
+
+	reservationDto := dto.NewBriefAdminReservationsResponse(reservations)
+	return reservationDto, count, nil
+}
+
 func (r *ReservationServiceImpl) GetUserReservationByID(ctx context.Context, reservationID string, userID string) (*dto.FullReservationResponse, error) {
 	reservation, err := r.repo.GetUserReservationByID(ctx, reservationID, userID)
 	if err != nil {

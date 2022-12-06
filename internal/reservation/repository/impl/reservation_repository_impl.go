@@ -65,6 +65,61 @@ func (r *ReservationRepositoryImpl) CountUserReservation(ctx context.Context, us
 	return count, nil
 }
 
+func (r *ReservationRepositoryImpl) CountReservation(ctx context.Context, filter *dto.ReservationQueryParam) (int64, error) {
+	db, err := r.db.DB()
+	if err != nil {
+		return 0, err
+	}
+
+	query := sq.Select("COUNT(*)").
+		From("reservations r").
+		Join("users u ON u.id = r.user_id").
+		Join("user_details ud ON u.id = ud.user_id").
+		Where("r.deleted_at IS NULL")
+
+	if filter.UserID != "" {
+		query = query.Where(sq.Eq{"r.user_id": filter.UserID})
+	}
+
+	if filter.UserName != "" {
+		query = query.Where("ud.name LIKE ?", "%"+filter.UserName+"%")
+	}
+
+	if filter.BuildingID != "" {
+		query = query.Where(sq.Eq{"r.building_id": filter.BuildingID})
+	}
+
+	if filter.StatusID != 0 {
+		query = query.Where(sq.Eq{"r.status_id": filter.StatusID})
+	}
+
+	if !filter.StartDate.IsZero() {
+		query = query.Where(sq.GtOrEq{"r.start_date": filter.StartDate})
+	}
+
+	if !filter.EndDate.IsZero() {
+		query = query.Where(sq.LtOrEq{"r.end_date": filter.EndDate})
+	}
+
+	rows, err := query.RunWith(db).QueryContext(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer func() {
+		err = rows.Close()
+	}()
+
+	var count int64
+	if rows.Next() {
+		err = rows.Scan(&count)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	return count, nil
+}
+
 func (r *ReservationRepositoryImpl) IsBuildingAvailable(ctx context.Context, buildingID string, start time.Time, end time.Time, excludedReservationID ...string) (bool, error) {
 	var count int64
 	// Count building active reservations with status id not 2 (rejected), 3 (canceled) or 5 (completed)
@@ -92,7 +147,7 @@ func (r *ReservationRepositoryImpl) GetReservations(ctx context.Context, filter 
 		return nil, err
 	}
 
-	query := sq.Select("r.id, r.company_name, r.building_id, r.start_date, r.end_date,  r.status_id, r.created_at, r.updated_at, s.id, s.message, b.id, b.name, p.thumbnail_url, c.name, u.email, ud.name, pp.url").
+	query := sq.Select("r.id, r.company_name, r.building_id, r.start_date, r.end_date,  r.status_id, r.created_at, r.updated_at, s.id, s.message, b.id, b.name, p.thumbnail_url, c.name, u.id, u.email, ud.name, pp.url").
 		From("reservations r").
 		Join("statuses s ON r.status_id = s.id").
 		Join("buildings b ON r.building_id = b.id").
@@ -141,13 +196,17 @@ func (r *ReservationRepositoryImpl) GetReservations(ctx context.Context, filter 
 	var reservations entity.Reservations
 	for rows.Next() {
 		var reservation entity.Reservation
+		NullAbleProfilePicture := &entity.NullAbleProfilePicture{}
 		reservation.Building.Pictures = append(reservation.Building.Pictures, entity.Picture{})
 		err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate, &reservation.StatusID, &reservation.CreatedAt, &reservation.UpdatedAt,
 			&reservation.Status.ID, &reservation.Status.Message,
-			&reservation.Building.ID, &reservation.Building.Name, &reservation.Building.Pictures[0].ThumbnailUrl, &reservation.Building.City.Name)
+			&reservation.Building.ID, &reservation.Building.Name, &reservation.Building.Pictures[0].ThumbnailUrl, &reservation.Building.City.Name,
+			&reservation.User.ID, &reservation.User.Email, &reservation.User.Detail.Name, &NullAbleProfilePicture.Url)
 		if err != nil {
 			return nil, err
 		}
+
+		reservation.User.Detail.Picture = NullAbleProfilePicture.ConvertToProfilePicture()
 
 		reservations = append(reservations, reservation)
 	}
@@ -201,7 +260,7 @@ func (r *ReservationRepositoryImpl) GetReservationByID(ctx context.Context, rese
 	if err != nil {
 		return nil, err
 	}
-	rows, err := sq.Select("r.id, r.company_name, r.building_id, r.start_date, r.end_date, r.user_id, r.status_id, r.created_at, r.updated_at, s.id, s.message, b.id, b.name, b.address, p.thumbnail_url, c.name, d.name, u.id, u.email, ud.name, pp.url").
+	rows, err := sq.Select("r.id, r.company_name, r.building_id, r.start_date, r.end_date, r.user_id, r.status_id, r.message, r.created_at, r.updated_at, s.id, s.message, b.id, b.name, b.address, p.thumbnail_url, c.name, d.name, u.id, u.email, ud.name, pp.url").
 		From("reservations r").
 		Join("statuses s ON s.id = r.status_id").
 		Join("buildings b ON b.id = r.building_id").
@@ -227,7 +286,7 @@ func (r *ReservationRepositoryImpl) GetReservationByID(ctx context.Context, rese
 	NullAbleProfilePicture := &entity.NullAbleProfilePicture{}
 	reservation.Building.Pictures = append(reservation.Building.Pictures, entity.Picture{})
 	err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate,
-		&reservation.UserID, &reservation.StatusID, &reservation.CreatedAt, &reservation.UpdatedAt, &reservation.Status.ID, &reservation.Status.Message,
+		&reservation.UserID, &reservation.StatusID, &reservation.Message, &reservation.CreatedAt, &reservation.UpdatedAt, &reservation.Status.ID, &reservation.Status.Message,
 		&reservation.Building.ID, &reservation.Building.Name, &reservation.Building.Address, &reservation.Building.Pictures[0].ThumbnailUrl,
 		&reservation.Building.City.Name, &reservation.Building.District.Name, &reservation.User.ID, &reservation.User.Email, &reservation.User.Detail.Name,
 		&NullAbleProfilePicture.Url)
@@ -245,7 +304,7 @@ func (r *ReservationRepositoryImpl) GetUserReservationByID(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	rows, err := sq.Select("r.id, r.company_name, r.building_id, r.start_date, r.end_date, r.user_id, r.status_id, r.created_at, r.updated_at, s.id, s.message, b.id, b.name, b.address, p.thumbnail_url, c.name, d.name").
+	rows, err := sq.Select("r.id, r.company_name, r.building_id, r.start_date, r.end_date, r.user_id, r.status_id, r.message, r.created_at, r.updated_at, s.id, s.message, b.id, b.name, b.address, p.thumbnail_url, c.name, d.name").
 		From("reservations r").
 		Join("statuses s ON s.id = r.status_id").
 		Join("buildings b ON b.id = r.building_id").
@@ -270,7 +329,7 @@ func (r *ReservationRepositoryImpl) GetUserReservationByID(ctx context.Context, 
 	var reservation entity.Reservation
 	reservation.Building.Pictures = append(reservation.Building.Pictures, entity.Picture{})
 	err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate,
-		&reservation.UserID, &reservation.StatusID, &reservation.CreatedAt, &reservation.UpdatedAt, &reservation.Status.ID, &reservation.Status.Message,
+		&reservation.UserID, &reservation.StatusID, &reservation.Message, &reservation.CreatedAt, &reservation.UpdatedAt, &reservation.Status.ID, &reservation.Status.Message,
 		&reservation.Building.ID, &reservation.Building.Name, &reservation.Building.Address, &reservation.Building.Pictures[0].ThumbnailUrl,
 		&reservation.Building.City.Name, &reservation.Building.District.Name)
 	if err != nil {

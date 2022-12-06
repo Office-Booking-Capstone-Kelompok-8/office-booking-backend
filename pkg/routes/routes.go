@@ -89,6 +89,7 @@ func (r *Routes) Init(app *fiber.App) {
 
 	// Admin.Reservation routes
 	aReservation := admin.Group("/reservations")
+	aReservation.Get("/", r.reservationController.GetReservations)
 	aReservation.Get("/:reservationID", r.reservationController.GetReservationDetailByID)
 	aReservation.Post("/", r.reservationController.CreateAdminReservation)
 	aReservation.Put("/:reservationID", r.reservationController.UpdateReservation)

@@ -57,6 +57,35 @@ func (r *ReservationController) GetUserReservations(c *fiber.Ctx) error {
 	})
 }
 
+func (r *ReservationController) GetReservations(c *fiber.Ctx) error {
+	filter := &dto.ReservationQueryParam{}
+	if err := c.QueryParser(filter); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
+	}
+
+	if errs := r.validator.ValidateStruct(filter); errs != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidQueryParams.Error(),
+			Data:    errs,
+		})
+	}
+
+	reservations, count, err := r.service.GetReservations(c.Context(), filter)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "Reservations fetched successfully",
+		Data:    reservations,
+		Meta: fiber.Map{
+			"total": count,
+			"page":  filter.Page,
+			"limit": filter.Limit,
+		},
+	})
+}
+
 func (r *ReservationController) GetReservationDetailByID(c *fiber.Ctx) error {
 	reservationID := c.Params("reservationID")
 	reservation, err := r.service.GetReservationByID(c.Context(), reservationID)
@@ -131,7 +160,7 @@ func (r *ReservationController) CreateReservation(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(response.BaseResponse{
 		Message: "Reservation created successfully",
 		Data: fiber.Map{
-			"reservationID": reservationID,
+			"reservationId": reservationID,
 		},
 	})
 }
@@ -164,7 +193,7 @@ func (r *ReservationController) CreateAdminReservation(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(response.BaseResponse{
 		Message: "Reservation created successfully",
 		Data: fiber.Map{
-			"reservationID": reservationID,
+			"reservationId": reservationID,
 		},
 	})
 }

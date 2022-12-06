@@ -487,9 +487,6 @@ paths:
                 phone:
                   type: string
                   example: +1 234 567 890
-                pictureID:
-                  type: string
-                  example: 5f9b9b9b9b9b9b9b9b9b9b9b
         required: true
       responses:
         200:
@@ -513,8 +510,6 @@ paths:
                   $ref: '#/components/examples/InvalidRequestBody'
                 InvalidEmail:
                   $ref: '#/components/examples/InvalidEmail'
-                InvalidPictureID:
-                  $ref: '#/components/examples/InvalidPictureID'
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         404:
@@ -733,12 +728,12 @@ paths:
             schema:
               type: object
               required:
-                - buildingID
+                - buildingd
                 - companyName
                 - startDate
                 - duration
               properties:
-                buildingID:
+                buildingId:
                   type: string
                   format: uuid
                   example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
@@ -769,7 +764,7 @@ paths:
                   data:
                     type: object
                     properties:
-                      reservationID:
+                      reservationId:
                         type: string
                         format: uuid
                         example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a        
@@ -997,13 +992,13 @@ paths:
           schema:
             type: string
             example: 'building'
-        - name: city
+        - name: cityId
           in: query
           description: City ID to filter buildings by city (*)
           required: false
           schema:
             type: integer
-        - name: district
+        - name: districtId
           in: query
           description: District ID to filter buildings by district (*)
           required: false
@@ -1116,7 +1111,7 @@ paths:
                   data:
                     type: object
                     properties:
-                      pictureID:
+                      id:
                         type: string
                         format: uuid
                         example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
@@ -1333,10 +1328,10 @@ paths:
                   type: object
                   minProperties: 1
                   properties:
-                    districtID:
+                    districtId:
                       type: integer
                       example: 1
-                    cityID:
+                    cityId:
                       type: integer
                       example: 1
                     address:
@@ -1580,37 +1575,36 @@ paths:
       tags:
         - Admin.Reservations
       parameters:
-        - name: status
+        - name: statusId
           in: query
           description: Status of the reservation
           required: false
           schema:
             type: string
             enum:
-              - pending
-              - payment
-              - approved
-              - rejected
-              - cancelled
-              - finished
-              - null
+              - 1
+              - 2
+              - 3
+              - 4
+              - 5
+              - 6
             description: >
               status of the reservation
-              * `pending` - reservation is waiting for manual approval from admin
-              * `payment` - reservation is waiting for payment
-              * `approved` - reservation is approved
-              * `rejected` - reservation is rejected
-              * `cancelled` - reservation is cancelled
-              * `finished` - reservation is finished
+              * `1` - reservation is waiting for manual approval from admin
+              * `2` - reservation is rejected
+              * `3` - reservation is cancelled
+              * `3` - reservation is waiting for payment
+              * `5` - reservation is active
+              * `6` - reservation is finished
             
-        - name: buildingID
+        - name: buildingId
           in: query
           description: ID of the building that the reservation is made for
           required: false
           schema:
             type: string
             format: uuid
-        - name: userID
+        - name: userId
           in: query
           description: ID of the user
           required: false
@@ -1677,18 +1671,18 @@ paths:
             schema:
               type: object
               required:
-                - userID
-                - buildingID
+                - userId
+                - buildingId
                 - companyName
                 - startDate
                 - duration
               properties:
-                userID:
+                userId:
                   type: string
                   description: ID of the user that made the reservation
                   format: uuid
                   example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
-                buildingID:
+                buildingId:
                   type: string
                   format: uuid
                   example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
@@ -1719,7 +1713,7 @@ paths:
                   data:
                     type: object
                     properties:
-                      reservationID:
+                      reservationId:
                         type: string
                         format: uuid
                         example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
@@ -1884,11 +1878,11 @@ paths:
               type: object
               minProperties: 1
               properties:
-                userID:
+                userId:
                   type: string
                   format: uuid
                   example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
-                buildingID:
+                buildingId:
                   type: string
                   format: uuid
                   example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
@@ -1907,19 +1901,24 @@ paths:
                 statusId:
                   type: string
                   enum:
-                    - 1
-                    - 2
-                    - 3
-                    - 4
-                    - 5
-                    - null
+                   - 1
+                   - 2
+                   - 3
+                   - 4
+                   - 5
+                   - 6
+                   - null
                   description: >
                     status of the reservation
                     * `1` - reservation is waiting for manual approval from admin
-                    * `2` - reservation is waiting for payment
-                    * `3` - reservation is rejected
-                    * `4` - reservation is cancelled
-                    * `5` - reservation is finished
+                    * `2` - reservation is rejected
+                    * `3` - reservation is cancelled
+                    * `3` - reservation is waiting for payment
+                    * `5` - reservation is active
+                    * `6` - reservation is finished
+                message:
+                  type: string
+                  example: Your reservation has been rejected
         required: true
       responses:
         200:
@@ -2354,16 +2353,6 @@ paths:
                 phone: 
                   type: string
                   example: 0123456789
-                pictureID:
-                  type: string
-                  example: 1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p
-                role:
-                  type: integer
-                  enum:
-                    - 1
-                    - 2
-                  description: 1 for user, 2 for admin
-                  example: 1
         required: true
       responses:
         200:
@@ -2583,7 +2572,7 @@ paths:
                 name:
                   type: string
                   example: BRI
-                logoID:
+                logoId:
                   type: string
                   example: 1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p
                 accountNumber:
@@ -2647,7 +2636,7 @@ paths:
                 name:
                   type: string
                   example: BRI
-                logoID:
+                logoId:
                   type: integer
                   example: 1
                 accountNumber:
@@ -2735,13 +2724,13 @@ paths:
           schema:
             type: string
             example: 'building'
-        - name: city
+        - name: cityId
           in: query
           description: City ID to filter buildings by city (*)
           required: false
           schema:
             type: integer
-        - name: district
+        - name: districtId
           in: query
           description: District ID to filter buildings by district (*)
           required: false
@@ -3314,6 +3303,13 @@ components:
             name:
               type: string
               example: Jakarta Convention Center
+            pictures:
+              type: string
+              format: url
+              example: https://ik.imagekit.io/fortyfour/default-image.jpg
+            city:
+              type: string
+              example: Jakarta Selatan
         tenant:
           type: object
           properties:
@@ -3324,6 +3320,13 @@ components:
             name:
               type: string
               example: PT. Graha Sidang Pratama
+            email:
+              type: string
+              example: oz@mail.com
+            picture:
+              type: string
+              format: url
+              example: https://ik.imagekit.io/fortyfour/default-image.jpg
         startDate:
           type: string
           format: date
@@ -3333,11 +3336,18 @@ components:
           format: date
           example: 2020-01-01
         status:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            status:
+              type: string
+              example: Pending
+        createdAt:
           type: string
-          example: pending
-        message:
-          type: string
-          example: Please contact me for further details
+          format: date-time
+          example: 2020-01-01T00:00:00.000Z
     BriefUserDetails:
       type: object
       properties:

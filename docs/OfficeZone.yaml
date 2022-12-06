@@ -800,6 +800,97 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
   /reservations/{reservationID}:
+    get:
+      summary: Get a user reservation by ID
+      operationId: getUserReservationByID
+      security:
+        - access_token: []
+      tags:
+        - EndUser.Reservations
+      parameters:
+        - name: reservationID
+          in: path
+          description: ID of the reservation
+          required: true
+          schema:
+            type: string
+            format: uuids
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+      responses:
+        200:
+          description: Successfully retrieved reservation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Reservation fetched successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+                      building:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
+                          name:
+                            type: string
+                            example: Jakarta Convention Center
+                          picture:
+                            type: string
+                            example: https://example.com/picture.jpg
+                          city:
+                            type: string
+                            example: Jakarta
+                          district:
+                            type: string
+                            example: Kebayoran Baru
+                          address:
+                            type: string
+                            example: Jl. Jend. Sudirman Kav. 1
+                      companyName:
+                        type: string
+                        example: Alterra
+                      startDate:
+                        type: string
+                        format: date
+                        description: Start date of the reservation with format YYYY-MM-DD
+                        example: 2022-02-02 08:00:00
+                      endDate:
+                        type: string
+                        format: date
+                        description: End date of the reservation with format YYYY-MM-DD
+                        example: 2022-02-02 08:00:00
+                      status:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          message:
+                            type: string
+                            example: Pending
+                      createdAt:
+                        type: string
+                        format: date-time
+                        description: Date and time of the reservation creation  with format YYYY-MM-DDTHH:MM:SSZ
+                        example: 2022-12-04T19:48:04+08:00
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        description: Date and time of the reservation update with format YYYY-MM-DDTHH:MM:SSZ
+                        example: 2022-12-04T19:48:04+08:00
+        404:
+          $ref: '#/components/responses/ReservationNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+        
     delete:
       summary: Cancel a reservation
       operationId: deleteReservation
@@ -1466,7 +1557,15 @@ paths:
         403:
           $ref: '#/components/responses/RolesNotSupported'
         404:
-          $ref: '#/components/responses/FacilityNotFound'
+          description: Facility not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: facility not found
         500:
           $ref: '#/components/responses/InternalServerError'
 
@@ -1651,6 +1750,114 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
   /admin/reservations/{reservationID}:
+    get:
+      summary: Get a user reservation by ID
+      operationId: getUserReservationByID
+      security:
+        - access_token: []
+      tags:
+        - Admin.Reservations
+      parameters:
+        - name: reservationID
+          in: path
+          description: ID of the reservation
+          required: true
+          schema:
+            type: string
+            format: uuids
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+      responses:
+        200:
+          description: Successfully retrieved reservation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Reservation fetched successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+                      building:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
+                          name:
+                            type: string
+                            example: Jakarta Convention Center
+                          picture:
+                            type: string
+                            example: https://example.com/picture.jpg
+                          city:
+                            type: string
+                            example: Jakarta
+                          district:
+                            type: string
+                            example: Kebayoran Baru
+                          address:
+                            type: string
+                            example: Jl. Jend. Sudirman Kav. 1
+                      tenant:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+                          name:
+                            type: string
+                            example: Alterra
+                          email:
+                            type: string
+                            format: email
+                            example: oz@mail.com
+                          picture:
+                            type: string
+                            example: https://example.com/picture.jpg
+                      companyName:
+                        type: string
+                        example: Alterra
+                      startDate:
+                        type: string
+                        format: date
+                        description: Start date of the reservation with format YYYY-MM-DD
+                        example: 2022-02-02 08:00:00
+                      endDate:
+                        type: string
+                        format: date
+                        description: End date of the reservation with format YYYY-MM-DD
+                        example: 2022-02-02 08:00:00
+                      status:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          message:
+                            type: string
+                            example: Pending
+                      createdAt:
+                        type: string
+                        format: date-time
+                        description: Date and time of the reservation creation  with format YYYY-MM-DDTHH:MM:SSZ
+                        example: 2022-12-04T19:48:04+08:00
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        description: Date and time of the reservation update with format YYYY-MM-DDTHH:MM:SSZ
+                        example: 2022-12-04T19:48:04+08:00
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        404:
+          $ref: '#/components/responses/ReservationNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
     put:
       summary: Update a reservation
       operationId: updateReservation

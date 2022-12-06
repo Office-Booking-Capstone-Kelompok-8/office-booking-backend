@@ -1,7 +1,6 @@
 package impl
 
 import (
-	"golang.org/x/sync/errgroup"
 	"log"
 	repository2 "office-booking-backend/internal/building/repository"
 	"office-booking-backend/internal/reservation/dto"
@@ -10,6 +9,8 @@ import (
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 
 	"golang.org/x/net/context"
 )
@@ -67,6 +68,17 @@ func (r *ReservationServiceImpl) GetUserReservations(ctx context.Context, userID
 
 	reservationDto := dto.NewBriefReservationsResponse(reservations)
 	return reservationDto, count, nil
+}
+
+func (r *ReservationServiceImpl) GetUserReservationByID(ctx context.Context, reservationID string, userID string) (*dto.FullReservationResponse, error) {
+	reservation, err := r.repo.GetUserReservationByID(ctx, reservationID, userID)
+	if err != nil {
+		log.Println("error while getting reservation by id: ", err)
+		return nil, err
+	}
+
+	reservationDto := dto.NewFullReservationResponse(reservation)
+	return reservationDto, nil
 }
 
 func (r *ReservationServiceImpl) GetReservationByID(ctx context.Context, reservationID string) (*dto.FullAdminReservationResponse, error) {

@@ -58,6 +58,7 @@ func (r *Routes) Init(app *fiber.App) {
 	// Enduser.Reservation routes
 	reservation := v1.Group("/reservations", r.accessTokenMiddleware)
 	reservation.Get("/", r.reservationController.GetUserReservations)
+	reservation.Get("/:reservationID", r.reservationController.GetUserReservationDetailByID)
 	reservation.Post("/", r.reservationController.CreateReservation)
 	reservation.Delete("/:reservationID", r.reservationController.CancelReservation)
 

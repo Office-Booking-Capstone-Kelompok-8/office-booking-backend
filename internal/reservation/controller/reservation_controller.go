@@ -2,14 +2,15 @@ package controller
 
 import (
 	"fmt"
-	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v4"
 	"office-booking-backend/internal/reservation/dto"
 	"office-booking-backend/internal/reservation/service"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
 	"office-booking-backend/pkg/utils/validator"
 	"strconv"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type ReservationController struct {
@@ -60,6 +61,28 @@ func (r *ReservationController) GetUserReservations(c *fiber.Ctx) error {
 func (r *ReservationController) GetReservationDetailByID(c *fiber.Ctx) error {
 	reservationID := c.Params("reservationID")
 	reservation, err := r.service.GetReservationByID(c.Context(), reservationID)
+	if err != nil {
+		switch err {
+		case err2.ErrReservationNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "Reservation fetched successfully",
+		Data:    reservation,
+	})
+}
+
+func (r *ReservationController) GetUserReservationDetailByID(c *fiber.Ctx) error {
+	token := c.Locals("user").(*jwt.Token)
+	claims := token.Claims.(jwt.MapClaims)
+	userID := claims["uid"].(string)
+
+	reservationID := c.Params("reservationID")
+	reservation, err := r.service.GetUserReservationByID(c.Context(), reservationID, userID)
 	if err != nil {
 		switch err {
 		case err2.ErrReservationNotFound:

@@ -221,15 +221,32 @@ func (r *ReservationServiceImpl) UpdateReservation(ctx context.Context, reservat
 		log.Println("error while getting reservation by id: ", err)
 		return err
 	}
-
 	if savedReservation == nil {
 		return err2.ErrReservationNotFound
 	}
 
-	if reservation.BuildingID != "" {
+	if reservation.BuildingID != "" || !reservation.StartDate.IsZero() || reservation.Duration > 0 {
+		buildingID := savedReservation.BuildingID
+		if reservation.BuildingID != "" {
+			buildingID = reservation.BuildingID
+		}
+
+		startDate := savedReservation.StartDate
+		if !reservation.StartDate.IsZero() {
+			startDate = reservation.StartDate.ToTime()
+		} else {
+			// if start date is not provided, we will use the saved start date so we can calculate the end date correctly
+			reservation.StartDate.Time = savedReservation.StartDate
+		}
+
+		endDate := savedReservation.EndDate
+		if reservation.Duration != 0 {
+			endDate = startDate.AddDate(0, reservation.Duration, 0)
+		}
+
 		errGroup := errgroup.Group{}
 		errGroup.Go(func() error {
-			isPublished, err := r.buildingRepo.IsBuildingPublished(ctx, reservation.BuildingID)
+			isPublished, err := r.buildingRepo.IsBuildingPublished(ctx, buildingID)
 			if err != nil {
 				log.Println("error while checking building availability: ", err)
 				return err
@@ -243,7 +260,7 @@ func (r *ReservationServiceImpl) UpdateReservation(ctx context.Context, reservat
 		})
 
 		errGroup.Go(func() error {
-			isAvailable, err := r.repo.IsBuildingAvailable(ctx, reservation.BuildingID, reservation.StartDate.ToTime(), reservation.EndDate.ToTime())
+			isAvailable, err := r.repo.IsBuildingAvailable(ctx, buildingID, startDate, endDate, reservationID)
 			if err != nil {
 				log.Println("error while checking building availability: ", err)
 				return err

@@ -1,14 +1,14 @@
 package validator
 
 import (
-	"fmt"
-	"github.com/go-playground/locales/en"
-	ut "github.com/go-playground/universal-translator"
-	en_trans "github.com/go-playground/validator/v10/translations/en"
 	"mime/multipart"
 	"net/textproto"
 	"reflect"
 	"strings"
+
+	"github.com/go-playground/locales/en"
+	ut "github.com/go-playground/universal-translator"
+	en_trans "github.com/go-playground/validator/v10/translations/en"
 
 	validation "github.com/go-playground/validator/v10"
 )
@@ -64,7 +64,14 @@ func NewValidator() Validator {
 	trans, _ := uni.GetTranslator("en")
 	_ = en_trans.RegisterDefaultTranslations(validate, trans)
 
-	return &CustomValidator{Validate: validate, trans: trans}
+	customValidator := &CustomValidator{
+		Validate: validate,
+		trans:    trans,
+	}
+
+	customValidator.addTranslation("required_with", "{0} is required when {1} is present")
+
+	return customValidator
 }
 
 func (c *CustomValidator) ValidateStruct(s interface{}) *ErrorsResponse {
@@ -72,7 +79,7 @@ func (c *CustomValidator) ValidateStruct(s interface{}) *ErrorsResponse {
 	if err == nil {
 		return nil
 	}
-	fmt.Println(s)
+
 	var errors ErrorsResponse
 	for _, err := range err.(validation.ValidationErrors) {
 		errors = append(errors, ErrorResponse{
@@ -108,4 +115,23 @@ func isValidMultipartImage(fl validation.FieldLevel) bool {
 	types := header.Get("Content-Type")
 	isImage := strings.HasPrefix(types, "image/")
 	return isImage
+}
+
+func (c *CustomValidator) addTranslation(tag string, message string) {
+	registerFn := func(ut ut.Translator) error {
+		return ut.Add(tag, message, false)
+	}
+
+	transFn := func(ut ut.Translator, fe validation.FieldError) string {
+		param := fe.Param()
+		tag := fe.Tag()
+
+		t, err := ut.T(tag, fe.Field(), param)
+		if err != nil {
+			return fe.(error).Error()
+		}
+		return t
+	}
+
+	_ = c.Validate.RegisterTranslation(tag, c.trans, registerFn, transFn)
 }

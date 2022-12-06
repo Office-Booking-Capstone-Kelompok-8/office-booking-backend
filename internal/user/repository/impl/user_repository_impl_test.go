@@ -96,7 +96,7 @@ func (s *TestSuiteUserRepository) TestGetFullUserByEmail() {
 
 func (s *TestSuiteUserRepository) TestGetFullUserByID() {
 	header := sqlmock.NewRows([]string{"id", "username", "role", "is_verified", "created_at", "updated_at", "deleted_at", "user_id", "name", "phone", "picture_id", "created_at", "updated_at", "deleted_at", "id", "url"})
-	query := regexp.QuoteMeta("SELECT u.id,u.email,u.role,u.is_verified,u.created_at,u.updated_at,u.deleted_at,d.user_id ,d.name,d.phone ,d.picture_id ,d.created_at ,d.updated_at ,d.deleted_at,pp.id, pp.url FROM users u JOIN user_details d ON u.id = d.user_id AND d.deleted_at IS NULL LEFT JOIN profile_pictures pp ON d.picture_id = pp.id WHERE u.deleted_at IS NULL AND u.id = ? ORDER BY u.id")
+	query := regexp.QuoteMeta("SELECT u.id, u.email, u.role, u.is_verified, u.created_at, u.updated_at, u.deleted_at, d.user_id, d.name, d.phone, d.picture_id, d.created_at, d.updated_at, d.deleted_at, pp.id, pp.url FROM users u JOIN user_details d ON u.id = d.user_id AND d.deleted_at IS NULL LEFT JOIN profile_pictures pp ON d.picture_id = pp.id WHERE u.deleted_at IS NULL AND u.id = ? ORDER BY u.id")
 	for _, tc := range []struct {
 		Name        string
 		Rows        *sqlmock.Rows
@@ -137,10 +137,10 @@ func (s *TestSuiteUserRepository) TestGetFullUserByID() {
 }
 
 func (s *TestSuiteUserRepository) TestGetAllUsers() {
-	query := regexp.QuoteMeta("SELECT * FROM `users` WHERE `Detail`.`name` LIKE ? AND role = ? AND `users`.`deleted_at` IS NULL LIMIT 1 OFFSET 1")
+	query := regexp.QuoteMeta("SELECT `users`.`id`,`users`.`email`,`users`.`password`,`users`.`role`,`users`.`is_verified`,`users`.`created_at`,`users`.`updated_at`,`users`.`deleted_at`,`Detail`.`user_id` AS `Detail__user_id`,`Detail`.`name` AS `Detail__name`,`Detail`.`phone` AS `Detail__phone`,`Detail`.`picture_id` AS `Detail__picture_id`,`Detail`.`created_at` AS `Detail__created_at`,`Detail`.`updated_at` AS `Detail__updated_at`,`Detail`.`deleted_at` AS `Detail__deleted_at` FROM `users` LEFT JOIN `user_details` `Detail` ON `users`.`id` = `Detail`.`user_id` AND `Detail`.`deleted_at` IS NULL WHERE `Detail`.`name` LIKE ? AND role = ? AND `users`.`deleted_at` IS NULL LIMIT 1 OFFSET 1")
 	preload := regexp.QuoteMeta("SELECT * FROM `user_details` WHERE `user_details`.`user_id` = ? AND `user_details`.`deleted_at` IS NULL")
 	preloadPicture := regexp.QuoteMeta("SELECT * FROM `profile_pictures` WHERE `profile_pictures`.`id` = ? AND `profile_pictures`.`deleted_at` IS NULL")
-	count := regexp.QuoteMeta("SELECT count(*) FROM `users` WHERE `Detail`.`name` LIKE ? AND role = ? AND `users`.`deleted_at` IS NULL LIMIT 1 OFFSET 1")
+	count := regexp.QuoteMeta("SELECT count(*) FROM `users` LEFT JOIN `user_details` `Detail` ON `users`.`id` = `Detail`.`user_id` AND `Detail`.`deleted_at` IS NULL WHERE `Detail`.`name` LIKE ? AND role = ? AND `users`.`deleted_at` IS NULL LIMIT 1 OFFSET 1")
 	for _, tc := range []struct {
 		Name        string
 		Err         error

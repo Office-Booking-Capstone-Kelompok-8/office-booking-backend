@@ -33,7 +33,7 @@ func (b *BuildingController) GetAllPublishedBuildings(c *fiber.Ctx) error {
 	city := c.Query("city", "0")
 	district := c.Query("district", "0")
 	startDate := c.Query("startDate", "0001-01-01")
-	endDate := c.Query("endDate", "0001-01-01")
+	duration := c.Query("duration", "0")
 	limit := c.Query("limit", "20")
 	page := c.Query("page", "1")
 
@@ -43,8 +43,7 @@ func (b *BuildingController) GetAllPublishedBuildings(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
 	}
 
-	// Parse endDate to time.Time YYYY-MM-DD format
-	endDateParsed, err := time.Parse("2006-01-02", endDate)
+	durationInt, err := strconv.Atoi(duration)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
 	}
@@ -69,14 +68,13 @@ func (b *BuildingController) GetAllPublishedBuildings(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
 	}
 
-	buildings, total, err := b.buildingService.GetAllPublishedBuildings(c.Context(), q, cityInt, districtInt, startDateParsed, endDateParsed, limitInt, pageInt)
+	buildings, total, err := b.buildingService.GetAllPublishedBuildings(c.Context(), q, cityInt, districtInt, startDateParsed, durationInt, limitInt, pageInt)
 	if err != nil {
-		switch err {
-		case err2.ErrStartDateAfterEndDate:
+		if errors.Is(err, err2.ErrInvalidDateRange) {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		default:
-			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 		}
+
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
@@ -95,7 +93,7 @@ func (b *BuildingController) GetAllBuildings(c *fiber.Ctx) error {
 	city := c.Query("city", "0")
 	district := c.Query("district", "0")
 	startDate := c.Query("startDate", "0001-01-01")
-	endDate := c.Query("endDate", "0001-01-01")
+	duration := c.Query("duration", "0")
 	limit := c.Query("limit", "20")
 	page := c.Query("page", "1")
 
@@ -105,8 +103,7 @@ func (b *BuildingController) GetAllBuildings(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
 	}
 
-	// Parse endDate to time.Time YYYY-MM-DD format
-	endDateParsed, err := time.Parse("2006-01-02", endDate)
+	durationInt, err := strconv.Atoi(duration)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
 	}
@@ -131,14 +128,12 @@ func (b *BuildingController) GetAllBuildings(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
 	}
 
-	buildings, total, err := b.buildingService.GetAllBuildings(c.Context(), q, cityInt, districtInt, startDateParsed, endDateParsed, limitInt, pageInt)
+	buildings, total, err := b.buildingService.GetAllBuildings(c.Context(), q, cityInt, districtInt, startDateParsed, durationInt, limitInt, pageInt)
 	if err != nil {
-		switch err {
-		case err2.ErrStartDateAfterEndDate:
+		if errors.Is(err, err2.ErrInvalidDateRange) {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
-		default:
-			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 		}
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{

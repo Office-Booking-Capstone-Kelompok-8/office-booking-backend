@@ -1,7 +1,6 @@
 package impl
 
 import (
-	"golang.org/x/sync/errgroup"
 	"log"
 	repository2 "office-booking-backend/internal/building/repository"
 	"office-booking-backend/internal/reservation/dto"
@@ -10,6 +9,8 @@ import (
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 
 	"golang.org/x/net/context"
 )
@@ -36,8 +37,9 @@ func (r *ReservationServiceImpl) CountUserActiveReservations(ctx context.Context
 	return count, nil
 }
 
-func (r *ReservationServiceImpl) IsBuildingAvailable(ctx context.Context, buildingID string, start time.Time, end time.Time) (bool, error) {
-	isAvailable, err := r.repo.IsBuildingAvailable(ctx, buildingID, start, end)
+func (r *ReservationServiceImpl) IsBuildingAvailable(ctx context.Context, buildingID string, startDate time.Time, duration int) (bool, error) {
+	endDate := startDate.AddDate(0, duration, 0)
+	isAvailable, err := r.repo.IsBuildingAvailable(ctx, buildingID, startDate, endDate)
 	if err != nil {
 		log.Println("error while checking building availability: ", err)
 		return false, err
@@ -47,8 +49,18 @@ func (r *ReservationServiceImpl) IsBuildingAvailable(ctx context.Context, buildi
 }
 
 func (r *ReservationServiceImpl) GetUserReservations(ctx context.Context, userID string, page int, limit int) (*dto.BriefReservationsResponse, int64, error) {
+	count, err := r.repo.CountUserReservation(ctx, userID)
+	if err != nil {
+		log.Println("error while counting user reservations: ", err)
+		return nil, 0, err
+	}
+
+	if count == 0 {
+		return nil, 0, nil
+	}
+
 	offset := (page - 1) * limit
-	reservations, count, err := r.repo.GetUserReservations(ctx, userID, offset, limit)
+	reservations, err := r.repo.GetUserReservations(ctx, userID, offset, limit)
 	if err != nil {
 		log.Println("error while getting user reservations: ", err)
 		return nil, 0, err
@@ -58,15 +70,29 @@ func (r *ReservationServiceImpl) GetUserReservations(ctx context.Context, userID
 	return reservationDto, count, nil
 }
 
+func (r *ReservationServiceImpl) GetUserReservationByID(ctx context.Context, reservationID string, userID string) (*dto.FullReservationResponse, error) {
+	reservation, err := r.repo.GetUserReservationByID(ctx, reservationID, userID)
+	if err != nil {
+		log.Println("error while getting reservation by id: ", err)
+		return nil, err
+	}
+
+	reservationDto := dto.NewFullReservationResponse(reservation)
+	return reservationDto, nil
+}
+
+func (r *ReservationServiceImpl) GetReservationByID(ctx context.Context, reservationID string) (*dto.FullAdminReservationResponse, error) {
+	reservation, err := r.repo.GetReservationByID(ctx, reservationID)
+	if err != nil {
+		log.Println("error while getting reservation by id: ", err)
+		return nil, err
+	}
+
+	reservationDto := dto.NewFullAdminReservationResponse(reservation)
+	return reservationDto, nil
+}
+
 func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, userID string, reservation *dto.AddReservartionRequest) (string, error) {
-	if reservation.StartDate.Before(time.Now()) {
-		return "", err2.ErrStartDateBeforeToday
-	}
-
-	if reservation.StartDate.After(reservation.EndDate.ToTime()) {
-		return "", err2.ErrStartDateAfterEndDate
-	}
-
 	errGroup := errgroup.Group{}
 	errGroup.Go(func() error {
 		isPublished, err := r.buildingRepo.IsBuildingPublished(ctx, reservation.BuildingID)
@@ -83,7 +109,8 @@ func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, userID s
 	})
 
 	errGroup.Go(func() error {
-		isAvailable, err := r.repo.IsBuildingAvailable(ctx, reservation.BuildingID, reservation.StartDate.ToTime(), reservation.EndDate.ToTime())
+		endDate := reservation.StartDate.AddDate(0, reservation.Duration, 0)
+		isAvailable, err := r.repo.IsBuildingAvailable(ctx, reservation.BuildingID, reservation.StartDate.ToTime(), endDate)
 		if err != nil {
 			log.Println("error while checking building availability: ", err)
 			return err
@@ -111,10 +138,6 @@ func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, userID s
 }
 
 func (r *ReservationServiceImpl) CreateAdminReservation(ctx context.Context, reservation *dto.AddAdminReservartionRequest) (string, error) {
-	if reservation.StartDate.After(reservation.EndDate.ToTime()) {
-		return "", err2.ErrStartDateAfterEndDate
-	}
-
 	errGroup := errgroup.Group{}
 	errGroup.Go(func() error {
 		isPublished, err := r.buildingRepo.IsBuildingPublished(ctx, reservation.BuildingID)
@@ -131,7 +154,8 @@ func (r *ReservationServiceImpl) CreateAdminReservation(ctx context.Context, res
 	})
 
 	errGroup.Go(func() error {
-		isAvailable, err := r.repo.IsBuildingAvailable(ctx, reservation.BuildingID, reservation.StartDate.ToTime(), reservation.EndDate.ToTime())
+		endDate := reservation.StartDate.AddDate(0, reservation.Duration, 0)
+		isAvailable, err := r.repo.IsBuildingAvailable(ctx, reservation.BuildingID, reservation.StartDate.ToTime(), endDate)
 		if err != nil {
 			log.Println("error while checking building availability: ", err)
 			return err
@@ -192,11 +216,6 @@ func (r *ReservationServiceImpl) CancelReservation(ctx context.Context, userID s
 }
 
 func (r *ReservationServiceImpl) UpdateReservation(ctx context.Context, reservationID string, reservation *dto.UpdateReservationRequest) error {
-	// check if reservation request is valid
-	if !reservation.StartDate.IsZero() && !reservation.EndDate.IsZero() && reservation.StartDate.After(reservation.EndDate.ToTime()) {
-		return err2.ErrStartDateAfterEndDate
-	}
-
 	savedReservation, err := r.repo.GetReservationByID(ctx, reservationID)
 	if err != nil {
 		log.Println("error while getting reservation by id: ", err)
@@ -205,16 +224,6 @@ func (r *ReservationServiceImpl) UpdateReservation(ctx context.Context, reservat
 
 	if savedReservation == nil {
 		return err2.ErrReservationNotFound
-	}
-
-	// check if requested end date is after saved start date if request contains end date
-	if !reservation.EndDate.IsZero() && reservation.EndDate.After(savedReservation.StartDate) {
-		return err2.ErrStartDateAfterEndDate
-	}
-
-	// check if requested start date is before saved end date if request contains start date
-	if !reservation.StartDate.IsZero() && reservation.StartDate.Before(savedReservation.EndDate) {
-		return err2.ErrStartDateAfterEndDate
 	}
 
 	if reservation.BuildingID != "" {

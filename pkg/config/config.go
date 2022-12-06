@@ -17,7 +17,7 @@ const (
 
 // JWT Access token and refresh token config
 const (
-	ACCESS_TOKEN_DURATION  = 15 * time.Minute
+	ACCESS_TOKEN_DURATION  = 4 * time.Hour
 	REFRESH_TOKEN_DURATION = 14 * 24 * time.Hour
 )
 

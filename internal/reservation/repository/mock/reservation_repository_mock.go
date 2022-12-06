@@ -1,10 +1,12 @@
 package mock
 
 import (
-	"github.com/stretchr/testify/mock"
-	"golang.org/x/net/context"
+	"office-booking-backend/internal/reservation/dto"
 	"office-booking-backend/pkg/entity"
 	"time"
+
+	"github.com/stretchr/testify/mock"
+	"golang.org/x/net/context"
 )
 
 type ReservationRepositoryMock struct {
@@ -31,9 +33,14 @@ func (r *ReservationRepositoryMock) AddBuildingReservation(ctx context.Context, 
 	return args.Error(0)
 }
 
-func (r *ReservationRepositoryMock) GetUserReservations(ctx context.Context, userID string, offset int, limit int) (*entity.Reservations, int64, error) {
+func (r *ReservationRepositoryMock) CountUserReservation(ctx context.Context, userID string) (int64, error) {
+	args := r.Called(ctx, userID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (r *ReservationRepositoryMock) GetUserReservations(ctx context.Context, userID string, offset int, limit int) (*entity.Reservations, error) {
 	args := r.Called(ctx, userID, offset, limit)
-	return args.Get(0).(*entity.Reservations), args.Get(1).(int64), args.Error(2)
+	return args.Get(0).(*entity.Reservations), args.Error(1)
 }
 
 func (r *ReservationRepositoryMock) GetReservationByID(ctx context.Context, reservationID string) (*entity.Reservation, error) {
@@ -49,4 +56,9 @@ func (r *ReservationRepositoryMock) DeleteReservationByID(ctx context.Context, r
 func (r *ReservationRepositoryMock) UpdateReservation(ctx context.Context, reservation *entity.Reservation) error {
 	args := r.Called(ctx, reservation)
 	return args.Error(0)
+}
+
+func (r *ReservationRepositoryMock) GetReservations(ctx context.Context, filter *dto.ReservationQueryParam) (*entity.Reservations, error) {
+	args := r.Called(ctx, filter)
+	return args.Get(0).(*entity.Reservations), args.Error(1)
 }

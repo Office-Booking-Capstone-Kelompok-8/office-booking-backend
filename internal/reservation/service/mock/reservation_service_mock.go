@@ -11,6 +11,11 @@ type ReservationServiceMock struct {
 	mock.Mock
 }
 
+func (r *ReservationServiceMock) GetReservationByID(ctx context.Context, reservationID string) (*dto.FullAdminReservationResponse, error) {
+	args := r.Called(ctx, reservationID)
+	return args.Get(0).(*dto.FullAdminReservationResponse), args.Error(1)
+}
+
 func (r *ReservationServiceMock) CountUserActiveReservations(ctx context.Context, userID string) (int64, error) {
 	args := r.Called(ctx, userID)
 	return args.Get(0).(int64), args.Error(1)

@@ -9,6 +9,7 @@ import (
 
 type ReservationService interface {
 	CountUserActiveReservations(ctx context.Context, userID string) (int64, error)
+	GetReservationByID(ctx context.Context, reservationID string) (*dto.FullAdminReservationResponse, error)
 	GetUserReservations(ctx context.Context, userID string, page int, limit int) (*dto.BriefReservationsResponse, int64, error)
 	IsBuildingAvailable(ctx context.Context, buildingID string, startDate time.Time, duration int) (bool, error)
 	CreateReservation(ctx context.Context, userID string, reservation *dto.AddReservartionRequest) (string, error)

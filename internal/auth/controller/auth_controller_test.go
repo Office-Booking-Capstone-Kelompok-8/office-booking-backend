@@ -41,6 +41,7 @@ func (s *TestSuiteAuthController) TearDownTest() {
 	s.fiberApp = nil
 }
 
+//goland:noinspection Annotator,Annotator
 func (s *TestSuiteAuthController) TestRegisterUser() {
 	signupReq := dto.SignupRequest{
 		Email:    "mail@mail.com",
@@ -145,6 +146,7 @@ func (s *TestSuiteAuthController) TestRegisterUser() {
 	}
 }
 
+//goland:noinspection Annotator,Annotator
 func (s *TestSuiteAuthController) TestLoginUser() {
 	loginReq := dto.LoginRequest{
 		Email:    "mail@mail.com",
@@ -256,6 +258,7 @@ func (s *TestSuiteAuthController) TestLoginUser() {
 	}
 }
 
+//goland:noinspection Annotator,Annotator
 func (s *TestSuiteAuthController) TestLogoutUser() {
 	// LogoutUser handler always get valid token from middleware
 	token := &jwt.Token{
@@ -311,6 +314,7 @@ func (s *TestSuiteAuthController) TestLogoutUser() {
 	}
 }
 
+//goland:noinspection Annotator,Annotator
 func (s *TestSuiteAuthController) TestRefreshToken() {
 	token := &dto.TokenPair{
 		AccessToken:  "some_access_token",
@@ -424,6 +428,7 @@ func (s *TestSuiteAuthController) TestRefreshToken() {
 	}
 }
 
+//goland:noinspection Annotator,Annotator
 func (s *TestSuiteAuthController) TestRequestOTP() {
 	req := &dto.OTPRequest{
 		Email: "some_email",
@@ -524,6 +529,7 @@ func (s *TestSuiteAuthController) TestRequestOTP() {
 	}
 }
 
+//goland:noinspection Annotator,Annotator
 func (s *TestSuiteAuthController) TestVerifyOTP() {
 	req := &dto.OTPVerifyRequest{
 		Email: "123@123.com",
@@ -629,6 +635,7 @@ func (s *TestSuiteAuthController) TestVerifyOTP() {
 	}
 }
 
+//goland:noinspection Annotator,Annotator
 func (s *TestSuiteAuthController) TestResetPassword() {
 	req := &dto.PasswordResetRequest{
 		Email:    "123@123.com",
@@ -750,6 +757,7 @@ func (s *TestSuiteAuthController) TestResetPassword() {
 	}
 }
 
+//goland:noinspection Annotator,Annotator
 func (s *TestSuiteAuthController) TestChangePassword() {
 	req := &dto.ChangePasswordRequest{
 		OldPassword: "123123123",

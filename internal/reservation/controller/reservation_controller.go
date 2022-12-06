@@ -57,6 +57,24 @@ func (r *ReservationController) GetUserReservations(c *fiber.Ctx) error {
 	})
 }
 
+func (r *ReservationController) GetReservationDetailByID(c *fiber.Ctx) error {
+	reservationID := c.Params("reservationID")
+	reservation, err := r.service.GetReservationByID(c.Context(), reservationID)
+	if err != nil {
+		switch err {
+		case err2.ErrReservationNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "Reservation fetched successfully",
+		Data:    reservation,
+	})
+}
+
 func (r *ReservationController) CreateReservation(c *fiber.Ctx) error {
 	token := c.Locals("user").(*jwt.Token)
 	claims := token.Claims.(jwt.MapClaims)

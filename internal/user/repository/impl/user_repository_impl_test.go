@@ -96,7 +96,7 @@ func (s *TestSuiteUserRepository) TestGetFullUserByEmail() {
 
 func (s *TestSuiteUserRepository) TestGetFullUserByID() {
 	header := sqlmock.NewRows([]string{"id", "username", "role", "is_verified", "created_at", "updated_at", "deleted_at", "user_id", "name", "phone", "picture_id", "created_at", "updated_at", "deleted_at", "id", "url"})
-	query := regexp.QuoteMeta("SELECT u.id,u.email,u.role,u.is_verified,u.created_at,u.updated_at,u.deleted_at,d.user_id ,d.name,d.phone ,d.picture_id ,d.created_at ,d.updated_at ,d.deleted_at,pp.id, pp.url FROM users u JOIN user_details d ON u.id = d.user_id AND d.deleted_at IS NULL LEFT JOIN profile_pictures pp ON d.picture_id = pp.id WHERE u.deleted_at IS NULL AND u.id = ? ORDER BY u.id")
+	query := regexp.QuoteMeta("SELECT u.id, u.email, u.role, u.is_verified, u.created_at, u.updated_at, u.deleted_at, d.user_id, d.name, d.phone, d.picture_id, d.created_at, d.updated_at, d.deleted_at, pp.id, pp.url FROM users u JOIN user_details d ON u.id = d.user_id AND d.deleted_at IS NULL LEFT JOIN profile_pictures pp ON d.picture_id = pp.id WHERE u.deleted_at IS NULL AND u.id = ? ORDER BY u.id")
 	for _, tc := range []struct {
 		Name        string
 		Rows        *sqlmock.Rows

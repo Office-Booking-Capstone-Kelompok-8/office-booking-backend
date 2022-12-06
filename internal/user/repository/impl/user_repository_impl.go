@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	sq "github.com/Masterminds/squirrel"
 	"office-booking-backend/internal/user/repository"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
@@ -39,15 +40,18 @@ func (u *UserRepositoryImpl) GetFullUserByEmail(ctx context.Context, email strin
 }
 
 func (u *UserRepositoryImpl) GetFullUserByID(ctx context.Context, id string) (*entity.User, error) {
-	query := `
-		SELECT u.id, u.email, u.role, u.is_verified, u.created_at, u.updated_at, u.deleted_at,
-			d.user_id, d.name, d.phone, d.picture_id, d.created_at, d.updated_at, d.deleted_at,
-			pp.id, pp.url 
-		FROM users u 
-			JOIN user_details d ON u.id = d.user_id AND d.deleted_at IS NULL
-			LEFT JOIN profile_pictures pp ON d.picture_id = pp.id
-		WHERE u.deleted_at IS NULL AND u.id = ? ORDER BY u.id`
-	rows, err := u.db.WithContext(ctx).Raw(query, id).Rows()
+	db, err := u.db.DB()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := sq.Select("u.id, u.email, u.role, u.is_verified, u.created_at, u.updated_at, u.deleted_at, d.user_id, d.name, d.phone, d.picture_id, d.created_at, d.updated_at, d.deleted_at, pp.id, pp.url").
+		From("users u").
+		Join("user_details d ON u.id = d.user_id AND d.deleted_at IS NULL").
+		LeftJoin("profile_pictures pp ON d.picture_id = pp.id").
+		Where(sq.Eq{"u.deleted_at": nil, "u.id": id}).
+		OrderBy("u.id").
+		RunWith(db).QueryContext(ctx)
 	if err != nil {
 		return nil, err
 	}

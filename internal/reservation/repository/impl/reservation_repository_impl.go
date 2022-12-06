@@ -1,6 +1,7 @@
 package impl
 
 import (
+	sq "github.com/Masterminds/squirrel"
 	"office-booking-backend/internal/reservation/repository"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
@@ -64,47 +65,77 @@ func (r *ReservationRepositoryImpl) IsBuildingAvailable(ctx context.Context, bui
 	return count == 0, nil
 }
 
-func (r *ReservationRepositoryImpl) GetUserReservations(ctx context.Context, userID string, offset int, limit int) (*entity.Reservations, int64, error) {
+func (r *ReservationRepositoryImpl) CountUserReservation(ctx context.Context, userID string) (int64, error) {
 	var count int64
-	var reservations entity.Reservations
-
 	err := r.db.WithContext(ctx).
 		Model(&entity.Reservation{}).
-		Joins("Status").
-		Joins("Building").
 		Where("user_id = ?", userID).
-		Offset(offset).
-		Limit(limit).
-		Find(&reservations).
 		Count(&count).Error
 	if err != nil {
-		return nil, 0, err
+		return 0, err
 	}
 
-	return &reservations, count, nil
+	return count, nil
+}
+
+func (r *ReservationRepositoryImpl) GetUserReservations(ctx context.Context, userID string, offset int, limit int) (*entity.Reservations, error) {
+	db, err := r.db.DB()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := sq.Select("r.id, r.company_name, r.building_id, r.start_date, r.end_date,  r.status_id, r.created_at, r.updated_at, s.id, s.message, b.id, b.name, b.address, p.thumbnail_url, c.name, d.name").
+		From("reservations r").
+		Join("statuses s ON r.status_id = s.id").
+		Join("buildings b ON r.building_id = b.id").
+		Join("pictures p ON p.id = (SELECT p1.id FROM pictures p1 WHERE b.id = p1.building_id AND p1.index = 0 LIMIT 1)").
+		Join("cities c ON c.id = b.city_id").
+		Join("districts d ON d.id = b.district_id").
+		Where("r.deleted_at IS NULL").
+		Where(sq.Eq{"r.user_id": userID}).
+		Offset(uint64(offset)).
+		Limit(uint64(limit)).
+		RunWith(db).QueryContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err = rows.Close()
+	}()
+
+	var reservations entity.Reservations
+	for rows.Next() {
+		var reservation entity.Reservation
+		reservation.Building.Pictures = append(reservation.Building.Pictures, entity.Picture{})
+		err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate, &reservation.StatusID, &reservation.CreatedAt, &reservation.UpdatedAt,
+			&reservation.Status.ID, &reservation.Status.Message,
+			&reservation.Building.ID, &reservation.Building.Name, &reservation.Building.Address, &reservation.Building.Pictures[0].ThumbnailUrl, &reservation.Building.City.Name, &reservation.Building.District.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		reservations = append(reservations, reservation)
+	}
+
+	return &reservations, nil
 }
 
 func (r *ReservationRepositoryImpl) GetReservationByID(ctx context.Context, reservationID string) (*entity.Reservation, error) {
-	query := `
-	SELECT r.id, r.company_name, r.building_id, r.start_date, r.end_date, r.user_id, r.status_id, r.created_at, r.updated_at,
-       s.id, s.message, b.id, b.name, b.address, p.thumbnail_url, c.name, d.name, u.id, u.email, ud.name, pp.url
-	FROM reservations r
-    	JOIN statuses s ON s.id = r.status_id
-    	JOIN buildings b ON b.id = r.building_id
-    	JOIN pictures p ON p.id = (
-    	        SELECT p1.id FROM pictures p1
-    	        WHERE b.id = p1.building_id AND
-    	              p1.index = 0
-    	        LIMIT 1
-    	    )
-    	JOIN cities c ON c.id = b.city_id
-    	JOIN districts d ON d.id = b.district_id
-    	JOIN users u ON u.id = r.user_id
-    	JOIN user_details ud ON u.id = ud.user_id
-    	LEFT JOIN profile_pictures pp ON ud.picture_id = pp.id
-	WHERE r.deleted_at IS NULL AND r.id = ?	
-	`
-	rows, err := r.db.WithContext(ctx).Raw(query, reservationID).Rows()
+	db, err := r.db.DB()
+	if err != nil {
+		return nil, err
+	}
+	rows, err := sq.Select("r.id, r.company_name, r.building_id, r.start_date, r.end_date, r.user_id, r.status_id, r.created_at, r.updated_at, s.id, s.message, b.id, b.name, b.address, p.thumbnail_url, c.name, d.name, u.id, u.email, ud.name, pp.url").
+		From("reservations r").
+		Join("statuses s ON s.id = r.status_id").
+		Join("buildings b ON b.id = r.building_id").
+		Join("pictures p ON p.id = (SELECT p1.id FROM pictures p1 WHERE b.id = p1.building_id AND p1.index = 0 LIMIT 1)").
+		Join("cities c ON c.id = b.city_id").
+		Join("districts d ON d.id = b.district_id").
+		Join("users u ON u.id = r.user_id").
+		Join("user_details ud ON u.id = ud.user_id").
+		LeftJoin("profile_pictures pp ON ud.picture_id = pp.id").
+		Where("r.deleted_at IS NULL AND r.id = ?", reservationID).RunWith(db).QueryContext(ctx)
 	if err != nil {
 		return nil, err
 	}

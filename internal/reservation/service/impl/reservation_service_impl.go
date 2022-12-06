@@ -48,8 +48,18 @@ func (r *ReservationServiceImpl) IsBuildingAvailable(ctx context.Context, buildi
 }
 
 func (r *ReservationServiceImpl) GetUserReservations(ctx context.Context, userID string, page int, limit int) (*dto.BriefReservationsResponse, int64, error) {
+	count, err := r.repo.CountUserReservation(ctx, userID)
+	if err != nil {
+		log.Println("error while counting user reservations: ", err)
+		return nil, 0, err
+	}
+
+	if count == 0 {
+		return nil, 0, nil
+	}
+
 	offset := (page - 1) * limit
-	reservations, count, err := r.repo.GetUserReservations(ctx, userID, offset, limit)
+	reservations, err := r.repo.GetUserReservations(ctx, userID, offset, limit)
 	if err != nil {
 		log.Println("error while getting user reservations: ", err)
 		return nil, 0, err

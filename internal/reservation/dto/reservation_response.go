@@ -128,6 +128,7 @@ type FullAdminReservationResponse struct {
 	StartDate   string           `json:"startDate"`
 	EndDate     string           `json:"endDate"`
 	Status      StatusResponse   `json:"status"`
+	Message     string           `json:"message"`
 	CreatedAt   time.Time        `json:"createdAt"`
 	UpdatedAt   time.Time        `json:"updatedAt"`
 }
@@ -141,6 +142,7 @@ func NewFullAdminReservationResponse(reservation *entity.Reservation) *FullAdmin
 		StartDate:   reservation.StartDate.Format(config.DATE_RESPONSE_FORMAT),
 		EndDate:     reservation.EndDate.Format(config.DATE_RESPONSE_FORMAT),
 		Status:      *NewStatusResponse(reservation.Status),
+		Message:     reservation.Message,
 		CreatedAt:   reservation.CreatedAt,
 		UpdatedAt:   reservation.UpdatedAt,
 	}
@@ -173,6 +175,7 @@ type FullReservationResponse struct {
 	StartDate   string           `json:"startDate"`
 	EndDate     string           `json:"endDate"`
 	Status      StatusResponse   `json:"status"`
+	Message     string           `json:"message"`
 	CreatedAt   time.Time        `json:"createdAt"`
 	UpdatedAt   time.Time        `json:"updatedAt"`
 }
@@ -185,6 +188,7 @@ func NewFullReservationResponse(reservation *entity.Reservation) *FullReservatio
 		StartDate:   reservation.StartDate.Format(config.DATE_RESPONSE_FORMAT),
 		EndDate:     reservation.EndDate.Format(config.DATE_RESPONSE_FORMAT),
 		Status:      *NewStatusResponse(reservation.Status),
+		Message:     reservation.Message,
 		CreatedAt:   reservation.CreatedAt,
 		UpdatedAt:   reservation.UpdatedAt,
 	}

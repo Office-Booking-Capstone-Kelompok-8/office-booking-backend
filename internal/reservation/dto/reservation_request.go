@@ -64,6 +64,7 @@ type UpdateReservationRequest struct {
 	StartDate   Date   `json:"startDate" validate:"omitempty"`
 	Duration    int    `json:"duration" validate:"required_with=StartDate"`
 	StatusID    int    `json:"statusId" validate:"omitempty,gte=1,lte=6"`
+	Message     string `json:"message" validate:"omitempty,min=3,max=255"`
 }
 
 func (u *UpdateReservationRequest) ToEntity(reservationID string) *entity.Reservation {
@@ -75,5 +76,6 @@ func (u *UpdateReservationRequest) ToEntity(reservationID string) *entity.Reserv
 		StartDate:   u.StartDate.ToTime(),
 		EndDate:     u.StartDate.AddDate(0, u.Duration, 0),
 		StatusID:    u.StatusID,
+		Message:     u.Message,
 	}
 }

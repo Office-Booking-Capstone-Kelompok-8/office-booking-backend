@@ -12,6 +12,7 @@ type ReservationRepository interface {
 	CountUserActiveReservations(ctx context.Context, userID string) (int64, error)
 	CountBuildingActiveReservations(ctx context.Context, buildingID string) (int64, error)
 	CountUserReservation(ctx context.Context, userID string) (int64, error)
+	CountReservation(ctx context.Context, filter *dto.ReservationQueryParam) (int64, error)
 	IsBuildingAvailable(ctx context.Context, buildingID string, start time.Time, end time.Time, excludedReservationID ...string) (bool, error)
 	GetReservations(ctx context.Context, filter *dto.ReservationQueryParam) (*entity.Reservations, error)
 	GetUserReservations(ctx context.Context, userID string, offset int, limit int) (*entity.Reservations, error)

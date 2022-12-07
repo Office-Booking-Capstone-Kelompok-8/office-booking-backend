@@ -985,13 +985,12 @@ paths:
       tags:
         - Admin.Buildings
       parameters:
-        - name: q
+        - name: buildingName
           in: query
           description: Search query string to filter buildings by name (*)
           required: false
           schema:
             type: string
-            example: 'building'
         - name: cityId
           in: query
           description: City ID to filter buildings by city (*)
@@ -1011,7 +1010,6 @@ paths:
           schema:
             type: string
             format: date
-            example: '2020-01-01'
         - name: duration
           in: query
           description: Duration of reservation to be checked its availability. Must be used together with startDate
@@ -1019,6 +1017,40 @@ paths:
           schema:
             type: integer
             example: 1
+        - name: sortBy
+          in: query
+          description: Sort buildings by column name
+          required: false
+          schema:
+            type: string
+            enum:
+              - annual_price
+              - monthly_price
+              - capacity
+              - pinpoint
+        - name: order
+          in: query
+          description: Sort order of buildings
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+        - name: latitude
+          in: query
+          description: Latitude of the location to filter buildings by distance, must present if sort by pinpoint
+          required: false
+          schema:
+            type: number
+            format: floa
+        - name: longitude
+          in: query
+          description: Longitude of the location to filter buildings by distance, must present if sort by pinpoint
+          required: false
+          schema:
+            type: number
+            format: float
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/page'
 
@@ -2751,6 +2783,40 @@ paths:
           schema:
             type: integer
             example: 1
+        - name: sortBy
+          in: query
+          description: Sort buildings by column name
+          required: false
+          schema:
+            type: string
+            enum:
+              - annual_price
+              - monthly_price
+              - capacity
+              - pinpoint
+        - name: order
+          in: query
+          description: Sort order of buildings
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+        - name: latitude
+          in: query
+          description: Latitude of the location to filter buildings by distance, must present if sort by pinpoint
+          required: false
+          schema:
+            type: number
+            format: floa
+        - name: longitude
+          in: query
+          description: Longitude of the location to filter buildings by distance, must present if sort by pinpoint
+          required: false
+          schema:
+            type: number
+            format: float
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/page'
 

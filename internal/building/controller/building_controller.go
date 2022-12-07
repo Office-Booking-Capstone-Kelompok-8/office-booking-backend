@@ -29,46 +29,27 @@ func NewBuildingController(buildingService service.BuildingService, validator va
 }
 
 func (b *BuildingController) GetAllPublishedBuildings(c *fiber.Ctx) error {
-	q := c.Query("q")
-	city := c.Query("city", "0")
-	district := c.Query("district", "0")
-	startDate := c.Query("startDate", "0001-01-01")
-	duration := c.Query("duration", "0")
-	limit := c.Query("limit", "20")
-	page := c.Query("page", "1")
+	filter := new(dto.SearchBuildingQueryParam)
+	if err := c.QueryParser(filter); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
 
-	// Parse startDate to time.Time YYYY-MM-DD format
-	startDateParsed, err := time.Parse("2006-01-02", startDate)
+	starDateStr := c.Query("startDate", "0001-01-01")
+	startDate, err := time.Parse("2006-01-02", starDateStr)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
 	}
 
-	durationInt, err := strconv.Atoi(duration)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
+	filter.StartDate = startDate
+
+	if errs := b.validator.ValidateQuery(filter); errs != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidQueryParams.Error(),
+			Data:    errs,
+		})
 	}
 
-	cityInt, err := strconv.Atoi(city)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
-	}
-
-	districtInt, err := strconv.Atoi(district)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
-	}
-
-	limitInt, err := strconv.Atoi(limit)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
-	}
-
-	pageInt, err := strconv.Atoi(page)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
-	}
-
-	buildings, total, err := b.buildingService.GetAllPublishedBuildings(c.Context(), q, cityInt, districtInt, startDateParsed, durationInt, limitInt, pageInt)
+	buildings, total, err := b.buildingService.GetAllPublishedBuildings(c.Context(), filter)
 	if err != nil {
 		if errors.Is(err, err2.ErrInvalidDateRange) {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
@@ -81,54 +62,35 @@ func (b *BuildingController) GetAllPublishedBuildings(c *fiber.Ctx) error {
 		Message: "buildings fetched successfully",
 		Data:    buildings,
 		Meta: fiber.Map{
-			"limit": limitInt,
-			"page":  pageInt,
+			"limit": filter.Limit,
+			"page":  filter.Page,
 			"total": total,
 		},
 	})
 }
 
 func (b *BuildingController) GetAllBuildings(c *fiber.Ctx) error {
-	q := c.Query("q")
-	city := c.Query("city", "0")
-	district := c.Query("district", "0")
-	startDate := c.Query("startDate", "0001-01-01")
-	duration := c.Query("duration", "0")
-	limit := c.Query("limit", "20")
-	page := c.Query("page", "1")
+	filter := new(dto.SearchBuildingQueryParam)
+	if err := c.QueryParser(filter); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
 
-	// Parse startDate to time.Time YYYY-MM-DD format
-	startDateParsed, err := time.Parse("2006-01-02", startDate)
+	starDateStr := c.Query("startDate", "0001-01-01")
+	startDate, err := time.Parse("2006-01-02", starDateStr)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
 	}
 
-	durationInt, err := strconv.Atoi(duration)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
+	filter.StartDate = startDate
+
+	if errs := b.validator.ValidateQuery(filter); errs != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidQueryParams.Error(),
+			Data:    errs,
+		})
 	}
 
-	cityInt, err := strconv.Atoi(city)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
-	}
-
-	districtInt, err := strconv.Atoi(district)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
-	}
-
-	limitInt, err := strconv.Atoi(limit)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
-	}
-
-	pageInt, err := strconv.Atoi(page)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
-	}
-
-	buildings, total, err := b.buildingService.GetAllBuildings(c.Context(), q, cityInt, districtInt, startDateParsed, durationInt, limitInt, pageInt)
+	buildings, total, err := b.buildingService.GetAllBuildings(c.Context(), filter)
 	if err != nil {
 		if errors.Is(err, err2.ErrInvalidDateRange) {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
@@ -140,8 +102,8 @@ func (b *BuildingController) GetAllBuildings(c *fiber.Ctx) error {
 		Message: "buildings fetched successfully",
 		Data:    buildings,
 		Meta: fiber.Map{
-			"limit": limitInt,
-			"page":  pageInt,
+			"limit": filter.Limit,
+			"page":  filter.Page,
 			"total": total,
 		},
 	})
@@ -234,7 +196,7 @@ func (b *BuildingController) AddBuildingPicture(c *fiber.Ctx) error {
 		Picture: fileHeader,
 	}
 
-	errs := b.validator.ValidateStruct(validatorDto)
+	errs := b.validator.ValidateJSON(validatorDto)
 	if errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
 			Message: err2.ErrInvalidRequestBody.Error(),
@@ -307,7 +269,7 @@ func (b *BuildingController) UpdateBuilding(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	if errs := b.validator.ValidateStruct(building); errs != nil {
+	if errs := b.validator.ValidateJSON(building); errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
 			Message: err2.ErrInvalidRequestBody.Error(),
 			Data:    errs,

@@ -5,12 +5,11 @@ import (
 	"io"
 	"office-booking-backend/internal/building/dto"
 	"office-booking-backend/pkg/utils/validator"
-	"time"
 )
 
 type BuildingService interface {
-	GetAllPublishedBuildings(ctx context.Context, q string, cityID int, districtID int, startDate time.Time, duration int, limit int, page int) (*dto.BriefPublishedBuildingsResponse, int64, error)
-	GetAllBuildings(ctx context.Context, q string, cityID int, districtID int, startDate time.Time, duration int, limit int, page int) (*dto.BriefBuildingsResponse, int64, error)
+	GetAllPublishedBuildings(ctx context.Context, filter *dto.SearchBuildingQueryParam) (*dto.BriefPublishedBuildingsResponse, int64, error)
+	GetAllBuildings(ctx context.Context, filter *dto.SearchBuildingQueryParam) (*dto.BriefBuildingsResponse, int64, error)
 	GetPublishedBuildingDetailByID(ctx context.Context, id string) (*dto.FullPublishedBuildingResponse, error)
 	GetBuildingDetailByID(ctx context.Context, id string) (*dto.FullBuildingResponse, error)
 	GetFacilityCategories(ctx context.Context) (*dto.FacilityCategoriesResponse, error)

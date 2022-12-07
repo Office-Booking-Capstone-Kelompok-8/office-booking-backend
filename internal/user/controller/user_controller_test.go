@@ -412,7 +412,7 @@ func (s *TestSuiteUserController) TestUpdateUser() {
 	} {
 		s.SetupTest()
 		s.Run(tc.Name, func() {
-			s.mockValidator.On("ValidateStruct", mock.Anything).Return(tc.ValidationErr)
+			s.mockValidator.On("ValidateJSON", mock.Anything).Return(tc.ValidationErr)
 			s.mockService.On("UpdateUserByID", mock.Anything, mock.Anything, mock.Anything).Return(tc.ServiceErr)
 
 			s.fiberApp.Put("/:userID", s.userController.UpdateUserByID)
@@ -542,7 +542,7 @@ func (s *TestSuiteUserController) TestUpdateLoggedUser() {
 	} {
 		s.SetupTest()
 		s.Run(tc.Name, func() {
-			s.mockValidator.On("ValidateStruct", mock.Anything).Return(tc.ValidationErr)
+			s.mockValidator.On("ValidateJSON", mock.Anything).Return(tc.ValidationErr)
 			s.mockService.On("UpdateUserByID", mock.Anything, "some_uid", mock.Anything).Return(tc.ServiceErr)
 
 			s.fiberApp.Put("/", func(ctx *fiber.Ctx) error {

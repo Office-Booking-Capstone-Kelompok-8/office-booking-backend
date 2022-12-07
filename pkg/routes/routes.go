@@ -98,6 +98,12 @@ func (r *Routes) Init(app *fiber.App) {
 	aReservation.Put("/:reservationID", r.reservationController.UpdateReservation)
 	aReservation.Delete("/:reservationID", r.reservationController.DeleteReservation)
 
+	// Admin.Payment routes
+	aPayment := admin.Group("/payments", r.adminAccessTokenMiddleware)
+	aPayment.Post("/", r.paymentController.CreatePayment)
+	aPayment.Get("/:paymentID", r.paymentController.GetPaymentByID)
+	aPayment.Put("/:paymentID", r.paymentController.UpdatePayment)
+
 	// Buildings routes
 	building := v1.Group("/buildings")
 	building.Get("/", r.buildingController.GetAllPublishedBuildings)
@@ -106,6 +112,7 @@ func (r *Routes) Init(app *fiber.App) {
 
 	// Payment routes
 	payment := v1.Group("/payments")
+	payment.Get("/banks", r.paymentController.GetBanks)
 	payment.Get("/:paymentID", r.paymentController.GetPaymentByID)
 }
 

@@ -2532,17 +2532,16 @@ paths:
             schema:
               type: object
               required:
-                - name
-                - logo
+                - bankID
                 - accountNumber
-                - description
+                - accountName
               properties:
-                name:
+                bankId:
+                  type: integer
+                  example: 1
+                accountName:
                   type: string
-                  example: BRI
-                logoId:
-                  type: string
-                  example: 1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p
+                  example: Fortyfour
                 accountNumber:
                   type: string
                   example: 1234567890
@@ -2601,12 +2600,12 @@ paths:
               type: object
               minProperties: 1
               properties:
-                name:
-                  type: string
-                  example: BRI
-                logoId:
+                bankId:
                   type: integer
                   example: 1
+                accountName:
+                  type: string
+                  example: Fortyfour
                 accountNumber:
                   type: string
                   example: 1234567890
@@ -2891,6 +2890,9 @@ paths:
                         bankIcon:
                           type: string
                           example: https://ik.imagekit.io/fortyfour/default-image.jpg
+                        accountName:
+                          type: string
+                          example: Fortyfour
                         accountNumber:
                           type: string
                           example: 1234567890
@@ -2939,6 +2941,9 @@ paths:
                       bankIcon:
                         type: string
                         example: https://ik.imagekit.io/fortyfour/default-image.jpg
+                      accountName:
+                        type: string
+                        example: Fortyfour
                       accountNumber:
                         type: string
                         example: 1234567890

@@ -2517,70 +2517,6 @@ paths:
           $ref: '#/components/responses/UserNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
-  /admin/payments/logo:
-    post:
-      summary: Upload logo for payment
-      operationId: uploadPaymentLogo
-      security:
-        - access_token: []
-      tags:
-        - Admin.Payments
-      requestBody:
-        description: Logo for payment
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              required:
-                - logo
-              properties:
-                logo:
-                  type: string
-                  format: binary
-                alt:
-                  type: string
-                  example: logo BRI
-        required: true
-      responses:
-        201:
-          description: Successfully uploaded logo
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: logo uploaded successfully
-                  data:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                        format: uuid
-                        example: 1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p
-                      url:
-                        type: string
-                        example: https://ik.imagekit.io/fortyfour/default-image.jpg
-        400:
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BaseResponse'
-              examples:
-                InvalidRequestBody:
-                  $ref: '#/components/examples/InvalidRequestBody'
-                InvalidLogo:
-                  value:
-                    message: invalid logo
-        401:
-          $ref: '#/components/responses/InvalidOrMissingToken'
-        403:
-          $ref: '#/components/responses/RolesNotSupported'
-        500:
-          $ref: '#/components/responses/InternalServerError'
-
   /admin/payments:
     post:
       summary: Create payment detail
@@ -2949,10 +2885,10 @@ paths:
                         id:
                           type: integer
                           example: 1
-                        name:
+                        bankName:
                           type: string
-                          example: Bank Transfer
-                        logo:
+                          example: BNI
+                        bankIcon:
                           type: string
                           example: https://ik.imagekit.io/fortyfour/default-image.jpg
                         accountNumber:
@@ -2966,7 +2902,53 @@ paths:
         
         500:
           $ref: '#/components/responses/InternalServerError'
-
+  /payments/{paymentID}:
+    get:
+      summary: Get payments by id
+      operationId: getPaymentsById
+      tags:
+        - Payments
+      parameters:
+        - name: paymentID
+          in: path
+          description: ID of the payment
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        200:
+          description: Successfully retrieved payments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: payments retrieved successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      bankName:
+                        type: string
+                        example: BNI
+                      bankIcon:
+                        type: string
+                        example: https://ik.imagekit.io/fortyfour/default-image.jpg
+                      accountNumber:
+                        type: string
+                        example: 1234567890
+                      description:
+                        type: string
+                        example: Bank Transfer
+        404:
+          $ref: '#/components/responses/PaymentNotFound'                         
+        500:
+          $ref: '#/components/responses/InternalServerError'
 
 components:
   responses:

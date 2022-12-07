@@ -51,6 +51,9 @@ var (
 	// ErrPictureNotFound is returned when the picture is not found
 	ErrPictureNotFound = errors.New("picture not found")
 
+	// ErrPaymentNotFound is returned when the payment is not found
+	ErrPaymentNotFound = errors.New("payment not found")
+
 	// ErrFacilityNotFound is returned when the picture is invalid
 	ErrFacilityNotFound = errors.New("facility not found")
 
@@ -86,6 +89,9 @@ var (
 
 	// ErrInvalidStatus is returned when the status is invalid
 	ErrInvalidStatus = errors.New("status id is invalid")
+
+	// ErrInvalidPaymentID is returned when the payment id is invalid
+	ErrInvalidPaymentID = errors.New("payment id is invalid")
 
 	// ErrInvalidRole is returned when the role is invalid
 	ErrInvalidBuildingID = errors.New("building id is invalid")

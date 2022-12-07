@@ -1,16 +1,20 @@
 package entity
 
+import "gorm.io/gorm"
+
 type Payment struct {
-	ID            int `gorm:"primaryKey; type:int; not null"`
+	gorm.Model
 	Name          string
 	AccountNumber string
 	Description   string
-	PictureID     string         `gorm:"type:varchar(36)"`
-	Picture       PaymentPicture `gorm:"foreignKey:PictureID"`
+	BankID        string `gorm:"type:varchar(36)"`
+	Bank          Bank   `gorm:"foreignKey:BankID"`
 }
 
-type PaymentPicture struct {
-	ID  string `gorm:"primaryKey; type:varchar(36); not null"`
-	Url int
-	Alt string
+type Payments []Payment
+
+type Bank struct {
+	ID   int `gorm:"primaryKey; not null"`
+	Name string
+	Icon string
 }

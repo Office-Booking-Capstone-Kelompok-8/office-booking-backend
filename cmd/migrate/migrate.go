@@ -42,7 +42,7 @@ func main() {
 		&entity.District{},
 		&entity.Picture{},
 		&entity.Payment{},
-		&entity.PaymentPicture{},
+		&entity.Bank{},
 		&entity.Status{},
 		&entity.Reservation{},
 	)

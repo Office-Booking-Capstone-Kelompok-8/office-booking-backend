@@ -3,6 +3,7 @@ package routes
 import (
 	ac "office-booking-backend/internal/auth/controller"
 	bc "office-booking-backend/internal/building/controller"
+	pr "office-booking-backend/internal/payment/controller"
 	rc "office-booking-backend/internal/reservation/controller"
 	uc "office-booking-backend/internal/user/controller"
 	"office-booking-backend/pkg/middlewares"
@@ -15,16 +16,18 @@ type Routes struct {
 	userController             *uc.UserController
 	buildingController         *bc.BuildingController
 	reservationController      *rc.ReservationController
+	paymentController          *pr.PaymentController
 	accessTokenMiddleware      fiber.Handler
 	adminAccessTokenMiddleware fiber.Handler
 }
 
-func NewRoutes(authController *ac.AuthController, userControllerPkg *uc.UserController, buildingController *bc.BuildingController, reservationController *rc.ReservationController, accessTokenMiddleware fiber.Handler, adminAccessTokenMiddleware fiber.Handler) *Routes {
+func NewRoutes(authController *ac.AuthController, userControllerPkg *uc.UserController, buildingController *bc.BuildingController, reservationController *rc.ReservationController, paymentController *pr.PaymentController, accessTokenMiddleware fiber.Handler, adminAccessTokenMiddleware fiber.Handler) *Routes {
 	return &Routes{
 		authController:             authController,
 		userController:             userControllerPkg,
 		buildingController:         buildingController,
 		reservationController:      reservationController,
+		paymentController:          paymentController,
 		accessTokenMiddleware:      accessTokenMiddleware,
 		adminAccessTokenMiddleware: adminAccessTokenMiddleware,
 	}
@@ -58,8 +61,8 @@ func (r *Routes) Init(app *fiber.App) {
 	// Enduser.Reservation routes
 	reservation := v1.Group("/reservations", r.accessTokenMiddleware)
 	reservation.Get("/", r.reservationController.GetUserReservations)
-	reservation.Get("/:reservationID", r.reservationController.GetUserReservationDetailByID)
 	reservation.Post("/", r.reservationController.CreateReservation)
+	reservation.Get("/:reservationID", r.reservationController.GetUserReservationDetailByID)
 	reservation.Delete("/:reservationID", r.reservationController.CancelReservation)
 
 	// Admin routes
@@ -90,16 +93,20 @@ func (r *Routes) Init(app *fiber.App) {
 	// Admin.Reservation routes
 	aReservation := admin.Group("/reservations")
 	aReservation.Get("/", r.reservationController.GetReservations)
-	aReservation.Get("/:reservationID", r.reservationController.GetReservationDetailByID)
 	aReservation.Post("/", r.reservationController.CreateAdminReservation)
+	aReservation.Get("/:reservationID", r.reservationController.GetReservationDetailByID)
 	aReservation.Put("/:reservationID", r.reservationController.UpdateReservation)
 	aReservation.Delete("/:reservationID", r.reservationController.DeleteReservation)
 
 	// Buildings routes
 	building := v1.Group("/buildings")
 	building.Get("/", r.buildingController.GetAllPublishedBuildings)
-	building.Get("/:buildingID", r.buildingController.GetPublishedBuildingDetailByID)
 	building.Get("/facilities/category", r.buildingController.GetFacilityCategories)
+	building.Get("/:buildingID", r.buildingController.GetPublishedBuildingDetailByID)
+
+	// Payment routes
+	payment := v1.Group("/payments")
+	payment.Get("/:paymentID", r.paymentController.GetPaymentByID)
 }
 
 func ping(c *fiber.Ctx) error {

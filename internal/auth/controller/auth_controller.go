@@ -30,7 +30,7 @@ func (a *AuthController) RegisterUser(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	errs := a.validator.ValidateStruct(*user)
+	errs := a.validator.ValidateJSON(*user)
 	if errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
 			Message: err2.ErrInvalidRequestBody.Error(),
@@ -59,7 +59,7 @@ func (a *AuthController) RegisterAdmin(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	errs := a.validator.ValidateStruct(*user)
+	errs := a.validator.ValidateJSON(*user)
 	if errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
 			Message: err2.ErrInvalidRequestBody.Error(),
@@ -89,7 +89,7 @@ func (a *AuthController) LoginUser(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	errs := a.validator.ValidateStruct(*user)
+	errs := a.validator.ValidateJSON(*user)
 	if errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
 			Message: err2.ErrInvalidRequestBody.Error(),
@@ -131,7 +131,7 @@ func (a *AuthController) RefreshToken(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	errs := a.validator.ValidateStruct(*token)
+	errs := a.validator.ValidateJSON(*token)
 	if errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
 			Message: err2.ErrInvalidRequestBody.Error(),
@@ -160,7 +160,7 @@ func (a *AuthController) RequestOTP(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	errs := a.validator.ValidateStruct(*otp)
+	errs := a.validator.ValidateJSON(*otp)
 	if errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
 			Message: err2.ErrInvalidRequestBody.Error(),
@@ -187,7 +187,7 @@ func (a *AuthController) VerifyOTP(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	errs := a.validator.ValidateStruct(*otp)
+	errs := a.validator.ValidateJSON(*otp)
 	if errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
 			Message: err2.ErrInvalidRequestBody.Error(),
@@ -218,7 +218,7 @@ func (a *AuthController) ResetPassword(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	errs := a.validator.ValidateStruct(*password)
+	errs := a.validator.ValidateJSON(*password)
 	if errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
 			Message: err2.ErrInvalidRequestBody.Error(),
@@ -251,7 +251,7 @@ func (a *AuthController) ChangePassword(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	errs := a.validator.ValidateStruct(*password)
+	errs := a.validator.ValidateJSON(*password)
 	if errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
 			Message: err2.ErrInvalidRequestBody.Error(),

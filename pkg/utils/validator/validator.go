@@ -14,6 +14,8 @@ import (
 )
 
 type Validator interface {
+	ValidateJSON(s interface{}) *ErrorsResponse
+	ValidateQuery(s interface{}) *ErrorsResponse
 	ValidateStruct(s interface{}) *ErrorsResponse
 	ValidateVar(field interface{}, tag string) *ErrorsResponse
 }
@@ -39,13 +41,6 @@ func (e *ErrorsResponse) AddError(field string, reason string) {
 
 func NewValidator() Validator {
 	validate := validation.New()
-	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
-		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
-		if name == "-" {
-			return ""
-		}
-		return name
-	})
 
 	validate.RegisterCustomTypeFunc(func(field reflect.Value) interface{} {
 		// register for multipart.FileHeader, so we can validate the file type from the header instead of the file itself
@@ -70,6 +65,7 @@ func NewValidator() Validator {
 	}
 
 	customValidator.addTranslation("required_with", "{0} is required when {1} is present")
+	customValidator.addTranslation("required_if", "{0} is required when {1}")
 
 	return customValidator
 }
@@ -89,6 +85,30 @@ func (c *CustomValidator) ValidateStruct(s interface{}) *ErrorsResponse {
 	}
 
 	return &errors
+}
+
+func (c *CustomValidator) ValidateJSON(s interface{}) *ErrorsResponse {
+	c.Validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+		if name == "-" {
+			return ""
+		}
+		return name
+	})
+
+	return c.ValidateStruct(s)
+}
+
+func (c *CustomValidator) ValidateQuery(s interface{}) *ErrorsResponse {
+	c.Validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+		name := strings.SplitN(fld.Tag.Get("query"), ",", 2)[0]
+		if name == "-" {
+			return ""
+		}
+		return name
+	})
+
+	return c.ValidateStruct(s)
 }
 
 func (c *CustomValidator) ValidateVar(field interface{}, tag string) *ErrorsResponse {
@@ -119,7 +139,7 @@ func isValidMultipartImage(fl validation.FieldLevel) bool {
 
 func (c *CustomValidator) addTranslation(tag string, message string) {
 	registerFn := func(ut ut.Translator) error {
-		return ut.Add(tag, message, false)
+		return ut.Add(tag, message, true)
 	}
 
 	transFn := func(ut ut.Translator, fe validation.FieldError) string {

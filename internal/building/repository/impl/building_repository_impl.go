@@ -3,14 +3,15 @@ package impl
 import (
 	"context"
 	"fmt"
+	"office-booking-backend/internal/building/dto"
 	"office-booking-backend/internal/building/repository"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/utils/ptr"
 	"strings"
-	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type BuildingRepositoryImpl struct {
@@ -23,7 +24,7 @@ func NewBuildingRepositoryImpl(db *gorm.DB) repository.BuildingRepository {
 	}
 }
 
-func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, q string, cityID int, districtID int, startDate time.Time, endDate time.Time, limit int, offset int, isPublishedOnly bool) (*entity.Buildings, int64, error) {
+func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, filter *dto.SearchBuildingQueryParam, isPublishedOnly bool) (*entity.Buildings, int64, error) {
 	buildings := &entity.Buildings{}
 	var count int64
 
@@ -32,20 +33,60 @@ func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, q string, 
 		Joins("District").
 		Joins("City").
 		Model(&entity.Building{})
-	if q != "" {
-		query = query.Where("`buildings`.`name` LIKE ?", "%"+q+"%")
+	if filter.BuildingName != "" {
+		query = query.Where("`buildings`.`name` LIKE ?", "%"+filter.BuildingName+"%")
 	}
 
-	if cityID != 0 {
-		query = query.Where("`City`.`id` = ?", cityID)
+	if filter.CityID != 0 {
+		query = query.Where("`City`.`id` = ?", filter.CityID)
 	}
 
-	if districtID != 0 {
-		query = query.Where("`District`.`id` = ?", districtID)
+	if filter.DistrictID != 0 {
+		query = query.Where("`District`.`id` = ?", filter.DistrictID)
 	}
 
-	if !startDate.IsZero() && !endDate.IsZero() {
-		query = query.Where("NOT EXISTS (SELECT * FROM `reservations` WHERE `reservations`.`building_id` = `buildings`.`id` AND `reservations`.`start_date` <= ? AND `reservations`.`end_date` >= ?)", endDate, startDate)
+	if !filter.StartDate.IsZero() && !filter.EndDate.IsZero() {
+		query = query.Where("NOT EXISTS (SELECT * FROM `reservations` WHERE `reservations`.`building_id` = `buildings`.`id` AND `reservations`.`start_date` <= ? AND `reservations`.`end_date` >= ?)", filter.EndDate, filter.StartDate)
+	}
+
+	if filter.AnnualPriceMin != 0 {
+		query = query.Where("`buildings`.`annual_price` >= ?", filter.AnnualPriceMin)
+	}
+
+	if filter.AnnualPriceMax != 0 {
+		query = query.Where("`buildings`.`annual_price` <= ?", filter.AnnualPriceMax)
+	}
+
+	if filter.MonthlyPriceMin != 0 {
+		query = query.Where("`buildings`.`monthly_price` >= ?", filter.MonthlyPriceMin)
+	}
+
+	if filter.MonthlyPriceMax != 0 {
+		query = query.Where("`buildings`.`monthly_price` <= ?", filter.MonthlyPriceMax)
+	}
+
+	if filter.CapacityMin != 0 {
+		query = query.Where("`buildings`.`capacity` >= ?", filter.CapacityMin)
+	}
+
+	if filter.CapacityMax != 0 {
+		query = query.Where("`buildings`.`capacity` <= ?", filter.CapacityMax)
+	}
+
+	if filter.SortBy != "" {
+		// POW(69.1 * (latitude - [startlat]), 2) +
+		// POW(69.1 * ([startlng] - longitude) * COS(latitude / 57.3), 2))
+		if filter.SortBy == "pinpoint" {
+			query = query.Clauses(clause.OrderBy{
+				Expression: clause.Expr{
+					SQL:                fmt.Sprintf("POW(69.1 * (`buildings`.`latitude` - ?), 2) + POW(69.1 * (? - `buildings`.`longitude`) * COS(`buildings`.`latitude` / 57.3), 2) %s", filter.Order),
+					Vars:               []interface{}{filter.Latitude, filter.Longitude},
+					WithoutParentheses: true,
+				},
+			})
+		} else {
+			query = query.Order(fmt.Sprintf("`buildings`.`%s` %s", filter.SortBy, filter.Order))
+		}
 	}
 
 	if isPublishedOnly {
@@ -53,8 +94,8 @@ func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, q string, 
 	}
 
 	err := query.
-		Limit(limit).
-		Offset(offset).
+		Limit(filter.Limit).
+		Offset(filter.Offset).
 		Find(buildings).
 		Count(&count).Error
 	if err != nil {
@@ -62,6 +103,92 @@ func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, q string, 
 	}
 
 	return buildings, count, nil
+
+	// db, err := b.db.DB()
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// query := sq.Select("b.id, b.name, b.annual_price, b.monthly_price, b.owner, b.is_published, c.name, d.name").
+	// 	From("buildings b").
+	// 	LeftJoin("cities c ON b.city_id = c.id").
+	// 	LeftJoin("districts d ON b.district_id = d.id").
+	// 	LeftJoin("pictures p ON p.id = (SELECT p1.id FROM pictures p1 WHERE b.id = p1.building_id AND p1.index = 0 LIMIT 1)").
+	// 	Where("b.deleted_at IS NULL").
+	// 	Where("b.is_published = ?", isPublishedOnly)
+
+	// if filter.BuildingName != "" {
+	// 	query = query.Where("b.name LIKE ?", "%"+filter.BuildingName+"%")
+	// }
+
+	// if filter.CityID != 0 {
+	// 	query = query.Where("b.city_id = ?", filter.CityID)
+	// }
+
+	// if filter.DistrictID != 0 {
+	// 	query = query.Where("b.district_id = ?", filter.DistrictID)
+	// }
+
+	// if !filter.StartDate.IsZero() && !filter.EndDate.IsZero() {
+	// 	query = query.Where("NOT EXISTS (SELECT * FROM reservations r WHERE r.building_id = b.id AND r.start_date <= ? AND r.end_date >= ?)", filter.EndDate, filter.StartDate)
+	// }
+
+	// if filter.AnnualPriceMin != 0 {
+	// 	query = query.Where("b.annual_price >= ?", filter.AnnualPriceMin)
+	// }
+
+	// if filter.AnnualPriceMax != 0 {
+	// 	query = query.Where("b.annual_price <= ?", filter.AnnualPriceMax)
+	// }
+
+	// if filter.MonthlyPriceMin != 0 {
+	// 	query = query.Where("b.monthly_price >= ?", filter.MonthlyPriceMin)
+	// }
+
+	// if filter.MonthlyPriceMax != 0 {
+	// 	query = query.Where("b.monthly_price <= ?", filter.MonthlyPriceMax)
+	// }
+
+	// if filter.CapacityMin != 0 {
+	// 	query = query.Where("b.capacity >= ?", filter.CapacityMin)
+	// }
+
+	// if filter.CapacityMax != 0 {
+	// 	query = query.Where("b.capacity <= ?", filter.CapacityMax)
+	// }
+
+	// if filter.SortBy != "" {
+	// 	// POW(69.1 * (latitude - [startlat]), 2) +
+	// 	// POW(69.1 * ([startlng] - longitude) * COS(latitude / 57.3), 2))
+	// 	if filter.SortBy == "pinpoint" {
+	// 		query = query.OrderByClause("POW(69.1 * (b.latitude - ?), 2) + POW(69.1 * (? - b.longitude) * COS(b.latitude / 57.3), 2) "+filter.Order, filter.Latitude, filter.Longitude, filter.Order)
+	// 	} else {
+	// 		query = query.OrderBy(filter.SortBy + " " + filter.Order)
+	// 	}
+	// }
+
+	// rows, err := query.
+	// 	Offset(uint64(filter.Offset)).
+	// 	Limit(uint64(filter.Limit)).
+	// 	RunWith(db).QueryContext(ctx)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// defer func() {
+	// 	err = rows.Close()
+	// }()
+
+	// var buildings entity.Buildings
+	// for rows.Next() {
+	// 	var building entity.Building
+	// 	err = rows.Scan(&building.ID, &building.Name, &building.AnnualPrice, &building.MonthlyPrice, &building.Owner, &building.IsPublished, &building.City, &building.District)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	buildings = append(buildings, building)
+	// }
+
+	// return &buildings, nil
 }
 
 func (b *BuildingRepositoryImpl) GetBuildingDetailByID(ctx context.Context, id string, isPublishedOnly bool) (*entity.Building, error) {

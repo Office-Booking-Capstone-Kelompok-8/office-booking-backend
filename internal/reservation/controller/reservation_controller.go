@@ -63,7 +63,7 @@ func (r *ReservationController) GetReservations(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
 	}
 
-	if errs := r.validator.ValidateStruct(filter); errs != nil {
+	if errs := r.validator.ValidateQuery(filter); errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
 			Message: err2.ErrInvalidQueryParams.Error(),
 			Data:    errs,
@@ -136,7 +136,7 @@ func (r *ReservationController) CreateReservation(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	if errs := r.validator.ValidateStruct(reservation); errs != nil {
+	if errs := r.validator.ValidateJSON(reservation); errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
 			Message: err2.ErrInvalidRequestBody.Error(),
 			Data:    errs,
@@ -171,7 +171,7 @@ func (r *ReservationController) CreateAdminReservation(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	if errs := r.validator.ValidateStruct(reservation); errs != nil {
+	if errs := r.validator.ValidateJSON(reservation); errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
 			Message: err2.ErrInvalidRequestBody.Error(),
 			Data:    errs,
@@ -232,7 +232,7 @@ func (r *ReservationController) UpdateReservation(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	if errs := r.validator.ValidateStruct(reservation); errs != nil {
+	if errs := r.validator.ValidateJSON(reservation); errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
 			Message: err2.ErrInvalidRequestBody.Error(),
 			Data:    errs,

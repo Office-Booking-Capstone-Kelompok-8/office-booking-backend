@@ -3,6 +3,7 @@ package impl
 import (
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
+	"strings"
 
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
@@ -19,13 +20,26 @@ func NewPaymentRepositoryImpl(db *gorm.DB) *PaymentRepositoryImpl {
 }
 
 func (p PaymentRepositoryImpl) GetAllPayment(ctx context.Context) (*entity.Payments, error) {
-	//TODO implement me
+	// TODO: add implementation
 	panic("implement me")
+}
+
+func (p PaymentRepositoryImpl) GetAllBank(ctx context.Context) (*entity.Banks, error) {
+	banks := new(entity.Banks)
+	err := p.db.WithContext(ctx).Find(banks).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return banks, nil
 }
 
 func (p PaymentRepositoryImpl) GetPaymentByID(ctx context.Context, paymentID int) (*entity.Payment, error) {
 	payment := new(entity.Payment)
-	err := p.db.WithContext(ctx).First(payment, paymentID).Error
+	err := p.db.WithContext(ctx).
+		Model(&entity.Payment{}).
+		Joins("Bank").
+		First(payment, paymentID).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, err2.ErrPaymentNotFound
@@ -37,16 +51,31 @@ func (p PaymentRepositoryImpl) GetPaymentByID(ctx context.Context, paymentID int
 }
 
 func (p PaymentRepositoryImpl) CreatePayment(ctx context.Context, payment *entity.Payment) error {
-	//TODO implement me
-	panic("implement me")
+	err := p.db.WithContext(ctx).Create(payment).Error
+	if err != nil {
+		if strings.Contains(err.Error(), "CONSTRAINT `fk_payments_bank`") {
+			return err2.ErrInvalidBankID
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 func (p PaymentRepositoryImpl) UpdatePayment(ctx context.Context, payment *entity.Payment) error {
-	//TODO implement me
-	panic("implement me")
-}
+	res := p.db.WithContext(ctx).Updates(payment)
+	if res.Error != nil {
+		if strings.Contains(res.Error.Error(), "CONSTRAINT `fk_payments_bank`") {
+			return err2.ErrInvalidBankID
+		}
 
-func (p PaymentRepositoryImpl) DeletePayment(ctx context.Context, paymentID int) error {
-	//TODO implement me
-	panic("implement me")
+		return res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return err2.ErrPaymentNotFound
+	}
+
+	return nil
 }

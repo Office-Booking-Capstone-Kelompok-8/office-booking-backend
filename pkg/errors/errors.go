@@ -98,4 +98,7 @@ var (
 
 	// ErrInvalidUserID is returned when the user id is invalid
 	ErrInvalidUserID = errors.New("user id is invalid")
+
+	// ErrInvalidBankID is returned when the bank id is invalid
+	ErrInvalidBankID = errors.New("bank id is invalid")
 )

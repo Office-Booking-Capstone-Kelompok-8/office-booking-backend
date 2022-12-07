@@ -7,6 +7,7 @@ type PaymentResponse struct {
 	BankIcon      string `json:"bankIcon"`
 	BankName      string `json:"bankName"`
 	AccountNumber string `json:"accountNumber"`
+	AccountName   string `json:"accountName"`
 	Description   string `json:"description"`
 }
 
@@ -16,6 +17,31 @@ func NewPaymentResponse(payment *entity.Payment) *PaymentResponse {
 		BankIcon:      payment.Bank.Icon,
 		BankName:      payment.Bank.Name,
 		AccountNumber: payment.AccountNumber,
+		AccountName:   payment.AccountName,
 		Description:   payment.Description,
 	}
+}
+
+type BankResponse struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+	Icon string `json:"icon"`
+}
+
+func NewBankResponse(bank *entity.Bank) *BankResponse {
+	return &BankResponse{
+		ID:   bank.ID,
+		Name: bank.Name,
+		Icon: bank.Icon,
+	}
+}
+
+type BanksResponse []BankResponse
+
+func NewBanksResponse(banks *entity.Banks) *BanksResponse {
+	var banksResponse BanksResponse
+	for _, bank := range *banks {
+		banksResponse = append(banksResponse, *NewBankResponse(&bank))
+	}
+	return &banksResponse
 }

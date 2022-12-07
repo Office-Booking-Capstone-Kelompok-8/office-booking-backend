@@ -76,6 +76,11 @@ func main() {
 		log.Fatalf("Error seeding category: %v", err)
 	}
 
+	err = InitBank(db)
+	if err != nil {
+		log.Fatalf("Error seeding bank: %v", err)
+	}
+
 	log.Println("Database migration successful")
 }
 
@@ -162,10 +167,6 @@ func InitCity(db *gorm.DB) error {
 
 	city := entity.Cities{
 		{
-			ID:   153,
-			Name: "Kab. Kepulauan Seribu",
-		},
-		{
 			ID:   154,
 			Name: "Kota Jakarta Selatan",
 		},
@@ -245,16 +246,6 @@ func InitDistrict(db *gorm.DB) error {
 	// (1923,158,' Cilincing'),
 
 	district := entity.Districts{
-		{
-			ID:     1880,
-			CityID: 153,
-			Name:   "Kepulauan Seribu Selatan",
-		},
-		{
-			ID:     1881,
-			CityID: 153,
-			Name:   "Kepulauan Seribu Utara",
-		},
 		{
 			ID:     1882,
 			CityID: 154,
@@ -482,8 +473,93 @@ func InitCategory(db *gorm.DB) error {
 	category := entity.Categories{
 		{
 			ID:   1,
-			Name: "other_houses",
+			Name: "Lainnya",
 			Url:  "https://ik.imagekit.io/fortyfour/FacilityCategory/other_houses_FILL0_wght400_GRAD0_opsz48_ySm9eMGlM.svg",
+		},
+		{
+			ID:   2,
+			Name: "CCTV",
+			Url:  "https://ik.imagekit.io/fortyfour/FacilityCategory/device-cctv_BSxTxr0s1.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670427963176",
+		},
+		{
+			ID:   3,
+			Name: "Dapur",
+			Url:  "https://ik.imagekit.io/fortyfour/FacilityCategory/kitchen_FILL0_wght400_GRAD0_opsz48_RzlEJkIJoC.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670428432557",
+		},
+		{
+			ID:   4,
+			Name: "Kamar Mandi",
+			Url:  "https://ik.imagekit.io/fortyfour/FacilityCategory/Toilet_Bowl-595b40b85ba036ed117db567_Ie7dc45m5.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670428666242",
+		},
+		{
+			ID:   5,
+			Name: "Parkir",
+			Url:  "https://ik.imagekit.io/fortyfour/FacilityCategory/local_parking_FILL0_wght400_GRAD0_opsz48_FgcoxojM2.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670428432580",
+		},
+		{
+			ID:   6,
+			Name: "Wifi",
+			Url:  "https://ik.imagekit.io/fortyfour/FacilityCategory/wifi_FILL0_wght400_GRAD0_opsz48_OTrB_E3Ge.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670428432560",
+		},
+		{
+			ID:   7,
+			Name: "Fitness",
+			Url:  "https://ik.imagekit.io/fortyfour/FacilityCategory/fitness_center_FILL0_wght400_GRAD0_opsz48_6vlA6Rv8m.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670428433245",
+		},
+		{
+			ID:   8,
+			Name: "Telepon",
+			Url:  "https://ik.imagekit.io/fortyfour/FacilityCategory/call_FILL0_wght400_GRAD0_opsz48_yZP_MUvaNH.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670428432624",
+		},
+		{
+			ID:   9,
+			Name: "Kantin",
+			Url:  "https://ik.imagekit.io/fortyfour/FacilityCategory/food_bank_FILL0_wght400_GRAD0_opsz48_hTRRszwP6.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670428433169",
+		},
+		{
+			ID:   10,
+			Name: "AC",
+			Url:  "https://ik.imagekit.io/fortyfour/FacilityCategory/ac_unit_FILL0_wght400_GRAD0_opsz48_WgKuo7ULx.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670428432656",
+		},
+		{
+			ID:   11,
+			Name: "Kipas Angin",
+			Url:  "https://ik.imagekit.io/fortyfour/FacilityCategory/mode_fan_FILL0_wght400_GRAD0_opsz48_UfKEzKxJ_T.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670428432669",
+		},
+		{
+			ID:   12,
+			Name: "Televisi",
+			Url:  "https://ik.imagekit.io/fortyfour/FacilityCategory/desktop_mac_FILL0_wght400_GRAD0_opsz48_a-P5J2q_Eu.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670428434101",
+		},
+		{
+			ID:   13,
+			Name: "Proyektor",
+			Url:  "https://ik.imagekit.io/fortyfour/FacilityCategory/projector-svgrepo-com_-I7UfrwD_.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670428695681",
+		},
+		{
+			ID:   14,
+			Name: "Printer",
+			Url:  "https://ik.imagekit.io/fortyfour/FacilityCategory/printer-svgrepo-com_CwEwxlp9m.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670428760161",
+		},
+		{
+			ID:   15,
+			Name: "Ruang Merokok",
+			Url:  "https://ik.imagekit.io/fortyfour/FacilityCategory/smoking_rooms_FILL0_wght400_GRAD0_opsz48_gEsimHKIG.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670429102985",
+		},
+		{
+			ID:   16,
+			Name: "Petugas Kebersihan",
+			Url:  "https://ik.imagekit.io/fortyfour/FacilityCategory/mop_FILL0_wght400_GRAD0_opsz48_bJTBx-3VX.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670429103012",
+		},
+		{
+			ID:   17,
+			Name: "Meja",
+			Url:  "https://ik.imagekit.io/fortyfour/FacilityCategory/table_restaurant_FILL0_wght400_GRAD0_opsz48_1hyC5DKIp.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670429104525s",
+		},
+		{
+			ID:   18,
+			Name: "Stop Kontak",
+			Url:  "https://ik.imagekit.io/fortyfour/FacilityCategory/electric_bolt_FILL0_wght400_GRAD0_opsz48_6xcn8a2FUk.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670429103611s",
 		},
 	}
 
@@ -494,4 +570,52 @@ func InitCategory(db *gorm.DB) error {
 	}
 
 	return db.Create(&category).Error
+}
+
+func InitBank(db *gorm.DB) error {
+	Bank := entity.Banks{
+		{
+			ID:   1,
+			Name: "BNI",
+			Icon: "https://ik.imagekit.io/fortyfour/banks/bni_1__pftwxJOII.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670427443148",
+		},
+		{
+			ID:   2,
+			Name: "BRI",
+			Icon: "https://ik.imagekit.io/fortyfour/banks/bri_dg-04n5YY.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670427442469",
+		},
+		{
+			ID:   3,
+			Name: "BCA",
+			Icon: "https://ik.imagekit.io/fortyfour/banks/bca_YfcLDnPQt.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670427476426",
+		},
+		{
+			ID:   4,
+			Name: "Mandiri",
+			Icon: "https://ik.imagekit.io/fortyfour/banks/mandiri_RHAXhiLalh.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670427505115",
+		},
+		{
+			ID:   5,
+			Name: "Permata",
+			Icon: "https://ik.imagekit.io/fortyfour/banks/permata_RSt5x6SZR.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670427674886",
+		},
+		{
+			ID:   6,
+			Name: "BTN",
+			Icon: "https://ik.imagekit.io/fortyfour/banks/btn_oxksrX1Rc.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670427674866",
+		},
+		{
+			ID:   7,
+			Name: "Danamon",
+			Icon: "https://ik.imagekit.io/fortyfour/banks/danamon_UW76q_DGc.svg?ik-sdk-version=javascript-1.4.3&updatedAt=1670427674777",
+		},
+	}
+
+	var count int64
+	db.Model(&entity.Bank{}).Count(&count)
+	if count != 0 {
+		return nil
+	}
+
+	return db.Create(&Bank).Error
 }

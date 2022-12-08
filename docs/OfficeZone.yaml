@@ -231,10 +231,108 @@ paths:
           $ref: '#/components/responses/InvalidOrMissingToken'
         500:
           $ref: '#/components/responses/InternalServerError'
-  /auth/otp/request:
+
+  /auth/otp/request/email:
     post:
-      summary: Request OTP
-      operationId: requestOTP
+      summary: Request OTP for verifying email
+      operationId: requestOtpForEmail
+      tags:
+        - Auth
+      security:
+        - access_token: []
+      responses:
+        200:
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: otp sent successfully
+        404:
+          $ref: '#/components/responses/UserNotFound'
+        409:
+          description: Email already verified
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: email already verified
+        429:
+          description: Too many requests sent in a short period of time. OTP can be requested only once every 60 seconds
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: too many requests
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/otp/verify/email:
+    post:
+      summary: Verify OTP for verifying email
+      operationId: verifyOtpForEmail
+      tags:
+        - Auth
+      security:
+        - access_token: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  example: 123456
+        required: true
+      responses:
+        200:
+          description: OTP verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: email verified successfully
+                   
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+        401:
+          description: Invalid OTP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidOTP:
+                  $ref: '#/components/examples/InvalidOTP'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/otp/request/reset-password:
+    post:
+      summary: Request OTP for reset password
+      operationId: requestResetPasswordOTP
       tags:
         - Auth
       requestBody:
@@ -287,10 +385,10 @@ paths:
                 
         500:
           $ref: '#/components/responses/InternalServerError'
-  /auth/otp/verify:
+  /auth/otp/verify/reset-password:
     post:
-      summary: Verify OTP
-      operationId: verifyOTP
+      summary: Verify Reset Password OTP
+      operationId: verifyResetPasswordOTP
       tags:
         - Auth
       requestBody:
@@ -350,6 +448,7 @@ paths:
                   $ref: '#/components/examples/InvalidOTP'
         500:
           $ref: '#/components/responses/InternalServerError'
+
   /auth/reset-password:
     put:
       summary: Reset password

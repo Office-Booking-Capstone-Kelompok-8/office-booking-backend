@@ -126,6 +126,7 @@ func (r *Routes) Init(app *fiber.App) {
 
 	// Payment routes
 	payment := v1.Group("/payments")
+	payment.Get("/", r.payment.GetAllPayment)
 	payment.Get("/banks", r.payment.GetBanks)
 	payment.Get("/:paymentID", r.payment.GetPaymentByID)
 }

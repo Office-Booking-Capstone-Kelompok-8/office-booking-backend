@@ -28,6 +28,16 @@ func (p *PaymentServiceImpl) GetBanks(ctx context.Context) (*dto.BanksResponse, 
 	return dto.NewBanksResponse(banks), nil
 }
 
+func (p *PaymentServiceImpl) GetAllPayment(ctx context.Context) (*dto.PaymentsResponse, error) {
+	payments, err := p.repo.GetAllPayment(ctx)
+	if err != nil {
+		log.Println("error when getting all payments: ", err)
+		return nil, err
+	}
+
+	return dto.NewPaymentsResponse(payments), nil
+}
+
 func (p *PaymentServiceImpl) GetPaymentByID(ctx context.Context, paymentID int) (*dto.PaymentResponse, error) {
 	payment, err := p.repo.GetPaymentByID(ctx, paymentID)
 	if err != nil {

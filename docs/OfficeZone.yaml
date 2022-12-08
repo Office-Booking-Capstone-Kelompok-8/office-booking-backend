@@ -3104,7 +3104,7 @@ paths:
 
   /payments:
     get:
-      summary: Get all payments in the system
+      summary: Get all payments method in the system
       operationId: getPayments
       tags:
         - Payments
@@ -3142,14 +3142,11 @@ paths:
                         description:
                           type: string
                           example: Bank Transfer
-                  meta:
-                    $ref: '#/components/schemas/Meta'
-        
         500:
           $ref: '#/components/responses/InternalServerError'
   /payments/{paymentID}:
     get:
-      summary: Get payments by id
+      summary: Get payments method by id
       operationId: getPaymentsById
       tags:
         - Payments

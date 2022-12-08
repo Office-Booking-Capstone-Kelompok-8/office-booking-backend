@@ -35,6 +35,18 @@ func (p *PaymentController) GetBanks(c *fiber.Ctx) error {
 	})
 }
 
+func (p *PaymentController) GetAllPayment(c *fiber.Ctx) error {
+	payments, err := p.service.GetAllPayment(c.Context())
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "payments retrieved successfully",
+		Data:    payments,
+	})
+}
+
 func (p *PaymentController) GetPaymentByID(c *fiber.Ctx) error {
 	paymentID := c.Params("paymentID")
 	paymentIDInt, err := strconv.Atoi(paymentID)

@@ -27,8 +27,6 @@ type AccessTokenValidator interface {
 
 func ValidateAccessToken(validator AccessTokenValidator) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		// check if next handler is null or not
-
 		user := c.Locals("user").(*jwt.Token)
 		claims := user.Claims.(jwt.MapClaims)
 

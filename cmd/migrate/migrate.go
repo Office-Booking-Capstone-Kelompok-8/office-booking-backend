@@ -27,11 +27,20 @@ func init() {
 }
 
 func main() {
-	env := config.LoadConfig()
+	conf, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalf("Error loading config: %v", err)
+	}
 
-	db := mysql.InitDatabase(env["DB_HOST"], env["DB_PORT"], env["DB_USER"], env["DB_PASS"], env["DB_NAME"])
+	db := mysql.InitDatabase(
+		conf.GetString("service.db.host"),
+		conf.GetString("service.db.port"),
+		conf.GetString("service.db.user"),
+		conf.GetString("service.db.pass"),
+		conf.GetString("service.db.name"),
+	)
 
-	err := db.AutoMigrate(
+	err = db.AutoMigrate(
 		&entity.User{},
 		&entity.UserDetail{},
 		&entity.Building{},

@@ -22,6 +22,7 @@ import (
 	redis2 "github.com/go-redis/redis/v9"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/spf13/viper"
 )
 
 const DefaultPasswordCost = 10
@@ -33,9 +34,10 @@ type AuthServiceImpl struct {
 	mail       mail.Client
 	password   password.Hash
 	generator  random.Generator
+	config     *viper.Viper
 }
 
-func NewAuthServiceImpl(repository repository.AuthRepository, tokenService service.TokenService, redisRepo redis.RedisClient, mail mail.Client, password password.Hash, generator random.Generator) service.AuthService {
+func NewAuthServiceImpl(repository repository.AuthRepository, tokenService service.TokenService, redisRepo redis.RedisClient, mail mail.Client, password password.Hash, generator random.Generator, config *viper.Viper) service.AuthService {
 	return &AuthServiceImpl{
 		repository: repository,
 		token:      tokenService,
@@ -43,6 +45,7 @@ func NewAuthServiceImpl(repository repository.AuthRepository, tokenService servi
 		mail:       mail,
 		password:   password,
 		generator:  generator,
+		config:     config,
 	}
 }
 
@@ -155,7 +158,7 @@ func (a *AuthServiceImpl) createResetOTP(ctx context.Context, email string) (*st
 		return nil, err
 	}
 
-	otp, err := a.generator.GenerateRandomIntString(config.OTP_LENGTH)
+	otp, err := a.generator.GenerateRandomIntString(a.config.GetInt("otp.length"))
 	if err != nil {
 		log.Println("Error while generating random string: ", err)
 		return nil, err
@@ -172,7 +175,7 @@ func (a *AuthServiceImpl) createResetOTP(ctx context.Context, email string) (*st
 	}
 	key := createKey(email, config.RESET_PASSWORD_SUBJECT)
 
-	err = a.redisRepo.Set(ctx, key, string(otpTokenPair), config.OTP_EXPIRATION_TIME)
+	err = a.redisRepo.Set(ctx, key, string(otpTokenPair), a.config.GetDuration("otp.exp"))
 	if err != nil {
 		log.Println("Error while setting key in redis: ", err)
 		return nil, err
@@ -233,7 +236,7 @@ func (a *AuthServiceImpl) VerifyPasswordResetOTP(ctx context.Context, otp *dto.R
 }
 
 func (a *AuthServiceImpl) createVerifyOTP(ctx context.Context, userID string, email string) (*string, error) {
-	otp, err := a.generator.GenerateRandomIntString(config.OTP_LENGTH)
+	otp, err := a.generator.GenerateRandomIntString(a.config.GetInt("otp.length"))
 	if err != nil {
 		log.Println("Error while generating random string: ", err)
 		return nil, err
@@ -249,7 +252,7 @@ func (a *AuthServiceImpl) createVerifyOTP(ctx context.Context, userID string, em
 	}
 	key := createKey(email, config.VERIFY_EMAIL_SUBJECT)
 
-	err = a.redisRepo.Set(ctx, key, string(otpTokenPair), config.OTP_EXPIRATION_TIME)
+	err = a.redisRepo.Set(ctx, key, string(otpTokenPair), a.config.GetDuration("otp.exp"))
 	if err != nil {
 		log.Println("Error while setting key in redis: ", err)
 		return nil, err

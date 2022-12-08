@@ -17,17 +17,21 @@ type Routes struct {
 	building                   *bc.BuildingController
 	reservation                *rc.ReservationController
 	payment                    *pr.PaymentController
+	limiter                    *middlewares.Limiter
+	cors                       fiber.Handler
 	accessTokenMiddleware      fiber.Handler
 	adminAccessTokenMiddleware fiber.Handler
 }
 
-func NewRoutes(authController *ac.AuthController, userControllerPkg *uc.UserController, buildingController *bc.BuildingController, reservationController *rc.ReservationController, paymentController *pr.PaymentController, accessTokenMiddleware fiber.Handler, adminAccessTokenMiddleware fiber.Handler) *Routes {
+func NewRoutes(authController *ac.AuthController, userControllerPkg *uc.UserController, buildingController *bc.BuildingController, reservationController *rc.ReservationController, paymentController *pr.PaymentController, limiter *middlewares.Limiter, accessTokenMiddleware fiber.Handler, adminAccessTokenMiddleware fiber.Handler, cors fiber.Handler) *Routes {
 	return &Routes{
 		auth:                       authController,
 		user:                       userControllerPkg,
 		building:                   buildingController,
 		reservation:                reservationController,
 		payment:                    paymentController,
+		limiter:                    limiter,
+		cors:                       cors,
 		accessTokenMiddleware:      accessTokenMiddleware,
 		adminAccessTokenMiddleware: adminAccessTokenMiddleware,
 	}
@@ -36,7 +40,7 @@ func NewRoutes(authController *ac.AuthController, userControllerPkg *uc.UserCont
 func (r *Routes) Init(app *fiber.App) {
 	app.Use(middlewares.Recover)
 	app.Use(middlewares.Logger)
-	app.Use(middlewares.Cors)
+	app.Use(r.cors)
 
 	v1 := app.Group("/v1")
 	v1.Get("/ping", ping)
@@ -51,8 +55,8 @@ func (r *Routes) Init(app *fiber.App) {
 
 	otp := auth.Group("/otp")
 	requestOtp := otp.Group("/request")
-	requestOtp.Post("/reset-password", middlewares.ResetPasswordOTPLimitter, r.auth.RequestPasswordResetOTP)
-	requestOtp.Post("/email", r.accessTokenMiddleware, middlewares.VerifyEmailOTPLimitter, r.auth.RequestVerifyEmailOTP)
+	requestOtp.Post("/reset-password", r.limiter.ResetPasswordOTPLimitter(), r.auth.RequestPasswordResetOTP)
+	requestOtp.Post("/email", r.accessTokenMiddleware, r.limiter.ResetPasswordOTPLimitter(), r.auth.RequestVerifyEmailOTP)
 	verifyOtp := otp.Group("/verify")
 	verifyOtp.Post("/reset-password", r.auth.VerifyPasswordResetOTP)
 	verifyOtp.Post("/email", r.accessTokenMiddleware, r.auth.VerifyEmailOTP)

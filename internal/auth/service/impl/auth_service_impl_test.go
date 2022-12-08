@@ -18,6 +18,7 @@ import (
 
 	"github.com/go-redis/redis/v9"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/spf13/viper"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -48,6 +49,7 @@ func (s *TestSuiteAuthService) SetupTest() {
 		mail:       s.mockMail,
 		password:   s.mockPass,
 		generator:  s.mockRand,
+		config:     viper.New(),
 	}
 }
 
@@ -67,8 +69,9 @@ func TestAuthService(t *testing.T) {
 
 func (s *TestSuiteAuthService) TestImplementation() {
 	s.Run("Success", func() {
+		conf := viper.New()
 		s.NotPanics(func() {
-			_ = NewAuthServiceImpl(s.mockRepo, s.mockToken, s.mockRedis, s.mockMail, s.mockPass, s.mockRand)
+			_ = NewAuthServiceImpl(s.mockRepo, s.mockToken, s.mockRedis, s.mockMail, s.mockPass, s.mockRand, conf)
 		})
 	})
 }
@@ -224,8 +227,10 @@ func (s *TestSuiteAuthService) TestCreateOTP() {
 		ExpectedErr   error
 	}{
 		{
-			Name:          "Success",
-			RepoReturn:    &entity.User{},
+			Name: "Success",
+			RepoReturn: &entity.User{
+				IsVerified: ptr.Bool(true),
+			},
 			RepoError:     nil,
 			GenerateError: nil,
 			RedisErr:      nil,
@@ -267,7 +272,7 @@ func (s *TestSuiteAuthService) TestCreateOTP() {
 		s.SetupTest()
 		s.Run(tc.Name, func() {
 			s.mockRepo.On("GetUserByEmail", mock.Anything, mock.Anything).Return(tc.RepoReturn, tc.RepoError)
-			s.mockRand.On("GenerateRandomIntString", 6).Return("123456", tc.GenerateError)
+			s.mockRand.On("GenerateRandomIntString", mock.Anything).Return("123456", tc.GenerateError)
 			s.mockRedis.On("Set", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.RedisErr)
 
 			_, err := s.authService.createResetOTP(context.Background(), "someEmail")
@@ -297,7 +302,7 @@ func (s *TestSuiteAuthService) TestRequestOTP() {
 		s.SetupTest()
 		s.Run(tc.Name, func() {
 			s.mockRepo.On("GetUserByEmail", mock.Anything, mock.Anything).Return(&entity.User{}, nil)
-			s.mockRand.On("GenerateRandomIntString", 6).Return("123456", nil)
+			s.mockRand.On("GenerateRandomIntString", mock.Anything).Return("123456", nil)
 			s.mockRedis.On("Set", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 			s.mockMail.On("SendMail", mock.Anything, mock.Anything).Return(tc.MailErr)

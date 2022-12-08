@@ -54,7 +54,7 @@ func Init(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf map[strin
 	reservationService := reservationServicePkg.NewReservationServiceImpl(reservationRepository, buildingRepository)
 	userService := userServicePkg.NewUserServiceImpl(userRepository, reservationService, imagekitService)
 	buildingService := buildingServicePkg.NewBuildingServiceImpl(buildingRepository, reservationRepository, imagekitService, validation)
-	authService := authServicePkg.NewAuthServiceImpl(authRepository, userRepository, tokenService, redisRepo, mailService, passwordService, generator)
+	authService := authServicePkg.NewAuthServiceImpl(authRepository, tokenService, redisRepo, mailService, passwordService, generator)
 	paymentService := paymentServicePkg.NewPaymentServiceImpl(paymentRepository)
 
 	reservationController := reservationControllerPkg.NewReservationController(reservationService, validation)

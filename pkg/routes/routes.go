@@ -12,22 +12,22 @@ import (
 )
 
 type Routes struct {
-	authController             *ac.AuthController
-	userController             *uc.UserController
-	buildingController         *bc.BuildingController
-	reservationController      *rc.ReservationController
-	paymentController          *pr.PaymentController
+	auth                       *ac.AuthController
+	user                       *uc.UserController
+	building                   *bc.BuildingController
+	reservation                *rc.ReservationController
+	payment                    *pr.PaymentController
 	accessTokenMiddleware      fiber.Handler
 	adminAccessTokenMiddleware fiber.Handler
 }
 
 func NewRoutes(authController *ac.AuthController, userControllerPkg *uc.UserController, buildingController *bc.BuildingController, reservationController *rc.ReservationController, paymentController *pr.PaymentController, accessTokenMiddleware fiber.Handler, adminAccessTokenMiddleware fiber.Handler) *Routes {
 	return &Routes{
-		authController:             authController,
-		userController:             userControllerPkg,
-		buildingController:         buildingController,
-		reservationController:      reservationController,
-		paymentController:          paymentController,
+		auth:                       authController,
+		user:                       userControllerPkg,
+		building:                   buildingController,
+		reservation:                reservationController,
+		payment:                    paymentController,
 		accessTokenMiddleware:      accessTokenMiddleware,
 		adminAccessTokenMiddleware: adminAccessTokenMiddleware,
 	}
@@ -43,84 +43,87 @@ func (r *Routes) Init(app *fiber.App) {
 
 	// Auth routes
 	auth := v1.Group("/auth")
-	auth.Post("/register", r.authController.RegisterUser)
-	auth.Post("/login", r.authController.LoginUser)
-	auth.Post("/logout", r.accessTokenMiddleware, r.authController.LogoutUser)
-	auth.Post("/refresh", r.authController.RefreshToken)
-	auth.Put("/reset-password", r.authController.ResetPassword)
+	auth.Post("/register", r.auth.RegisterUser)
+	auth.Post("/login", r.auth.LoginUser)
+	auth.Post("/logout", r.accessTokenMiddleware, r.auth.LogoutUser)
+	auth.Post("/refresh", r.auth.RefreshToken)
+	auth.Put("/reset-password", r.auth.ResetPassword)
 
 	otp := auth.Group("/otp")
-	otp.Post("/request", middlewares.OTPLimitter, r.authController.RequestOTP)
-	otp.Post("/verify", r.authController.VerifyOTP)
+	requestOtp := otp.Group("/request")
+	requestOtp.Post("/reset-password", middlewares.ResetPasswordOTPLimitter, r.auth.RequestPasswordResetOTP)
+	requestOtp.Post("/email", r.accessTokenMiddleware, middlewares.VerifyEmailOTPLimitter, r.auth.RequestVerifyEmailOTP)
+	verifyOtp := otp.Group("/verify")
+	verifyOtp.Post("/reset-password", r.auth.VerifyPasswordResetOTP)
+	verifyOtp.Post("/email", r.accessTokenMiddleware, r.auth.VerifyEmailOTP)
 
 	// Enduser.User routes
-	user := v1.Group("/users", r.accessTokenMiddleware)
-	user.Get("/", r.userController.GetLoggedFullUserByID)
-	user.Put("/", r.userController.UpdateLoggedUser)
-	user.Put("/picture", r.userController.UpdateUserAvatar)
-	user.Put("/change-password", r.authController.ChangePassword)
+	user := v1.Group("/users")
+	user.Get("/", r.accessTokenMiddleware, r.user.GetLoggedFullUserByID)
+	user.Put("/", r.accessTokenMiddleware, r.user.UpdateLoggedUser)
+	user.Put("/picture", r.accessTokenMiddleware, r.user.UpdateUserAvatar)
+	user.Put("/change-password", r.accessTokenMiddleware, r.auth.ChangePassword)
 
 	// Enduser.Reservation routes
-	reservation := v1.Group("/reservations", r.accessTokenMiddleware)
-	reservation.Get("/", r.reservationController.GetUserReservations)
-	reservation.Post("/", r.reservationController.CreateReservation)
-	reservation.Get("/:reservationID", r.reservationController.GetUserReservationDetailByID)
-	reservation.Delete("/:reservationID", r.reservationController.CancelReservation)
+	reservation := v1.Group("/reservations")
+	reservation.Get("/", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.GetUserReservations)
+	reservation.Post("/", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.CreateReservation)
+	reservation.Get("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.GetUserReservationDetailByID)
+	reservation.Delete("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.CancelReservation)
 
 	// Admin routes
-	admin := v1.Group("/admin", r.adminAccessTokenMiddleware)
+	admin := v1.Group("/admin")
 
 	// Admin.User routes
 	aUser := admin.Group("/users")
-	aUser.Get("/", r.userController.GetAllUsers)
-	aUser.Post("/", r.authController.RegisterUser)
-	aUser.Post("/admin", r.authController.RegisterAdmin)
-	aUser.Get("/:userID", r.userController.GetFullUserByID)
-	aUser.Put("/:userID", r.userController.UpdateUserByID)
-	aUser.Delete("/:userID", r.userController.DeleteUserByID)
-	aUser.Put("/:userID/picture", r.userController.UpdateAnotherUserAvatar)
+	aUser.Get("/", r.adminAccessTokenMiddleware, r.user.GetAllUsers)
+	aUser.Post("/", r.adminAccessTokenMiddleware, r.auth.RegisterUser)
+	aUser.Post("/admin", r.adminAccessTokenMiddleware, r.auth.RegisterAdmin)
+	aUser.Get("/:userID", r.adminAccessTokenMiddleware, r.user.GetFullUserByID)
+	aUser.Put("/:userID", r.adminAccessTokenMiddleware, r.user.UpdateUserByID)
+	aUser.Delete("/:userID", r.adminAccessTokenMiddleware, r.user.DeleteUserByID)
+	aUser.Put("/:userID/picture", r.adminAccessTokenMiddleware, r.user.UpdateAnotherUserAvatar)
 
 	// Admin.Building routes
 	aBuilding := admin.Group("/buildings")
-	aBuilding.Get("/", r.buildingController.GetAllBuildings)
-	aBuilding.Get("/id", r.buildingController.RequestNewBuildingID)
-	aBuilding.Get("/:buildingID", r.buildingController.GetBuildingDetailByID)
-	aBuilding.Put("/:buildingID", r.buildingController.UpdateBuilding)
-	aBuilding.Delete("/:buildingID", r.buildingController.DeleteBuilding)
-	aBuilding.Post("/:buildingID/pictures", r.buildingController.AddBuildingPicture)
-	aBuilding.Delete("/:buildingID/pictures/:pictureID", r.buildingController.DeleteBuildingPicture)
-	aBuilding.Post("/:buildingID/facilities", r.buildingController.AddBuildingFacilities)
-	aBuilding.Delete("/:buildingID/facilities/:facilityID", r.buildingController.DeleteBuildingFacility)
+	aBuilding.Get("/", r.adminAccessTokenMiddleware, r.building.GetAllBuildings)
+	aBuilding.Get("/id", r.adminAccessTokenMiddleware, r.building.RequestNewBuildingID)
+	aBuilding.Get("/:buildingID", r.adminAccessTokenMiddleware, r.building.GetBuildingDetailByID)
+	aBuilding.Put("/:buildingID", r.adminAccessTokenMiddleware, r.building.UpdateBuilding)
+	aBuilding.Delete("/:buildingID", r.adminAccessTokenMiddleware, r.building.DeleteBuilding)
+	aBuilding.Post("/:buildingID/pictures", r.adminAccessTokenMiddleware, r.building.AddBuildingPicture)
+	aBuilding.Delete("/:buildingID/pictures/:pictureID", r.adminAccessTokenMiddleware, r.building.DeleteBuildingPicture)
+	aBuilding.Post("/:buildingID/facilities", r.adminAccessTokenMiddleware, r.building.AddBuildingFacilities)
+	aBuilding.Delete("/:buildingID/facilities/:facilityID", r.adminAccessTokenMiddleware, r.building.DeleteBuildingFacility)
 
 	// Admin.Reservation routes
 	aReservation := admin.Group("/reservations")
-	aReservation.Get("/", r.reservationController.GetReservations)
-	aReservation.Post("/", r.reservationController.CreateAdminReservation)
-	aReservation.Get("/:reservationID", r.reservationController.GetReservationDetailByID)
-	aReservation.Put("/:reservationID", r.reservationController.UpdateReservation)
-	aReservation.Delete("/:reservationID", r.reservationController.DeleteReservation)
+	aReservation.Get("/", r.adminAccessTokenMiddleware, r.reservation.GetReservations)
+	aReservation.Post("/", r.adminAccessTokenMiddleware, r.reservation.CreateAdminReservation)
+	aReservation.Get("/:reservationID", r.adminAccessTokenMiddleware, r.reservation.GetReservationDetailByID)
+	aReservation.Put("/:reservationID", r.adminAccessTokenMiddleware, r.reservation.UpdateReservation)
+	aReservation.Delete("/:reservationID", r.adminAccessTokenMiddleware, r.reservation.DeleteReservation)
 
 	// Admin.Payment routes
-	aPayment := admin.Group("/payments", r.adminAccessTokenMiddleware)
-	aPayment.Post("/", r.paymentController.CreatePayment)
-	aPayment.Get("/:paymentID", r.paymentController.GetPaymentByID)
-	aPayment.Put("/:paymentID", r.paymentController.UpdatePayment)
+	aPayment := admin.Group("/payments")
+	aPayment.Post("/", r.adminAccessTokenMiddleware, r.payment.CreatePayment)
+	aPayment.Put("/:paymentID", r.adminAccessTokenMiddleware, r.payment.UpdatePayment)
 
 	// Buildings routes
 	building := v1.Group("/buildings")
-	building.Get("/", r.buildingController.GetAllPublishedBuildings)
-	building.Get("/facilities/category", r.buildingController.GetFacilityCategories)
-	building.Get("/:buildingID", r.buildingController.GetPublishedBuildingDetailByID)
+	building.Get("/", r.building.GetAllPublishedBuildings)
+	building.Get("/facilities/category", r.building.GetFacilityCategories)
+	building.Get("/:buildingID", r.building.GetPublishedBuildingDetailByID)
 
 	// Location routes
 	location := v1.Group("/locations")
-	location.Get("/cities", r.buildingController.GetCities)
-	location.Get("/districts", r.buildingController.GetDistricts)
+	location.Get("/cities", r.building.GetCities)
+	location.Get("/districts", r.building.GetDistricts)
 
 	// Payment routes
 	payment := v1.Group("/payments")
-	payment.Get("/banks", r.paymentController.GetBanks)
-	payment.Get("/:paymentID", r.paymentController.GetPaymentByID)
+	payment.Get("/banks", r.payment.GetBanks)
+	payment.Get("/:paymentID", r.payment.GetPaymentByID)
 }
 
 func ping(c *fiber.Ctx) error {

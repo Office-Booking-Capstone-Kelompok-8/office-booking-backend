@@ -431,7 +431,7 @@ func (s *TestSuiteAuthController) TestRefreshToken() {
 
 //goland:noinspection Annotator,Annotator
 func (s *TestSuiteAuthController) TestRequestOTP() {
-	req := &dto.OTPRequest{
+	req := &dto.ResetPasswordOTPRequest{
 		Email: "some_email",
 	}
 
@@ -510,10 +510,10 @@ func (s *TestSuiteAuthController) TestRequestOTP() {
 			jsonBody, err := json.Marshal(tc.RequestBody)
 			s.NoError(err)
 
-			s.mockAuthService.On("RequestOTP", mock.Anything, mock.Anything).Return(tc.ServiceErr)
+			s.mockAuthService.On("RequestPasswordResetOTP", mock.Anything, mock.Anything).Return(tc.ServiceErr)
 			s.mockValidator.On("ValidateJSON", mock.Anything).Return(tc.ValidatorError)
 
-			s.fiberApp.Post("/", s.authController.RequestOTP)
+			s.fiberApp.Post("/", s.authController.RequestPasswordResetOTP)
 			r := httptest.NewRequest("POST", "/", bytes.NewBuffer(jsonBody))
 			r.Header.Set(fiber.HeaderContentType, tc.MimeType)
 			resp, err := s.fiberApp.Test(r)
@@ -532,7 +532,7 @@ func (s *TestSuiteAuthController) TestRequestOTP() {
 
 //goland:noinspection Annotator,Annotator
 func (s *TestSuiteAuthController) TestVerifyOTP() {
-	req := &dto.OTPVerifyRequest{
+	req := &dto.ResetPasswordOTPVerifyRequest{
 		Email: "123@123.com",
 		Code:  "123123",
 	}
@@ -616,10 +616,10 @@ func (s *TestSuiteAuthController) TestVerifyOTP() {
 			jsonBody, err := json.Marshal(tc.RequestBody)
 			s.NoError(err)
 
-			s.mockAuthService.On("VerifyOTP", mock.Anything, mock.Anything).Return(&key, tc.ServiceErr)
+			s.mockAuthService.On("VerifyPasswordResetOTP", mock.Anything, mock.Anything).Return(&key, tc.ServiceErr)
 			s.mockValidator.On("ValidateJSON", mock.Anything).Return(tc.ValidatorError)
 
-			s.fiberApp.Post("/", s.authController.VerifyOTP)
+			s.fiberApp.Post("/", s.authController.VerifyPasswordResetOTP)
 			r := httptest.NewRequest("POST", "/", bytes.NewBuffer(jsonBody))
 			r.Header.Set(fiber.HeaderContentType, tc.MimeType)
 			resp, err := s.fiberApp.Test(r)

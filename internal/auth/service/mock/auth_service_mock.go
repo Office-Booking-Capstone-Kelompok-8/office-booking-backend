@@ -36,12 +36,12 @@ func (m *AuthServiceMock) RefreshToken(ctx context.Context, token *dto.RefreshTo
 	return args.Get(0).(*dto.TokenPair), args.Error(1)
 }
 
-func (m *AuthServiceMock) RequestOTP(ctx context.Context, email string) error {
+func (m *AuthServiceMock) RequestPasswordResetOTP(ctx context.Context, email string) error {
 	args := m.Called(ctx, email)
 	return args.Error(0)
 }
 
-func (m *AuthServiceMock) VerifyOTP(ctx context.Context, otp *dto.OTPVerifyRequest) (*string, error) {
+func (m *AuthServiceMock) VerifyPasswordResetOTP(ctx context.Context, otp *dto.ResetPasswordOTPVerifyRequest) (*string, error) {
 	args := m.Called(ctx, otp)
 	return args.Get(0).(*string), args.Error(1)
 }
@@ -53,5 +53,15 @@ func (m *AuthServiceMock) ResetPassword(ctx context.Context, password *dto.Passw
 
 func (m *AuthServiceMock) ChangePassword(ctx context.Context, uid string, password *dto.ChangePasswordRequest) error {
 	args := m.Called(ctx, uid, password)
+	return args.Error(0)
+}
+
+func (m *AuthServiceMock) RequestEmailOTP(ctx context.Context, userID string) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
+
+func (m *AuthServiceMock) VerifyEmailOTP(ctx context.Context, userID string, otp *dto.VerifyEmailOTOPVerifyRequest) error {
+	args := m.Called(ctx, userID, otp)
 	return args.Error(0)
 }

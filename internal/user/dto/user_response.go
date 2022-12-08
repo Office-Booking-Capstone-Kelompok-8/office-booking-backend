@@ -12,6 +12,7 @@ type UserResponse struct {
 	Phone      string `json:"phone"`
 	PictureURL string `json:"picture"`
 	Role       int    `json:"role"`
+	IsVerified bool   `json:"isVerified"`
 }
 
 func NewUserResponse(user *entity.User) *UserResponse {
@@ -27,6 +28,7 @@ func NewUserResponse(user *entity.User) *UserResponse {
 		Phone:      user.Detail.Phone,
 		PictureURL: picture,
 		Role:       user.Role,
+		IsVerified: *user.IsVerified,
 	}
 }
 

@@ -2,11 +2,12 @@ package middlewares
 
 import (
 	"context"
+	"office-booking-backend/pkg/config"
+	err2 "office-booking-backend/pkg/errors"
+
 	"github.com/gofiber/fiber/v2"
 	jwtware "github.com/gofiber/jwt/v3"
 	"github.com/golang-jwt/jwt/v4"
-	"office-booking-backend/pkg/config"
-	err2 "office-booking-backend/pkg/errors"
 )
 
 func NewJWTMiddleware(tokenSecret string, validator fiber.Handler) fiber.Handler {
@@ -26,6 +27,8 @@ type AccessTokenValidator interface {
 
 func ValidateAccessToken(validator AccessTokenValidator) fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		// check if next handler is null or not
+
 		user := c.Locals("user").(*jwt.Token)
 		claims := user.Claims.(jwt.MapClaims)
 
@@ -58,6 +61,19 @@ func ValidateAdminAccessToken(validator AccessTokenValidator) fiber.Handler {
 
 		if !valid {
 			return fiber.NewError(fiber.StatusUnauthorized, err2.ErrInvalidToken.Error())
+		}
+
+		return c.Next()
+	}
+}
+
+func EnforceValidEmail() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		user := c.Locals("user").(*jwt.Token)
+		claims := user.Claims.(jwt.MapClaims)
+
+		if claims["isVerified"] != true {
+			return fiber.NewError(fiber.StatusForbidden, err2.ErrEmailNotVerified.Error())
 		}
 
 		return c.Next()

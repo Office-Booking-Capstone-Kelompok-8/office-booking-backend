@@ -25,13 +25,17 @@ type LoginRequest struct {
 	Password string `json:"password" validate:"required,min=8"`
 }
 
-type OTPRequest struct {
+type ResetPasswordOTPRequest struct {
 	Email string `json:"email" validate:"required,email"`
 }
 
-type OTPVerifyRequest struct {
+type ResetPasswordOTPVerifyRequest struct {
 	Email string `json:"email" validate:"required,email"`
 	Code  string `json:"code" validate:"required"`
+}
+
+type VerifyEmailOTOPVerifyRequest struct {
+	Code string `json:"code" validate:"required"`
 }
 
 type PasswordResetRequest struct {

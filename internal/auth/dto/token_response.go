@@ -10,7 +10,6 @@ import (
 type AccessToken struct {
 	jwt.RegisteredClaims
 	UID        string `json:"uid"`
-	Name       string `json:"name"`
 	Role       int    `json:"role"`
 	IsVerified bool   `json:"isVerified"`
 	Category   string `json:"cat"`
@@ -22,10 +21,10 @@ func NewAccessToken(user *entity.User, tokenID string, exp time.Time) *AccessTok
 			ID:        tokenID,
 			ExpiresAt: jwt.NewNumericDate(exp),
 		},
-		UID:      user.ID,
-		Name:     user.Detail.Name,
-		Role:     user.Role,
-		Category: "access",
+		UID:        user.ID,
+		Role:       user.Role,
+		IsVerified: *user.IsVerified,
+		Category:   "access",
 	}
 }
 

@@ -4,14 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"office-booking-backend/pkg/database/redis"
+	"office-booking-backend/pkg/entity"
+	"office-booking-backend/pkg/utils/ptr"
+	"testing"
+	"time"
+
 	redis2 "github.com/go-redis/redis/v9"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	"office-booking-backend/pkg/database/redis"
-	"office-booking-backend/pkg/entity"
-	"testing"
-	"time"
 )
 
 type TestSuiteTokenService struct {
@@ -49,7 +51,11 @@ func (s *TestSuiteTokenService) TestNewTokenServiceImpl() {
 
 func (s *TestSuiteTokenService) TestGenerateAccessToken() {
 	s.Run("generateAccessToken", func() {
-		accessToken, tokenID, err := s.service.generateAccessToken(&entity.User{}, time.Now().Add(s.service.AccessTokenExp))
+		accessToken, tokenID, err := s.service.generateAccessToken(&entity.User{
+			ID:         "123",
+			Role:       1,
+			IsVerified: ptr.Bool(true),
+		}, time.Now().Add(s.service.AccessTokenExp))
 		s.Nil(err)
 		s.NotEmpty(accessToken)
 		s.NotEmpty(tokenID)
@@ -66,9 +72,12 @@ func (s *TestSuiteTokenService) TestGenerateRefreshToken() {
 }
 
 func (s *TestSuiteTokenService) TestNewTokenPair() {
+	user := &entity.User{
+		ID:         "123",
+		Role:       1,
+		IsVerified: ptr.Bool(true),
+	}
 	s.Run("Success", func() {
-		user := &entity.User{}
-
 		s.mockRedis.On("Set", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 		tokenPair, err := s.service.NewTokenPair(context.Background(), user)
@@ -78,8 +87,6 @@ func (s *TestSuiteTokenService) TestNewTokenPair() {
 	s.TearDownTest()
 	s.SetupTest()
 	s.Run("Fail: redis error", func() {
-		user := &entity.User{}
-
 		s.mockRedis.On("Set", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New("redis error"))
 
 		tokenPair, err := s.service.NewTokenPair(context.Background(), user)

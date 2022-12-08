@@ -112,6 +112,11 @@ func (r *Routes) Init(app *fiber.App) {
 	building.Get("/facilities/category", r.buildingController.GetFacilityCategories)
 	building.Get("/:buildingID", r.buildingController.GetPublishedBuildingDetailByID)
 
+	// Location routes
+	location := v1.Group("/locations")
+	location.Get("/cities", r.buildingController.GetCities)
+	location.Get("/districts", r.buildingController.GetDistricts)
+
 	// Payment routes
 	payment := v1.Group("/payments")
 	payment.Get("/banks", r.paymentController.GetBanks)

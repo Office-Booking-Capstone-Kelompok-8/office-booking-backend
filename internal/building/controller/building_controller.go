@@ -157,6 +157,36 @@ func (b *BuildingController) GetFacilityCategories(c *fiber.Ctx) error {
 	})
 }
 
+func (b *BuildingController) GetCities(c *fiber.Ctx) error {
+	cities, err := b.buildingService.GetCities(c.Context())
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "cities fetched successfully",
+		Data:    cities,
+	})
+}
+
+func (b *BuildingController) GetDistricts(c *fiber.Ctx) error {
+	cityID := c.Query("cityId", "")
+	cityIDInt, err := strconv.Atoi(cityID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
+	}
+
+	districts, err := b.buildingService.GetDistrictsByCityID(c.Context(), cityIDInt)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "districts fetched successfully",
+		Data:    districts,
+	})
+}
+
 func (b *BuildingController) RequestNewBuildingID(c *fiber.Ctx) error {
 	token := c.Locals("user").(*jwt.Token)
 	claims := token.Claims.(jwt.MapClaims)

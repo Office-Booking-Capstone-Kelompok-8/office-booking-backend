@@ -11,4 +11,5 @@ type PaymentService interface {
 	GetBanks(ctx context.Context) (*dto.BanksResponse, error)
 	CreatePayment(ctx context.Context, payment *dto.CreatePaymentRequest) error
 	UpdatePayment(ctx context.Context, paymentID int, payment *dto.UpdatePaymentRequest) error
+	DeletePayment(ctx context.Context, paymentID int) error
 }

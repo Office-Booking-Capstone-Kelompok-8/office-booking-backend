@@ -137,3 +137,25 @@ func (p *PaymentController) UpdatePayment(c *fiber.Ctx) error {
 		Message: "payment method updated successfully",
 	})
 }
+
+func (p *PaymentController) DeletePayment(c *fiber.Ctx) error {
+	paymentID := c.Params("paymentID")
+	paymentIDInt, err := strconv.Atoi(paymentID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidPaymentID.Error())
+	}
+
+	err = p.service.DeletePayment(c.Context(), paymentIDInt)
+	if err != nil {
+		switch err {
+		case err2.ErrPaymentNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "payment method deleted successfully",
+	})
+}

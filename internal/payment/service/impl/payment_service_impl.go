@@ -69,3 +69,13 @@ func (p *PaymentServiceImpl) UpdatePayment(ctx context.Context, paymentID int, p
 
 	return nil
 }
+
+func (p *PaymentServiceImpl) DeletePayment(ctx context.Context, paymentID int) error {
+	err := p.repo.DeletePayment(ctx, paymentID)
+	if err != nil {
+		log.Println("error when delete payment: ", err)
+		return err
+	}
+
+	return nil
+}

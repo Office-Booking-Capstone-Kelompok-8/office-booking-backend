@@ -112,6 +112,7 @@ func (r *Routes) Init(app *fiber.App) {
 	aPayment := admin.Group("/payments")
 	aPayment.Post("/", r.adminAccessTokenMiddleware, r.payment.CreatePayment)
 	aPayment.Put("/:paymentID", r.adminAccessTokenMiddleware, r.payment.UpdatePayment)
+	aPayment.Delete("/:paymentID", r.adminAccessTokenMiddleware, r.payment.DeletePayment)
 
 	// Buildings routes
 	building := v1.Group("/buildings")

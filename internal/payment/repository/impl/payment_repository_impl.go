@@ -19,7 +19,7 @@ func NewPaymentRepositoryImpl(db *gorm.DB) *PaymentRepositoryImpl {
 	}
 }
 
-func (p PaymentRepositoryImpl) GetAllPayment(ctx context.Context) (*entity.Payments, error) {
+func (p *PaymentRepositoryImpl) GetAllPayment(ctx context.Context) (*entity.Payments, error) {
 	payment := new(entity.Payments)
 	err := p.db.WithContext(ctx).
 		Model(&entity.Payment{}).
@@ -32,7 +32,7 @@ func (p PaymentRepositoryImpl) GetAllPayment(ctx context.Context) (*entity.Payme
 	return payment, nil
 }
 
-func (p PaymentRepositoryImpl) GetAllBank(ctx context.Context) (*entity.Banks, error) {
+func (p *PaymentRepositoryImpl) GetAllBank(ctx context.Context) (*entity.Banks, error) {
 	banks := new(entity.Banks)
 	err := p.db.WithContext(ctx).Find(banks).Error
 	if err != nil {
@@ -42,7 +42,7 @@ func (p PaymentRepositoryImpl) GetAllBank(ctx context.Context) (*entity.Banks, e
 	return banks, nil
 }
 
-func (p PaymentRepositoryImpl) GetPaymentByID(ctx context.Context, paymentID int) (*entity.Payment, error) {
+func (p *PaymentRepositoryImpl) GetPaymentByID(ctx context.Context, paymentID int) (*entity.Payment, error) {
 	payment := new(entity.Payment)
 	err := p.db.WithContext(ctx).
 		Model(&entity.Payment{}).
@@ -58,7 +58,7 @@ func (p PaymentRepositoryImpl) GetPaymentByID(ctx context.Context, paymentID int
 	return payment, nil
 }
 
-func (p PaymentRepositoryImpl) CreatePayment(ctx context.Context, payment *entity.Payment) error {
+func (p *PaymentRepositoryImpl) CreatePayment(ctx context.Context, payment *entity.Payment) error {
 	err := p.db.WithContext(ctx).Create(payment).Error
 	if err != nil {
 		if strings.Contains(err.Error(), "CONSTRAINT `fk_payments_bank`") {
@@ -71,13 +71,26 @@ func (p PaymentRepositoryImpl) CreatePayment(ctx context.Context, payment *entit
 	return nil
 }
 
-func (p PaymentRepositoryImpl) UpdatePayment(ctx context.Context, payment *entity.Payment) error {
+func (p *PaymentRepositoryImpl) UpdatePayment(ctx context.Context, payment *entity.Payment) error {
 	res := p.db.WithContext(ctx).Updates(payment)
 	if res.Error != nil {
 		if strings.Contains(res.Error.Error(), "CONSTRAINT `fk_payments_bank`") {
 			return err2.ErrInvalidBankID
 		}
 
+		return res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return err2.ErrPaymentNotFound
+	}
+
+	return nil
+}
+
+func (p *PaymentRepositoryImpl) DeletePayment(ctx context.Context, paymentID int) error {
+	res := p.db.WithContext(ctx).Delete(&entity.Payment{}, paymentID)
+	if res.Error != nil {
 		return res.Error
 	}
 

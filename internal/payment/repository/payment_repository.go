@@ -11,4 +11,5 @@ type PaymentRepository interface {
 	GetPaymentByID(ctx context.Context, paymentID int) (*entity.Payment, error)
 	CreatePayment(ctx context.Context, payment *entity.Payment) error
 	UpdatePayment(ctx context.Context, payment *entity.Payment) error
+	DeletePayment(ctx context.Context, paymentID int) error
 }

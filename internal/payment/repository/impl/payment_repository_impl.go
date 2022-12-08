@@ -20,8 +20,16 @@ func NewPaymentRepositoryImpl(db *gorm.DB) *PaymentRepositoryImpl {
 }
 
 func (p PaymentRepositoryImpl) GetAllPayment(ctx context.Context) (*entity.Payments, error) {
-	// TODO: add implementation
-	panic("implement me")
+	payment := new(entity.Payments)
+	err := p.db.WithContext(ctx).
+		Model(&entity.Payment{}).
+		Joins("Bank").
+		Find(payment).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return payment, nil
 }
 
 func (p PaymentRepositoryImpl) GetAllBank(ctx context.Context) (*entity.Banks, error) {

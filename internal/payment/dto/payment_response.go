@@ -22,6 +22,16 @@ func NewPaymentResponse(payment *entity.Payment) *PaymentResponse {
 	}
 }
 
+type PaymentsResponse []PaymentResponse
+
+func NewPaymentsResponse(payments *entity.Payments) *PaymentsResponse {
+	var paymentsResponse PaymentsResponse
+	for _, payment := range *payments {
+		paymentsResponse = append(paymentsResponse, *NewPaymentResponse(&payment))
+	}
+	return &paymentsResponse
+}
+
 type BankResponse struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`

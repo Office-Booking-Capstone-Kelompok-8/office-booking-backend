@@ -2967,6 +2967,7 @@ paths:
           $ref: '#/components/responses/BuildingNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
+
   /buildings/facilities/category:
     get:
       summary: Get all building facilities categories
@@ -3128,6 +3129,81 @@ paths:
                         icon:
                           type: string
                           example: https://ik.imagekit.io/fortyfour/default-image.jpg
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /locations/cities:
+    get:
+      summary: Get all cities
+      operationId: getCities
+      tags:
+        - Locations
+      responses:
+        200:
+          description: Successfully retrieved cities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: cities retrieved successfully
+                  data:
+                    type: array
+                    example: 
+                      - id: 155
+                        name: Jakarta
+                      - id: 156
+                        name: Bandung
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    
+  /locations/districts:
+    get:
+      summary: Get all districts
+      operationId: getDistricts
+      tags:
+        - Locations
+      parameters:
+        - name: cityID
+          in: query
+          description: ID of the city
+          required: true
+          schema:
+            type: integer
+            example: 154
+      responses:
+        200:
+          description: Successfully retrieved districts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: districts retrieved successfully
+                  data:
+                    type: array
+                    example: 
+                      - id: 1888
+                        cityId: 154
+                        name: Mampang Prapatan
+                      - id: 1889
+                        cityId: 154
+                        name: Pancoran
+        400:
+          description: Bad parameter request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidParameterValue:
+                  description: Invalid parameter value provided
+                  value:
+                    message: invalid query params
         500:
           $ref: '#/components/responses/InternalServerError'
 
@@ -3753,3 +3829,5 @@ tags:
     description: Buildings related endpoints
   - name: Payments
     description: Payments related endpoints
+  - name: Locations
+    description: Locations related endpoints

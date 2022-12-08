@@ -111,6 +111,25 @@ func (b *BuildingServiceImpl) CreateEmptyBuilding(ctx context.Context, creatorID
 	return building.ID, nil
 }
 
+func (b *BuildingServiceImpl) GetCities(ctx context.Context) (*dto.CitiesResponse, error) {
+	cities, err := b.repo.GetCities(ctx)
+	if err != nil {
+		log.Println("error when getting cities: ", err)
+		return nil, err
+	}
+
+	return dto.NewCitiesResponse(cities), nil
+}
+func (b *BuildingServiceImpl) GetDistrictsByCityID(ctx context.Context, cityID int) (*dto.DistrictsResponse, error) {
+	districts, err := b.repo.GetDistrictsByCityID(ctx, cityID)
+	if err != nil {
+		log.Println("error when getting districts: ", err)
+		return nil, err
+	}
+
+	return dto.NewDistrictsResponse(districts), nil
+}
+
 func (b *BuildingServiceImpl) UpdateBuilding(ctx context.Context, building *dto.UpdateBuildingRequest, buildingID string) error {
 	buildingEntity := building.ToEntity(buildingID)
 

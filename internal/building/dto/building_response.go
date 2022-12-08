@@ -272,3 +272,49 @@ func NewAddPictureResponse(picture *entity.Picture) *AddPictureResponse {
 		Alt: picture.Alt,
 	}
 }
+
+type CityResponse struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+func NewCityResponse(cities *entity.City) *CityResponse {
+	return &CityResponse{
+		ID:   cities.ID,
+		Name: cities.Name,
+	}
+}
+
+type CitiesResponse []CityResponse
+
+func NewCitiesResponse(cities *entity.Cities) *CitiesResponse {
+	var citiesResponse CitiesResponse
+	for _, city := range *cities {
+		citiesResponse = append(citiesResponse, *NewCityResponse(&city))
+	}
+	return &citiesResponse
+}
+
+type DistrictResponse struct {
+	ID     int    `json:"id"`
+	CityID int    `json:"cityId"`
+	Name   string `json:"name"`
+}
+
+func NewDistrictResponse(district *entity.District) *DistrictResponse {
+	return &DistrictResponse{
+		ID:     district.ID,
+		CityID: district.CityID,
+		Name:   district.Name,
+	}
+}
+
+type DistrictsResponse []DistrictResponse
+
+func NewDistrictsResponse(districts *entity.Districts) *DistrictsResponse {
+	var districtsResponse DistrictsResponse
+	for _, district := range *districts {
+		districtsResponse = append(districtsResponse, *NewDistrictResponse(&district))
+	}
+	return &districtsResponse
+}

@@ -234,6 +234,30 @@ func (b *BuildingRepositoryImpl) GetFacilityCategories(ctx context.Context) (*en
 	return categories, nil
 }
 
+func (b *BuildingRepositoryImpl) GetCities(ctx context.Context) (*entity.Cities, error) {
+	cities := new(entity.Cities)
+	err := b.db.WithContext(ctx).
+		Model(entity.City{}).
+		Find(cities).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return cities, nil
+}
+func (b *BuildingRepositoryImpl) GetDistrictsByCityID(ctx context.Context, cityID int) (*entity.Districts, error) {
+	districts := new(entity.Districts)
+	err := b.db.WithContext(ctx).
+		Model(entity.District{}).
+		Where("city_id = ?", cityID).
+		Find(districts).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return districts, nil
+}
+
 func (b *BuildingRepositoryImpl) CreateBuilding(ctx context.Context, building *entity.Building) error {
 	err := b.db.WithContext(ctx).
 		Model(&entity.Building{}).

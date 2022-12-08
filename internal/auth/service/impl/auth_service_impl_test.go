@@ -18,6 +18,7 @@ import (
 
 	"github.com/go-redis/redis/v9"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/spf13/viper"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -67,8 +68,9 @@ func TestAuthService(t *testing.T) {
 
 func (s *TestSuiteAuthService) TestImplementation() {
 	s.Run("Success", func() {
+		conf := viper.New()
 		s.NotPanics(func() {
-			_ = NewAuthServiceImpl(s.mockRepo, s.mockToken, s.mockRedis, s.mockMail, s.mockPass, s.mockRand)
+			_ = NewAuthServiceImpl(s.mockRepo, s.mockToken, s.mockRedis, s.mockMail, s.mockPass, s.mockRand, conf)
 		})
 	})
 }

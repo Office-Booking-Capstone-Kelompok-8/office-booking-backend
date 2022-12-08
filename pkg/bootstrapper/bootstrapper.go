@@ -17,7 +17,6 @@ import (
 	userRepositoryPkg "office-booking-backend/internal/user/repository/impl"
 	userServicePkg "office-booking-backend/internal/user/service/impl"
 
-	"office-booking-backend/pkg/config"
 	redisRepoPkg "office-booking-backend/pkg/database/redis"
 	"office-booking-backend/pkg/middlewares"
 	"office-booking-backend/pkg/routes"
@@ -29,21 +28,23 @@ import (
 
 	"github.com/go-redis/redis/v9"
 	"github.com/gofiber/fiber/v2"
+	"github.com/spf13/viper"
 	"gorm.io/gorm"
 )
 
-func Init(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf map[string]string) {
-
-	imagekitService := imagekitServicePkg.NewImgKitService(conf["IMGKIT_PRIVATE_KEY"], conf["IMGKIT_PUBLIC_KEY"], conf["IMGKIT_URL_ENDPOINT"])
+func Init(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf *viper.Viper) {
 	passwordService := passwordServicePkg.NewPasswordFuncImpl()
 	validation := validator.NewValidator()
 	generator := random.NewGenerator()
-	redisRepo := redisRepoPkg.NewRedisClient(redisClient)
-	mailService := mail.NewClient(conf["MAIL_DOMAIN"], conf["MAIL_API_KEY"], conf["MAIL_SENDER"], conf["MAIL_SENDER_NAME"])
-	tokenService := authServicePkg.NewTokenServiceImpl(conf["ACCESS_SECRET"], conf["REFRESH_SECRET"], config.ACCESS_TOKEN_DURATION, config.REFRESH_TOKEN_DURATION, redisRepo)
+	imagekitService := imagekitServicePkg.NewImgKitService(conf.GetString("service.imgkit.privateKey"), conf.GetString("service.imgkit.publicKey"), conf.GetString("service.imgkit.endpoint"))
+	mailService := mail.NewClient(conf.GetString("service.mailgun.domain"), conf.GetString("service.mailgun.apiKey"), conf.GetString("service.mailgun.sender"), conf.GetString("service.mailgun.senderName"))
 
-	accessTokenMiddleware := middlewares.NewJWTMiddleware(conf["ACCESS_SECRET"], middlewares.ValidateAccessToken(tokenService))
-	adminAccessTokenMiddleware := middlewares.NewJWTMiddleware(conf["ACCESS_SECRET"], middlewares.ValidateAdminAccessToken(tokenService))
+	redisRepo := redisRepoPkg.NewRedisClient(redisClient)
+	tokenService := authServicePkg.NewTokenServiceImpl(conf.GetString("token.access.secret"), conf.GetString("token.refresh.secret"), conf.GetDuration("token.access.exp"), conf.GetDuration("token.refresh.exp"), redisRepo)
+	accessTokenMiddleware := middlewares.NewJWTMiddleware(conf.GetString("token.access.secret"), middlewares.ValidateAccessToken(tokenService))
+	adminAccessTokenMiddleware := middlewares.NewJWTMiddleware(conf.GetString("token.access.secret"), middlewares.ValidateAdminAccessToken(tokenService))
+	limiterMiddeleware := middlewares.NewLimiter(conf.GetDuration("otp.exp"))
+	corsMiddleware := middlewares.NewCORSMiddleware(conf.GetStringSlice("server.allowedOrigins"))
 
 	reservationRepository := reservationRepositoryPkg.NewReservationRepositoryImpl(db)
 	userRepository := userRepositoryPkg.NewUserRepositoryImpl(db)
@@ -54,7 +55,7 @@ func Init(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf map[strin
 	reservationService := reservationServicePkg.NewReservationServiceImpl(reservationRepository, buildingRepository)
 	userService := userServicePkg.NewUserServiceImpl(userRepository, reservationService, imagekitService)
 	buildingService := buildingServicePkg.NewBuildingServiceImpl(buildingRepository, reservationRepository, imagekitService, validation)
-	authService := authServicePkg.NewAuthServiceImpl(authRepository, tokenService, redisRepo, mailService, passwordService, generator)
+	authService := authServicePkg.NewAuthServiceImpl(authRepository, tokenService, redisRepo, mailService, passwordService, generator, conf)
 	paymentService := paymentServicePkg.NewPaymentServiceImpl(paymentRepository)
 
 	reservationController := reservationControllerPkg.NewReservationController(reservationService, validation)
@@ -64,6 +65,6 @@ func Init(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf map[strin
 	paymentController := paymentControllerPkg.NewPaymentController(paymentService, validation)
 
 	// init routes
-	route := routes.NewRoutes(authController, userController, buildingController, reservationController, paymentController, accessTokenMiddleware, adminAccessTokenMiddleware)
+	route := routes.NewRoutes(authController, userController, buildingController, reservationController, paymentController, limiterMiddeleware, accessTokenMiddleware, adminAccessTokenMiddleware, corsMiddleware)
 	route.Init(app)
 }

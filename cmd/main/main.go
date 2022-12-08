@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net"
 	"office-booking-backend/pkg/bootstrapper"
 	"office-booking-backend/pkg/config"
 	"office-booking-backend/pkg/database/mysql"
@@ -15,20 +16,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/joho/godotenv"
 )
-
-func init() {
-	if os.Getenv("ENV") == "production" {
-		return
-	}
-
-	//	load env variables from .env file for local development
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
-}
 
 // operation is a cleanup function on shutting down
 type operation func(ctx context.Context) error
@@ -83,22 +71,36 @@ func gracefulShutdown(ctx context.Context, timeout time.Duration, ops map[string
 }
 
 func main() {
-	env := config.LoadConfig()
+	conf, err := config.LoadConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	rs := redis.InitRedis(env["REDIS_HOST"], env["REDIS_PORT"], env["REDIS_PASS"], env["REDIS_DB"])
-	db := mysql.InitDatabase(env["DB_HOST"], env["DB_PORT"], env["DB_USER"], env["DB_PASS"], env["DB_NAME"])
+	rs := redis.InitRedis(
+		conf.GetString("service.redis.host"),
+		conf.GetString("service.redis.port"),
+		conf.GetString("service.redis.pass"),
+		conf.GetString("service.redis.db"),
+	)
+	db := mysql.InitDatabase(
+		conf.GetString("service.db.host"),
+		conf.GetString("service.db.port"),
+		conf.GetString("service.db.user"),
+		conf.GetString("service.db.pass"),
+		conf.GetString("service.db.name"),
+	)
 
 	app := fiber.New(fiber.Config{
-		AppName:      config.APP_NAME,
-		ServerHeader: config.SERVER_HEADER,
-		Prefork:      env["PREFORK"] == "true",
-		ReadTimeout:  time.Second * config.READ_TIMEOUT_SECONDS,
+		AppName:      conf.GetString("server.name"),
+		ServerHeader: conf.GetString("server.header"),
+		Prefork:      conf.GetBool("server.prefork"),
+		ReadTimeout:  conf.GetDuration("server.read_timeout"),
 		ErrorHandler: response.DefaultErrorHandler,
 	})
 
-	bootstrapper.Init(app, db, rs, env)
+	bootstrapper.Init(app, db, rs, conf)
 
-	wait := gracefulShutdown(context.Background(), config.SHUTDOWN_TIMEOUT*time.Second, map[string]operation{
+	wait := gracefulShutdown(context.Background(), conf.GetDuration("server.shutdownTimeout"), map[string]operation{
 		"fiber": func(ctx context.Context) error {
 			return app.Shutdown()
 		},
@@ -116,7 +118,8 @@ func main() {
 		},
 	})
 
-	if err := app.Listen(":" + env["PORT"]); err != nil {
+	listen := net.JoinHostPort("", conf.GetString("server.port"))
+	if err := app.Listen(listen); err != nil {
 		log.Fatal(err)
 	}
 

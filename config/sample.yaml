@@ -1,0 +1,45 @@
+server:
+  name: office-zone-api v1
+  header: office-zone-api
+  readTimeout: 10s
+  shutdownTimeout: 10s
+  prefork: true
+  port: 8000
+  allowedOrigins:
+    - http://localhost:3000
+    - http://localhost:3001
+
+token:
+  access:
+    secret: someSecret
+    exp: 15m
+  refresh:
+    secret: someSecret
+    exp: 168h # 7 days
+
+otp:
+  exp: 15m
+  length: 6
+  resendLimit: 1m
+
+service:
+  mailgun:
+    domain: email.domain.com
+    apiKey: someKey
+    sender: no-reply@mail.fortyfourvisual.com
+    senderName: OfficeZone
+  db:
+    host: localhost
+    port: 3307
+    user: user
+    pass: pass
+    name: oz
+  redis:
+    host: localhost
+    port: 6379
+    pass: pass
+    db: 0
+  imgkit:
+    publicKey: someKey
+    privateKey: someKey
+    endpoint: imgkitEndpoint

@@ -231,7 +231,7 @@ paths:
           $ref: '#/components/responses/InvalidOrMissingToken'
         500:
           $ref: '#/components/responses/InternalServerError'
-  /auth/request-otp:
+  /auth/otp/request:
     post:
       summary: Request OTP
       operationId: requestOTP
@@ -287,7 +287,7 @@ paths:
                 
         500:
           $ref: '#/components/responses/InternalServerError'
-  /auth/verify-otp:
+  /auth/otp/verify:
     post:
       summary: Verify OTP
       operationId: verifyOTP
@@ -991,18 +991,63 @@ paths:
           required: false
           schema:
             type: string
+            example: Jakarta Convention Center
         - name: cityId
           in: query
           description: City ID to filter buildings by city (*)
           required: false
           schema:
             type: integer
+            example: 155
         - name: districtId
           in: query
           description: District ID to filter buildings by district (*)
           required: false
           schema:
             type: integer
+            example: 1624
+        - name: annualPriceMin
+          in: query
+          description: Minimum annual price to filter buildings by annual price 
+          required: false
+          schema:
+            type: integer
+            example: 100000000
+        - name: annualPriceMax
+          in: query
+          description: Maximum annual price to filter buildings by annual price 
+          required: false
+          schema:
+            type: integer
+            example: 100000000
+        - name: monthlyPriceMin
+          in: query
+          description: Minimum monthly price to filter buildings by monthly price 
+          required: false
+          schema:
+            type: integer
+            example: 10000000
+        - name: monthlyPriceMax
+          in: query
+          description: Maximum monthly price to filter buildings by monthly price 
+          required: false
+          schema:
+            type: integer
+            example: 10000000
+        - name: capacityMin
+          in: query
+          description: Minimum capacity to filter buildings by capacity 
+          required: false
+          schema:
+            type: integer
+            example: 100
+        - name: capacityMax
+          in: query
+          description: Maximum capacity to filter buildings by capacity 
+          required: false
+          schema:
+            type: integer
+            example: 100
         - name: startDate
           in: query
           description: Start date to filter buildings by availability in yyyy-mm-dd format. Must be used together with duration
@@ -1010,6 +1055,7 @@ paths:
           schema:
             type: string
             format: date
+            example: 2022-02-02
         - name: duration
           in: query
           description: Duration of reservation to be checked its availability. Must be used together with startDate
@@ -1091,159 +1137,6 @@ paths:
           $ref: '#/components/responses/BuildingNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
-
-  /admin/buildings/{buildingID}/pictures:
-    post:
-      summary: Upload a picture for a building
-      operationId: uploadBuildingPicture
-      security:
-        - access_token: []
-      tags:
-        - Admin.Buildings
-      parameters:
-        - name: buildingID
-          in: path
-          description: ID of the building to be added with picture
-          required: true
-          schema:
-            type: string
-            format: uuid
-            example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              required:
-                - picture
-                - index
-              properties:
-                picture:
-                  type: string
-                  format: binary
-                  description: Picture of the building
-                index:
-                  type: integer
-                  description: Index of the picture
-                alt:
-                  type: string
-                  description: Alternative text for the picture
-        required: true
-      responses:
-        201:
-          description: Successfully uploaded building picture
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: building picture uploaded successfully
-                  data:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                        format: uuid
-                        example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
-                      url:
-                        type: string
-                        example: https://ik.imagekit.io/fortyfour/default-image.jpg
-                      alt:
-                        type: string
-                        example: Jakarta Convention Center
-        400:
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BaseResponse'
-              examples:
-                InvalidRequestBody:
-                  $ref: '#/components/examples/InvalidRequestBody'
-                InvalidPictureIndex:
-                  $ref: '#/components/examples/InvalidPictureIndex'
-                InvalidPicture:
-                  $ref: '#/components/examples/InvalidPicture'
-        401:
-          $ref: '#/components/responses/InvalidOrMissingToken'
-        403:
-          $ref: '#/components/responses/RolesNotSupported'
-        500:
-          $ref: '#/components/responses/InternalServerError'
-  
-  /admin/buildings/{buildingID}/facilities:
-    post:
-      summary: Add a facility to a building
-      operationId: addBuildingFacility
-      security:
-        - access_token: []
-      tags:
-        - Admin.Buildings
-      parameters:
-        - name: buildingID
-          in: path
-          description: ID of the building to be added with facility
-          required: true
-          schema:
-            type: string
-            format: uuid
-            example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                type: object
-                required:
-                  - name
-                  - iconId
-                properties:
-                  name:
-                    type: string
-                    example: Meeting Room
-                  iconId:
-                    type: integer
-                    example: 5
-                  description:
-                    type: string
-                    example: Meeting room with 10 seats 
-        required: true
-      responses:
-        201:
-          description: Successfully added building facility
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: building facility added successfully
-        400:
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BaseResponse'
-              examples:
-                InvalidRequestBody:
-                  $ref: '#/components/examples/InvalidRequestBody'
-                InvalidFacilityName:
-                  $ref: '#/components/examples/InvalidFacilityName'
-                InvalidFacilityDescription:
-                  $ref: '#/components/examples/InvalidFacilityDescription'
-                InvalidFacilityIconID:
-                  $ref: '#/components/examples/InvalidFacilityIconID'
-        401:
-          $ref: '#/components/responses/InvalidOrMissingToken'
-        403:
-          $ref: '#/components/responses/RolesNotSupported'
-        500:
-          $ref: '#/components/responses/InternalServerError'
-
 
   /admin/buildings/{buildingID}:
     get:
@@ -1491,7 +1384,158 @@ paths:
                     example: building has active reservation
         500:
           $ref: '#/components/responses/InternalServerError'
-
+  /admin/buildings/{buildingID}/pictures:
+    post:
+      summary: Upload a picture for a building
+      operationId: uploadBuildingPicture
+      security:
+        - access_token: []
+      tags:
+        - Admin.Buildings
+      parameters:
+        - name: buildingID
+          in: path
+          description: ID of the building to be added with picture
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - picture
+                - index
+              properties:
+                picture:
+                  type: string
+                  format: binary
+                  description: Picture of the building
+                index:
+                  type: integer
+                  description: Index of the picture
+                alt:
+                  type: string
+                  description: Alternative text for the picture
+        required: true
+      responses:
+        201:
+          description: Successfully uploaded building picture
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building picture uploaded successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+                      url:
+                        type: string
+                        example: https://ik.imagekit.io/fortyfour/default-image.jpg
+                      alt:
+                        type: string
+                        example: Jakarta Convention Center
+        400:
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidPictureIndex:
+                  $ref: '#/components/examples/InvalidPictureIndex'
+                InvalidPicture:
+                  $ref: '#/components/examples/InvalidPicture'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  
+  /admin/buildings/{buildingID}/facilities:
+    post:
+      summary: Add a facility to a building
+      operationId: addBuildingFacility
+      security:
+        - access_token: []
+      tags:
+        - Admin.Buildings
+      parameters:
+        - name: buildingID
+          in: path
+          description: ID of the building to be added with facility
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                required:
+                  - name
+                  - iconId
+                properties:
+                  name:
+                    type: string
+                    example: Meeting Room
+                  iconId:
+                    type: integer
+                    example: 5
+                  description:
+                    type: string
+                    example: Meeting room with 10 seats 
+        required: true
+      responses:
+        201:
+          description: Successfully added building facility
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building facility added successfully
+        400:
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidFacilityName:
+                  $ref: '#/components/examples/InvalidFacilityName'
+                InvalidFacilityDescription:
+                  $ref: '#/components/examples/InvalidFacilityDescription'
+                InvalidFacilityIconID:
+                  $ref: '#/components/examples/InvalidFacilityIconID'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+          
   /admin/buildings/{buildingID}/pictures/{pictureID}:
     delete:
       summary: Delete a picture from a building
@@ -2059,16 +2103,19 @@ paths:
                       pending:
                         type: integer
                         example: 1
-                      payment:
-                        type: integer
-                        example: 1
-                      approved:
+                      awaitingPayment:
                         type: integer
                         example: 1
                       rejected:
                         type: integer
                         example: 1
                       cancelled:
+                        type: integer
+                        example: 1
+                      active:
+                        type: integer
+                        example: 1
+                      complete:
                         type: integer
                         example: 1
                       monthly:
@@ -2184,8 +2231,6 @@ paths:
           $ref: '#/components/responses/RolesNotSupported'
         500:
           $ref: '#/components/responses/InternalServerError'
-
-  /admin/users/new-user:
     post:
       summary: Register a new user
       operationId: registerUserfromAdmin
@@ -2250,7 +2295,7 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  /admin/users/new-admin:
+  /admin/users/admin:
     post:
       summary: Register a new admin
       operationId: registerAdminfromAdmin
@@ -2517,6 +2562,60 @@ paths:
           $ref: '#/components/responses/UserNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
+
+  /admin/users/statistics:
+    get:
+      summary: Get joined users statistics per month from 12 months ago to now 
+      operationId: getUsersStatistics
+      security:
+        - access_token: []
+      tags:
+        - Admin.Users
+      responses:
+        200:
+          description: Successfully get users statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: users statistics retrieved successfully
+                  data:
+                    type: array
+                    example:
+                      - month: January
+                        total: 1
+                      - month: February
+                        total: 1
+                      - month: March
+                        total: 1
+                      - month: April
+                        total: 1
+                      - month: May
+                        total: 1
+                      - month: June
+                        total: 1
+                      - month: July
+                        total: 1
+                      - month: August
+                        total: 1
+                      - month: September
+                        total: 1
+                      - month: October  
+                        total: 1
+                      - month: November 
+                        total: 1
+                      - month: December
+                        total: 1
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
   /admin/payments:
     post:
       summary: Create payment detail
@@ -2684,25 +2783,69 @@ paths:
       tags:
         - Buildings
       parameters:
-        - name: q
+        - name: buildingName
           in: query
           description: Search query string to filter buildings by name (*)
           required: false
           schema:
             type: string
-            example: 'building'
+            example: Jakarta Convention Center
         - name: cityId
           in: query
           description: City ID to filter buildings by city (*)
           required: false
           schema:
             type: integer
+            example: 155
         - name: districtId
           in: query
           description: District ID to filter buildings by district (*)
           required: false
           schema:
             type: integer
+            example: 1624
+        - name: annualPriceMin
+          in: query
+          description: Minimum annual price to filter buildings by annual price 
+          required: false
+          schema:
+            type: integer
+            example: 100000000
+        - name: annualPriceMax
+          in: query
+          description: Maximum annual price to filter buildings by annual price 
+          required: false
+          schema:
+            type: integer
+            example: 100000000
+        - name: monthlyPriceMin
+          in: query
+          description: Minimum monthly price to filter buildings by monthly price 
+          required: false
+          schema:
+            type: integer
+            example: 10000000
+        - name: monthlyPriceMax
+          in: query
+          description: Maximum monthly price to filter buildings by monthly price 
+          required: false
+          schema:
+            type: integer
+            example: 10000000
+        - name: capacityMin
+          in: query
+          description: Minimum capacity to filter buildings by capacity 
+          required: false
+          schema:
+            type: integer
+            example: 100
+        - name: capacityMax
+          in: query
+          description: Maximum capacity to filter buildings by capacity 
+          required: false
+          schema:
+            type: integer
+            example: 100
         - name: startDate
           in: query
           description: Start date to filter buildings by availability in yyyy-mm-dd format. Must be used together with duration
@@ -2710,7 +2853,7 @@ paths:
           schema:
             type: string
             format: date
-            example: '2020-01-01'
+            example: 2022-02-02
         - name: duration
           in: query
           description: Duration of reservation to be checked its availability. Must be used together with startDate
@@ -2952,6 +3095,39 @@ paths:
                         example: Bank Transfer
         404:
           $ref: '#/components/responses/PaymentNotFound'                         
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /payments/banks:
+    get:
+      summary: Get all banks in the system
+      operationId: getBanks
+      tags:
+        - Payments
+      responses:
+        200:
+          description: Successfully retrieved banks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: banks retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: BNI
+                        icon:
+                          type: string
+                          example: https://ik.imagekit.io/fortyfour/default-image.jpg
         500:
           $ref: '#/components/responses/InternalServerError'
 

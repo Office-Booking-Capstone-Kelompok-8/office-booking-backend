@@ -48,8 +48,10 @@ func (r *Routes) Init(app *fiber.App) {
 	auth.Post("/logout", r.accessTokenMiddleware, r.authController.LogoutUser)
 	auth.Post("/refresh", r.authController.RefreshToken)
 	auth.Put("/reset-password", r.authController.ResetPassword)
-	auth.Post("/request-otp", middlewares.OTPLimitter, r.authController.RequestOTP)
-	auth.Post("/verify-otp", r.authController.VerifyOTP)
+
+	otp := auth.Group("/otp")
+	otp.Post("/request", middlewares.OTPLimitter, r.authController.RequestOTP)
+	otp.Post("/verify", r.authController.VerifyOTP)
 
 	// Enduser.User routes
 	user := v1.Group("/users", r.accessTokenMiddleware)
@@ -71,8 +73,8 @@ func (r *Routes) Init(app *fiber.App) {
 	// Admin.User routes
 	aUser := admin.Group("/users")
 	aUser.Get("/", r.userController.GetAllUsers)
-	aUser.Post("/new-admin", r.authController.RegisterAdmin)
-	aUser.Post("/new-user", r.authController.RegisterUser)
+	aUser.Post("/", r.authController.RegisterUser)
+	aUser.Post("/admin", r.authController.RegisterAdmin)
 	aUser.Get("/:userID", r.userController.GetFullUserByID)
 	aUser.Put("/:userID", r.userController.UpdateUserByID)
 	aUser.Delete("/:userID", r.userController.DeleteUserByID)

@@ -30,7 +30,7 @@ func (p *PaymentController) GetBanks(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
-		Message: "success getting banks",
+		Message: "banks retrieved successfully",
 		Data:    banks,
 	})
 }
@@ -53,7 +53,7 @@ func (p *PaymentController) GetPaymentByID(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
-		Message: "success get payment by id",
+		Message: "payment method retrieved successfully",
 		Data:    payment,
 	})
 }
@@ -84,7 +84,7 @@ func (p *PaymentController) CreatePayment(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(response.BaseResponse{
-		Message: "success creating payment",
+		Message: "payment method created successfully",
 	})
 }
 
@@ -122,6 +122,6 @@ func (p *PaymentController) UpdatePayment(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
-		Message: "success updating payment",
+		Message: "payment method updated successfully",
 	})
 }

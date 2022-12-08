@@ -208,7 +208,7 @@ func (s *TestSuiteAuthService) TestLogoutUser() {
 func (s *TestSuiteAuthService) TestCreateKey() {
 	s.Run("Success", func() {
 		s.NotPanics(func() {
-			key := createKey("someText")
+			key := createKey("someText", "someSalt")
 			s.NotEmpty(key)
 		})
 	})
@@ -270,7 +270,7 @@ func (s *TestSuiteAuthService) TestCreateOTP() {
 			s.mockRand.On("GenerateRandomIntString", 6).Return("123456", tc.GenerateError)
 			s.mockRedis.On("Set", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.RedisErr)
 
-			_, err := s.authService.createOTP(context.Background(), "someEmail")
+			_, err := s.authService.createResetOTP(context.Background(), "someEmail")
 			s.Equal(tc.ExpectedErr, err)
 		})
 		s.TearDownTest()
@@ -301,7 +301,7 @@ func (s *TestSuiteAuthService) TestRequestOTP() {
 			s.mockRedis.On("Set", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 			s.mockMail.On("SendMail", mock.Anything, mock.Anything).Return(tc.MailErr)
-			err := s.authService.RequestOTP(context.Background(), "someEmail")
+			err := s.authService.RequestPasswordResetOTP(context.Background(), "someEmail")
 			s.Equal(tc.ExpectedErr, err)
 		})
 		s.TearDownTest()
@@ -311,14 +311,14 @@ func (s *TestSuiteAuthService) TestRequestOTP() {
 func (s *TestSuiteAuthService) TestVerifyOTP() {
 	for _, tc := range []struct {
 		Name        string
-		otp         *dto.OTPVerifyRequest
+		otp         *dto.ResetPasswordOTPVerifyRequest
 		RedisReturn entity.CachedOTP
 		RedisErr    error
 		ExpectedErr error
 	}{
 		{
 			Name: "Success",
-			otp: &dto.OTPVerifyRequest{
+			otp: &dto.ResetPasswordOTPVerifyRequest{
 				Email: "someEmail",
 				Code:  "123456",
 			},
@@ -328,7 +328,7 @@ func (s *TestSuiteAuthService) TestVerifyOTP() {
 		},
 		{
 			Name: "Fail: OTP not found",
-			otp: &dto.OTPVerifyRequest{
+			otp: &dto.ResetPasswordOTPVerifyRequest{
 				Email: "someEmail",
 				Code:  "123456",
 			},
@@ -337,7 +337,7 @@ func (s *TestSuiteAuthService) TestVerifyOTP() {
 		},
 		{
 			Name: "Fail: OTP not match",
-			otp: &dto.OTPVerifyRequest{
+			otp: &dto.ResetPasswordOTPVerifyRequest{
 				Email: "someEmail",
 				Code:  "123456",
 			},
@@ -348,7 +348,7 @@ func (s *TestSuiteAuthService) TestVerifyOTP() {
 		},
 		{
 			Name: "Fail: Unknown Redis Error",
-			otp: &dto.OTPVerifyRequest{
+			otp: &dto.ResetPasswordOTPVerifyRequest{
 				Email: "someEmail",
 				Code:  "123456",
 			},
@@ -362,7 +362,7 @@ func (s *TestSuiteAuthService) TestVerifyOTP() {
 			s.NoError(err)
 
 			s.mockRedis.On("Get", mock.Anything, mock.Anything).Return(string(jsonRedisReturn), tc.RedisErr)
-			_, err = s.authService.VerifyOTP(context.Background(), tc.otp)
+			_, err = s.authService.VerifyPasswordResetOTP(context.Background(), tc.otp)
 			s.Equal(tc.ExpectedErr, err)
 		})
 		s.TearDownTest()

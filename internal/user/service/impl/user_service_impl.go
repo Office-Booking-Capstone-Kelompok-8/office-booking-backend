@@ -11,6 +11,7 @@ import (
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/utils/imagekit"
+	"office-booking-backend/pkg/utils/mail"
 	"office-booking-backend/pkg/utils/ptr"
 
 	"github.com/google/uuid"
@@ -20,6 +21,7 @@ import (
 type UserServiceImpl struct {
 	userRepository     repository.UserRepository
 	reservationService service2.ReservationService
+	mailService        mail.Client
 	imgKitService      imagekit.ImgKitService
 }
 

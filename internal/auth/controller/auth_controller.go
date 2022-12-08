@@ -154,8 +154,8 @@ func (a *AuthController) RefreshToken(c *fiber.Ctx) error {
 	})
 }
 
-func (a *AuthController) RequestOTP(c *fiber.Ctx) error {
-	otp := new(dto.OTPRequest)
+func (a *AuthController) RequestPasswordResetOTP(c *fiber.Ctx) error {
+	otp := new(dto.ResetPasswordOTPRequest)
 	if err := c.BodyParser(otp); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
@@ -168,7 +168,7 @@ func (a *AuthController) RequestOTP(c *fiber.Ctx) error {
 		})
 	}
 
-	if err := a.service.RequestOTP(c.Context(), otp.Email); err != nil {
+	if err := a.service.RequestPasswordResetOTP(c.Context(), otp.Email); err != nil {
 		if errors.Is(err, err2.ErrUserNotFound) {
 			return fiber.NewError(fiber.StatusNotFound, err.Error())
 		}
@@ -181,8 +181,8 @@ func (a *AuthController) RequestOTP(c *fiber.Ctx) error {
 	})
 }
 
-func (a *AuthController) VerifyOTP(c *fiber.Ctx) error {
-	otp := new(dto.OTPVerifyRequest)
+func (a *AuthController) VerifyPasswordResetOTP(c *fiber.Ctx) error {
+	otp := new(dto.ResetPasswordOTPVerifyRequest)
 	if err := c.BodyParser(otp); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
@@ -195,7 +195,7 @@ func (a *AuthController) VerifyOTP(c *fiber.Ctx) error {
 		})
 	}
 
-	key, err := a.service.VerifyOTP(c.Context(), otp)
+	key, err := a.service.VerifyPasswordResetOTP(c.Context(), otp)
 	if err != nil {
 		if errors.Is(err, err2.ErrInvalidOTP) {
 			return fiber.NewError(fiber.StatusUnauthorized, err.Error())
@@ -238,6 +238,59 @@ func (a *AuthController) ResetPassword(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
 		Message: "password reset successfully",
+	})
+}
+
+func (a *AuthController) RequestVerifyEmailOTP(c *fiber.Ctx) error {
+	token := c.Locals("user").(*jwt.Token)
+	claims := token.Claims.(jwt.MapClaims)
+	uid := claims["uid"].(string)
+
+	if err := a.service.RequestEmailOTP(c.Context(), uid); err != nil {
+		switch err {
+		case err2.ErrUserNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		case err2.ErrEmailAlreadyVerified:
+			return fiber.NewError(fiber.StatusConflict, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "otp sent successfully",
+	})
+}
+
+func (a *AuthController) VerifyEmailOTP(c *fiber.Ctx) error {
+	token := c.Locals("user").(*jwt.Token)
+	claims := token.Claims.(jwt.MapClaims)
+	uid := claims["uid"].(string)
+
+	otp := new(dto.VerifyEmailOTOPVerifyRequest)
+	if err := c.BodyParser(otp); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	errs := a.validator.ValidateJSON(*otp)
+	if errs != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidRequestBody.Error(),
+			Data:    errs,
+		})
+	}
+
+	err := a.service.VerifyEmailOTP(c.Context(), uid, otp)
+	if err != nil {
+		if errors.Is(err, err2.ErrInvalidOTP) {
+			return fiber.NewError(fiber.StatusUnauthorized, err.Error())
+		}
+
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "email verified successfully",
 	})
 }
 

@@ -30,3 +30,8 @@ func (m *AuthRepositoryMock) GetUserByID(ctx context.Context, id string) (*entit
 	args := m.Called(ctx, id)
 	return args.Get(0).(*entity.User), args.Error(1)
 }
+
+func (m *AuthRepositoryMock) VerifyEmail(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}

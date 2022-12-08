@@ -10,4 +10,5 @@ type AuthRepository interface {
 	GetUserByEmail(ctx context.Context, email string) (*entity.User, error)
 	ChangePassword(ctx context.Context, id string, password string) error
 	GetUserByID(ctx context.Context, id string) (*entity.User, error)
+	VerifyEmail(ctx context.Context, id string) error
 }

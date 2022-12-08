@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"office-booking-backend/internal/auth/dto"
 	"office-booking-backend/internal/auth/repository"
@@ -141,13 +142,13 @@ func (a *AuthServiceImpl) RefreshToken(ctx context.Context, token *dto.RefreshTo
 	return a.token.NewTokenPair(ctx, user)
 }
 
-func createKey(email string) string {
+func createKey(email string, subject string) string {
 	hasher := md5.New()
-	hasher.Write([]byte(email))
+	hasher.Write([]byte(fmt.Sprintf("%s:%s", email, subject)))
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
-func (a *AuthServiceImpl) createOTP(ctx context.Context, email string) (*string, error) {
+func (a *AuthServiceImpl) createResetOTP(ctx context.Context, email string) (*string, error) {
 	user, err := a.repository.GetUserByEmail(ctx, email)
 	if err != nil {
 		log.Println("Error while finding user by email: ", err)
@@ -169,7 +170,7 @@ func (a *AuthServiceImpl) createOTP(ctx context.Context, email string) (*string,
 		log.Println("Error while marshalling otp token pair: ", err)
 		return nil, err
 	}
-	key := createKey(email)
+	key := createKey(email, config.RESET_PASSWORD_SUBJECT)
 
 	err = a.redisRepo.Set(ctx, key, string(otpTokenPair), config.OTP_EXPIRATION_TIME)
 	if err != nil {
@@ -180,8 +181,8 @@ func (a *AuthServiceImpl) createOTP(ctx context.Context, email string) (*string,
 	return &otp, nil
 }
 
-func (a *AuthServiceImpl) RequestOTP(ctx context.Context, email string) error {
-	otp, err := a.createOTP(ctx, email)
+func (a *AuthServiceImpl) RequestPasswordResetOTP(ctx context.Context, email string) error {
+	otp, err := a.createResetOTP(ctx, email)
 	if err != nil {
 		log.Println("Error while creating otp: ", err)
 		return err
@@ -205,8 +206,8 @@ func (a *AuthServiceImpl) RequestOTP(ctx context.Context, email string) error {
 	return nil
 }
 
-func (a *AuthServiceImpl) VerifyOTP(ctx context.Context, otp *dto.OTPVerifyRequest) (*string, error) {
-	key := createKey(otp.Email)
+func (a *AuthServiceImpl) VerifyPasswordResetOTP(ctx context.Context, otp *dto.ResetPasswordOTPVerifyRequest) (*string, error) {
+	key := createKey(otp.Email, config.RESET_PASSWORD_SUBJECT)
 	jsonToken, err := a.redisRepo.Get(ctx, key)
 	if err != nil {
 		if errors.Is(err, redis2.Nil) {
@@ -231,8 +232,106 @@ func (a *AuthServiceImpl) VerifyOTP(ctx context.Context, otp *dto.OTPVerifyReque
 	return &token.Key, nil
 }
 
+func (a *AuthServiceImpl) createVerifyOTP(ctx context.Context, userID string, email string) (*string, error) {
+	otp, err := a.generator.GenerateRandomIntString(config.OTP_LENGTH)
+	if err != nil {
+		log.Println("Error while generating random string: ", err)
+		return nil, err
+	}
+
+	otpTokenPair, err := json.Marshal(entity.CachedOTP{
+		OTP:    otp,
+		UserID: userID,
+	})
+	if err != nil {
+		log.Println("Error while marshalling otp token pair: ", err)
+		return nil, err
+	}
+	key := createKey(email, config.VERIFY_EMAIL_SUBJECT)
+
+	err = a.redisRepo.Set(ctx, key, string(otpTokenPair), config.OTP_EXPIRATION_TIME)
+	if err != nil {
+		log.Println("Error while setting key in redis: ", err)
+		return nil, err
+	}
+
+	return &otp, nil
+}
+
+func (a *AuthServiceImpl) RequestEmailOTP(ctx context.Context, userID string) error {
+	user, err := a.repository.GetUserByID(ctx, userID)
+	if err != nil {
+		log.Println("Error while finding user by id: ", err)
+		return err
+	}
+
+	if *user.IsVerified {
+		return err2.ErrEmailAlreadyVerified
+	}
+
+	otp, err := a.createVerifyOTP(ctx, userID, user.Email)
+	if err != nil {
+		log.Println("Error while creating otp: ", err)
+		return err
+	}
+
+	msg := &mail.Mail{
+		Subject:  "Verify Email OTP",
+		Template: "email-verify",
+		Variable: map[string]string{
+			"otp": *otp,
+		},
+		Recipient: user.Email,
+	}
+
+	err = a.mail.SendMail(ctx, msg)
+	if err != nil {
+		log.Println("Error while sending email: ", err)
+		return err
+	}
+
+	return nil
+}
+func (a *AuthServiceImpl) VerifyEmailOTP(ctx context.Context, userID string, otp *dto.VerifyEmailOTOPVerifyRequest) error {
+	user, err := a.repository.GetUserByID(ctx, userID)
+	if err != nil {
+		log.Println("Error while finding user by id: ", err)
+		return err
+	}
+
+	key := createKey(user.Email, config.VERIFY_EMAIL_SUBJECT)
+	jsonToken, err := a.redisRepo.Get(ctx, key)
+	if err != nil {
+		if errors.Is(err, redis2.Nil) {
+			return err2.ErrInvalidOTP
+		}
+
+		log.Println("Error while getting key from redis: ", err)
+		return err
+	}
+
+	token := new(entity.CachedOTP)
+	err = json.Unmarshal([]byte(jsonToken), token)
+	if err != nil {
+		log.Println("Error while unmarshalling json token: ", err)
+		return err
+	}
+
+	if token.OTP != otp.Code {
+		return err2.ErrInvalidOTP
+	}
+
+	err = a.repository.VerifyEmail(ctx, token.UserID)
+	if err != nil {
+		log.Println("Error while verifying email: ", err)
+		return err
+	}
+
+	return nil
+}
+
 func (a *AuthServiceImpl) ResetPassword(ctx context.Context, password *dto.PasswordResetRequest) error {
-	key := createKey(password.Email)
+	key := createKey(password.Email, config.RESET_PASSWORD_SUBJECT)
 	jsonOTP, err := a.redisRepo.Get(ctx, key)
 	if err != nil {
 		if errors.Is(err, redis2.Nil) {

@@ -11,8 +11,10 @@ type AuthService interface {
 	LoginUser(ctx context.Context, user *dto.LoginRequest) (*dto.TokenPair, error)
 	LogoutUser(ctx context.Context, uid string) error
 	RefreshToken(ctx context.Context, token *dto.RefreshTokenRequest) (*dto.TokenPair, error)
-	RequestOTP(ctx context.Context, email string) error
-	VerifyOTP(ctx context.Context, otp *dto.OTPVerifyRequest) (*string, error)
+	RequestPasswordResetOTP(ctx context.Context, email string) error
+	VerifyPasswordResetOTP(ctx context.Context, otp *dto.ResetPasswordOTPVerifyRequest) (*string, error)
+	RequestEmailOTP(ctx context.Context, userID string) error
+	VerifyEmailOTP(ctx context.Context, userID string, otp *dto.VerifyEmailOTOPVerifyRequest) error
 	ResetPassword(ctx context.Context, password *dto.PasswordResetRequest) error
 	ChangePassword(ctx context.Context, uid string, password *dto.ChangePasswordRequest) error
 }

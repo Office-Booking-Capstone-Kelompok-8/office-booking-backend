@@ -21,7 +21,8 @@ func NewAuthRepositoryImpl(db *gorm.DB) repository.AuthRepository {
 }
 
 func (a *AuthRepositoryImpl) RegisterUser(ctx context.Context, user *entity.User) error {
-	err := a.db.WithContext(ctx).Create(user).Error
+	err := a.db.WithContext(ctx).
+		Create(user).Error
 	if err != nil {
 		if strings.Contains(err.Error(), "Error 1062: Duplicate entry") {
 			return err2.ErrDuplicateEmail
@@ -35,7 +36,10 @@ func (a *AuthRepositoryImpl) RegisterUser(ctx context.Context, user *entity.User
 
 func (a *AuthRepositoryImpl) GetUserByEmail(ctx context.Context, email string) (*entity.User, error) {
 	user := &entity.User{}
-	err := a.db.WithContext(ctx).Model(&entity.User{}).Where("email = ?", email).First(user).Error
+	err := a.db.WithContext(ctx).
+		Model(&entity.User{}).
+		Where("email = ?", email).
+		First(user).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, err2.ErrUserNotFound
@@ -49,7 +53,10 @@ func (a *AuthRepositoryImpl) GetUserByEmail(ctx context.Context, email string) (
 
 func (a *AuthRepositoryImpl) GetUserByID(ctx context.Context, id string) (*entity.User, error) {
 	user := &entity.User{}
-	err := a.db.WithContext(ctx).Model(&entity.User{}).Where("id = ?", id).First(user).Error
+	err := a.db.WithContext(ctx).
+		Model(&entity.User{}).
+		Where("id = ?", id).
+		First(user).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, err2.ErrUserNotFound
@@ -62,7 +69,26 @@ func (a *AuthRepositoryImpl) GetUserByID(ctx context.Context, id string) (*entit
 }
 
 func (a *AuthRepositoryImpl) ChangePassword(ctx context.Context, id string, password string) error {
-	result := a.db.WithContext(ctx).Model(&entity.User{}).Where("id = ?", id).Update("password", password)
+	result := a.db.WithContext(ctx).
+		Model(&entity.User{}).
+		Where("id = ?", id).
+		Update("password", password)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return err2.ErrUserNotFound
+	}
+
+	return nil
+}
+
+func (a *AuthRepositoryImpl) VerifyEmail(ctx context.Context, id string) error {
+	result := a.db.WithContext(ctx).
+		Model(&entity.User{}).
+		Where("id = ?", id).
+		Update("is_verified", true)
 	if result.Error != nil {
 		return result.Error
 	}

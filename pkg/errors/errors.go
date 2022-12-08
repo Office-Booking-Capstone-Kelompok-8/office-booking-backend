@@ -104,4 +104,7 @@ var (
 
 	// ErrEmailNotVerified is returned when the email is not verified when accessing email sensitive page
 	ErrEmailNotVerified = errors.New("email not verified")
+
+	// ErrEmailAlreadyVerified is returned when the user email is already verified
+	ErrEmailAlreadyVerified = errors.New("email already verified")
 )

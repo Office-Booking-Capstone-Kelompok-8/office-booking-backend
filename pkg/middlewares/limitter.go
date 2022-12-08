@@ -3,10 +3,11 @@ package middlewares
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
+	"github.com/golang-jwt/jwt/v4"
 	"office-booking-backend/pkg/config"
 )
 
-var OTPLimitter = limiter.New(limiter.Config{
+var ResetPasswordOTPLimitter = limiter.New(limiter.Config{
 	Max:        1,
 	Expiration: config.OTP_RESEND_TIME,
 	KeyGenerator: func(c *fiber.Ctx) string {
@@ -26,6 +27,22 @@ var OTPLimitter = limiter.New(limiter.Config{
 		}
 
 		return body.Email
+	},
+	LimitReached: func(c *fiber.Ctx) error {
+		return fiber.NewError(fiber.StatusTooManyRequests, "too many requests")
+	},
+})
+
+var VerifyEmailOTPLimitter = limiter.New(limiter.Config{
+	Max:        1,
+	Expiration: config.OTP_RESEND_TIME,
+	KeyGenerator: func(c *fiber.Ctx) string {
+		// limit by jwt token uid
+		token := c.Locals("user").(*jwt.Token)
+		claims := token.Claims.(jwt.MapClaims)
+		uid := claims["uid"].(string)
+
+		return uid
 	},
 	LimitReached: func(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusTooManyRequests, "too many requests")

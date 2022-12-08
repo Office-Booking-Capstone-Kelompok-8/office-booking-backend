@@ -23,9 +23,11 @@ const (
 
 // OTP config
 const (
-	OTP_EXPIRATION_TIME = 15 * time.Minute
-	OTP_LENGTH          = 6
-	OTP_RESEND_TIME     = 1 * time.Minute
+	OTP_EXPIRATION_TIME    = 15 * time.Minute
+	OTP_LENGTH             = 6
+	OTP_RESEND_TIME        = 1 * time.Minute
+	RESET_PASSWORD_SUBJECT = "pass"
+	VERIFY_EMAIL_SUBJECT   = "verify"
 )
 
 // Global config

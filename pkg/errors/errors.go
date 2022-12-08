@@ -101,4 +101,7 @@ var (
 
 	// ErrInvalidBankID is returned when the bank id is invalid
 	ErrInvalidBankID = errors.New("bank id is invalid")
+
+	// ErrEmailNotVerified is returned when the email is not verified when accessing email sensitive page
+	ErrEmailNotVerified = errors.New("email not verified")
 )

@@ -41,7 +41,9 @@ func TestUserService(t *testing.T) {
 	suite.Run(t, new(TestSuiteUserService))
 }
 func (s *TestSuiteUserService) TestGetFullUserByID_Success() {
-	s.mockRepo.On("GetFullUserByID", mock.Anything, mock.Anything).Return(&entity.User{}, nil)
+	s.mockRepo.On("GetFullUserByID", mock.Anything, mock.Anything).Return(&entity.User{
+		IsVerified: ptr.Bool(true),
+	}, nil)
 	_, err := s.userService.GetFullUserByID(context.Background(), "")
 	s.NoError(err)
 }

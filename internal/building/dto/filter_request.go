@@ -4,8 +4,8 @@ import "time"
 
 type SearchBuildingQueryParam struct {
 	BuildingName    string    `query:"buildingName" validate:"omitempty,min=3"`
-	CityID          int       `query:"cityId" validate:"omitempty,uuid4"`
-	DistrictID      int       `query:"districtId" validate:"omitempty,uuid4"`
+	CityID          int       `query:"cityId" validate:"omitempty"`
+	DistrictID      int       `query:"districtId" validate:"omitempty"`
 	AnnualPriceMin  int       `query:"annualPriceMin" validate:"omitempty,gte=0"`
 	AnnualPriceMax  int       `query:"annualPriceMax" validate:"omitempty,gte=0"`
 	MonthlyPriceMin int       `query:"monthlyPriceMin" validate:"omitempty,gte=0"`

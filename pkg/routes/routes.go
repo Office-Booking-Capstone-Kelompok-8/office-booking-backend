@@ -83,6 +83,7 @@ func (r *Routes) Init(app *fiber.App) {
 	aUser.Get("/", r.adminAccessTokenMiddleware, r.user.GetAllUsers)
 	aUser.Post("/", r.adminAccessTokenMiddleware, r.auth.RegisterUser)
 	aUser.Post("/admin", r.adminAccessTokenMiddleware, r.auth.RegisterAdmin)
+	aUser.Get("/statistic", r.adminAccessTokenMiddleware, r.user.GetRegisteredMemberStat)
 	aUser.Get("/:userID", r.adminAccessTokenMiddleware, r.user.GetFullUserByID)
 	aUser.Put("/:userID", r.adminAccessTokenMiddleware, r.user.UpdateUserByID)
 	aUser.Delete("/:userID", r.adminAccessTokenMiddleware, r.user.DeleteUserByID)

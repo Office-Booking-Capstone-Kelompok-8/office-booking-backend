@@ -22,6 +22,11 @@ func (m *UserServiceMock) GetAllUsers(ctx context.Context, q string, role int, l
 	return args.Get(0).(*dto.BriefUsersResponse), args.Get(1).(int64), args.Error(2)
 }
 
+func (m *UserServiceMock) GetRegisteredMemberStat(ctx context.Context) (*dto.RegisteredStatResponseList, error) {
+	args := m.Called(ctx)
+	return args.Get(0).(*dto.RegisteredStatResponseList), args.Error(1)
+}
+
 func (m *UserServiceMock) UpdateUserByID(ctx context.Context, id string, user *dto.UserUpdateRequest) error {
 	args := m.Called(ctx, id, user)
 	return args.Error(0)

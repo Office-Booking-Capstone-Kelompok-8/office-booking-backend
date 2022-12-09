@@ -10,6 +10,7 @@ type UserRepository interface {
 	GetFullUserByID(ctx context.Context, id string) (*entity.User, error)
 	GetAllUsers(ctx context.Context, q string, role int, limit int, offset int) (*entity.Users, int64, error)
 	GetUserProfilePictureID(ctx context.Context, id string) (*entity.ProfilePicture, error)
+	GetRegisteredMemberStat(ctx context.Context) (*entity.MonthlyRegisteredStatList, error)
 	UpdateUserByID(ctx context.Context, user *entity.User) error
 	UpdateUserDetailByID(ctx context.Context, userDetail *entity.UserDetail) error
 	DeleteUserByID(ctx context.Context, id string) (string, error)

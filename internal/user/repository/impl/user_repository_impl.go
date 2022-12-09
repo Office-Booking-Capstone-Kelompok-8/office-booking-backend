@@ -3,11 +3,13 @@ package repository
 import (
 	"context"
 	"database/sql"
-	sq "github.com/Masterminds/squirrel"
 	"office-booking-backend/internal/user/repository"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"strings"
+	"time"
+
+	sq "github.com/Masterminds/squirrel"
 
 	"gorm.io/gorm"
 )
@@ -99,6 +101,35 @@ func (u *UserRepositoryImpl) GetAllUsers(ctx context.Context, q string, role int
 	}
 
 	return users, count, nil
+}
+
+func (u *UserRepositoryImpl) GetRegisteredMemberStat(ctx context.Context) (*entity.MonthlyRegisteredStatList, error) {
+
+	var subQuery []*gorm.DB
+	unionStr := ""
+	for i := 0; i <= 11; i++ {
+		unionStr = unionStr + "?"
+		month := time.Now().AddDate(0, i*(-1), 0).Format("2006-01-02")
+		query := u.db.Select("MONTHNAME(?) as month,COUNT(*) as total", month).
+			Table("users").
+			Where("Month(created_at) = Month(?)", month).
+			Where("deleted_at IS NULL")
+		subQuery = append(subQuery, query)
+
+		if i != 11 {
+			unionStr = unionStr + " UNION "
+		}
+	}
+
+	resStructs := new(entity.MonthlyRegisteredStatList)
+	err := u.db.WithContext(ctx).
+		Raw(unionStr, subQuery[0], subQuery[1], subQuery[2], subQuery[3], subQuery[4], subQuery[5], subQuery[6], subQuery[7], subQuery[8], subQuery[9], subQuery[10], subQuery[11]).
+		Find(&resStructs).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return resStructs, nil
 }
 
 func (u *UserRepositoryImpl) UpdateUserByID(ctx context.Context, user *entity.User) error {

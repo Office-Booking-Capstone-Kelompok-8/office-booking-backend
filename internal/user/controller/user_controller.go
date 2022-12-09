@@ -100,6 +100,18 @@ func (u *UserController) GetAllUsers(c *fiber.Ctx) error {
 	})
 }
 
+func (u *UserController) GetRegisteredMemberStat(c *fiber.Ctx) error {
+	stat, err := u.userService.GetRegisteredMemberStat(c.Context())
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "user statistic fetched successfully",
+		Data:    stat,
+	})
+}
+
 func (u *UserController) UpdateUserByID(c *fiber.Ctx) error {
 	uid := c.Params("userID")
 

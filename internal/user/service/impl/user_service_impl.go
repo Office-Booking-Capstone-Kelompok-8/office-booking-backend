@@ -54,6 +54,16 @@ func (u *UserServiceImpl) GetAllUsers(ctx context.Context, q string, role int, l
 	return briefUsers, total, nil
 }
 
+func (u *UserServiceImpl) GetRegisteredMemberStat(ctx context.Context) (*dto.RegisteredStatResponseList, error) {
+	stat, err := u.userRepository.GetRegisteredMemberStat(ctx)
+	if err != nil {
+		log.Println("Error while getting registered member stat: ", err)
+		return nil, err
+	}
+
+	return dto.NewRegisteredStatResponseList(stat), nil
+}
+
 func (u *UserServiceImpl) UpdateUserByID(ctx context.Context, id string, user *dto.UserUpdateRequest) error {
 	userEntity := user.ToEntity()
 	userEntity.ID = id

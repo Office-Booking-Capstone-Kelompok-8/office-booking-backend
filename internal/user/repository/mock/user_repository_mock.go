@@ -26,6 +26,11 @@ func (u *UserRepositoryMock) GetAllUsers(ctx context.Context, q string, role int
 	return args.Get(0).(*entity.Users), args.Get(1).(int64), args.Error(2)
 }
 
+func (u *UserRepositoryMock) GetRegisteredMemberStat(ctx context.Context) (*entity.MonthlyRegisteredStatList, error) {
+	args := u.Called(ctx)
+	return args.Get(0).(*entity.MonthlyRegisteredStatList), args.Error(1)
+}
+
 func (u *UserRepositoryMock) UpdateUserByID(ctx context.Context, user *entity.User) error {
 	args := u.Called(ctx, user)
 	return args.Error(0)

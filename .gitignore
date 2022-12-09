@@ -16,4 +16,7 @@
 .idea
 .vscode
 *.env
+/template
 /tmp
+config.yaml
+/config

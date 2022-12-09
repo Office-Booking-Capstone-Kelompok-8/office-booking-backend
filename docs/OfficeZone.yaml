@@ -73,6 +73,12 @@ paths:
                   message:
                     type: string
                     example: user created successfully
+                  data:
+                    type: object
+                    properties:
+                      uid:
+                        type: string
+                        example: 5f7f9c9c-8b9a-4b9c-9c9c-8b9a4b9c9c9c
         409:
           $ref: '#/components/responses/EmailAlreadyUsed'
         400:
@@ -126,6 +132,9 @@ paths:
                   data:
                     type: object
                     properties:
+                      role:
+                        type: integer
+                        example: 1
                       access_token:
                         type: string
                         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiI3MTg1OGNmMS1lNDhkLTQzYmQtOGU0YS1jZDNkNGE1YjIwMDMiLCJyb2xlIjoxLCJleHAiOjB9.G0PITHn6gz-fu6kqrZYwBc_bAca1YCZvMNGFvKHDytk
@@ -176,15 +185,7 @@ paths:
                     type: string
                     example: Logout successful
         401:
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Unauthorized
+          $ref: '#/components/responses/InvalidOrMissingToken'
         500:
           $ref: '#/components/responses/InternalServerError'
 
@@ -194,8 +195,18 @@ paths:
       operationId: refreshAccessToken
       tags:
         - Auth
-      security:
-        - refresh_token: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzA0NTgwNDksImp0aSI6IjBiNGFmZmY5LTg0NzAtNDkxNi04NDEyLTllNjY3M2RhMmU0NyIsInVpZCI6IjY4ZjA2M2M0LTBjZGItNDJlNi1hNjFiLTg4NTg3MzkwMmJmZCIsImNhdCI6InJlZnJlc2gifQ.X0a_rKDJzQVSbgtN2BahhhVgJThemckCuImo6Axp0vg
+        required: true
       responses:
         200:
           description: Successfully refreshed access token
@@ -217,7 +228,21 @@ paths:
                         type: string
                         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiI3MTg1OGNmMS1lNDhkLTQzYmQtOGU0YS1jZDNkNGE1YjIwMDMiLCJyb2xlIjoxLCJleHAiOjB9.G0PITHn6gz-fu6kqrZYwBc_bAca1YCZvMNGFvKHDytk
         401:
-          description: Unauthorized
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/otp/request/email:
+    post:
+      summary: Request OTP for verifying email
+      operationId: requestOtpForEmail
+      tags:
+        - Auth
+      security:
+        - access_token: []
+      responses:
+        200:
+          description: OTP sent successfully
           content:
             application/json:
               schema:
@@ -225,9 +250,271 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: Unauthorized
+                    example: otp sent successfully
+        404:
+          $ref: '#/components/responses/UserNotFound'
+        409:
+          description: Email already verified
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: email already verified
+        429:
+          description: Too many requests sent in a short period of time. OTP can be requested only once every 60 seconds
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: too many requests
         500:
           $ref: '#/components/responses/InternalServerError'
+
+  /auth/otp/verify/email:
+    post:
+      summary: Verify OTP for verifying email
+      operationId: verifyOtpForEmail
+      tags:
+        - Auth
+      security:
+        - access_token: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  example: 123456
+        required: true
+      responses:
+        200:
+          description: OTP verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: email verified successfully
+                   
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+        401:
+          description: Invalid OTP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidOTP:
+                  $ref: '#/components/examples/InvalidOTP'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/otp/request/reset-password:
+    post:
+      summary: Request OTP for reset password
+      operationId: requestResetPasswordOTP
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: a@a.com
+        required: true
+      responses:
+        200:
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: otp sent successfully
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidEmail:
+                  $ref: '#/components/examples/InvalidEmail'
+        404:
+          $ref: '#/components/responses/UserNotFound'
+        429:
+          description: Too many requests sent in a short period of time. OTP can be requested only once every 60 seconds
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: too many requests
+                
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /auth/otp/verify/reset-password:
+    post:
+      summary: Verify Reset Password OTP
+      operationId: verifyResetPasswordOTP
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - code
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: a@a.com
+                code:
+                  type: string
+                  example: 123456
+        required: true
+      responses:
+        200:
+          description: OTP verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: otp verified successfully
+                  data:
+                    type: object
+                    properties:
+                      key:
+                        type: string
+                        example: 12345adaasdadd6   
+                  
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidEmail:
+                  $ref: '#/components/examples/InvalidEmail'
+        401:
+          description: Invalid OTP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidOTP:
+                  $ref: '#/components/examples/InvalidOTP'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/reset-password:
+    put:
+      summary: Reset password
+      operationId: resetPassword
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - key
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: a@a.com
+                key:
+                  type: string
+                  example: 12345adaasdadd6
+                password:
+                  type: string
+                  example: 123456789
+        required: true
+      responses:
+        200:
+          description: Password reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: password reset successfully
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidEmail:
+                  $ref: '#/components/examples/InvalidEmail'
+                InvalidPassword:
+                  $ref: '#/components/examples/InvalidPassword'
+        401:
+          description: Invalid OTP Token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: invalid OTP token
+        404:
+          $ref: '#/components/responses/UserNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+                
   /users:
     get:
       summary: Get logged in user detail
@@ -250,15 +537,25 @@ paths:
                   data:
                     type: object
                     properties:
-                      name:
+                      id:
                         type: string
-                        example: John Doe
+                        example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
                       email:
                         type: string
                         example: of@mail.com
+                      name:
+                        type: string
+                        example: John Doe
                       phone:
                         type: string
                         example: +1 234 567 890
+                      picture:
+                        type: string
+                        format: uri
+                        example: https://example.com/picture.jpg
+                      role:
+                        type: integer
+                        example: 1
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         404:
@@ -289,9 +586,6 @@ paths:
                 phone:
                   type: string
                   example: +1 234 567 890
-                pictureID:
-                  type: string
-                  example: 5f9b9b9b9b9b9b9b9b9b9b9b
         required: true
       responses:
         200:
@@ -303,7 +597,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: user details updated successfully
+                    example: user updated successfully
         400:
           description: Bad request
           content:
@@ -315,8 +609,6 @@ paths:
                   $ref: '#/components/examples/InvalidRequestBody'
                 InvalidEmail:
                   $ref: '#/components/examples/InvalidEmail'
-                InvalidPictureID:
-                  $ref: '#/components/examples/InvalidPictureID'
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         404:
@@ -354,7 +646,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: picture changed successfully
+                    example: user avatar updated successfully
         400:
           description: Bad request
           content:
@@ -371,7 +663,7 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  /users/password:
+  /users/change-password:
     put:
       summary: Update logged in user password
       operationId: updateUserPassword
@@ -407,9 +699,9 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: user password updated successfully
+                    example: password changed successful
         400:
-          description: Bad request
+          description: Bad request body
           content:
             application/json:
               schema:
@@ -419,8 +711,10 @@ paths:
                   $ref: '#/components/examples/InvalidRequestBody'
                 InvalidPassword:
                   $ref: '#/components/examples/InvalidPassword'
+             
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
+                
         404:
           $ref: '#/components/responses/UserNotFound'
         409:
@@ -432,7 +726,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: old password is incorrect
+                    example:  password not match
         500:
           $ref: '#/components/responses/InternalServerError'
 
@@ -444,6 +738,24 @@ paths:
         - access_token: []
       tags:
         - EndUser.Reservations
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of reservations per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
       responses:
         200:
           description: successfully retrieved reservations
@@ -494,6 +806,8 @@ paths:
                             message:
                               type: string
                               example: Pending
+                  Mete:
+                    $ref: '#/components/schemas/Meta'
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         404:
@@ -513,12 +827,12 @@ paths:
             schema:
               type: object
               required:
-                - buildingID
+                - buildingd
                 - companyName
                 - startDate
-                - endDate
+                - duration
               properties:
-                buildingID:
+                buildingId:
                   type: string
                   format: uuid
                   example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
@@ -530,11 +844,10 @@ paths:
                   format: date
                   description: Start date of the reservation with format YYYY-MM-DD
                   example: 2020-01-01
-                endDate:
-                  type: string
-                  format: date
-                  description: End date of the reservation with format YYYY-MM-DD
-                  example: 2020-01-01
+                duration:
+                  type: integer
+                  description: Duration of the reservation in months
+                  example: 1
         required: true
       responses:
         201:
@@ -550,7 +863,7 @@ paths:
                   data:
                     type: object
                     properties:
-                      reservationID:
+                      reservationId:
                         type: string
                         format: uuid
                         example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a        
@@ -563,10 +876,6 @@ paths:
               examples:
                 InvalidRequestBody:
                   $ref: '#/components/examples/InvalidRequestBody'
-                InvalidStartDate:
-                  $ref: '#/components/examples/InvalidStartDate'
-                InvalidEndDate:
-                  $ref: '#/components/examples/InvalidEndDate'
                 InvalidDateRange:
                   $ref: '#/components/examples/InvalidDateRange'
                 InvalidBuildingID:
@@ -574,7 +883,7 @@ paths:
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         409:
-          description: Reservation date range is not available
+          description: The building to be reserved is not available
           content:
             application/json:
               schema:
@@ -582,13 +891,104 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: reservation date range is not available
+                    example: building is not available
         500:
           $ref: '#/components/responses/InternalServerError'
 
   /reservations/{reservationID}:
+    get:
+      summary: Get a user reservation by ID
+      operationId: getUserReservationByID
+      security:
+        - access_token: []
+      tags:
+        - EndUser.Reservations
+      parameters:
+        - name: reservationID
+          in: path
+          description: ID of the reservation
+          required: true
+          schema:
+            type: string
+            format: uuids
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+      responses:
+        200:
+          description: Successfully retrieved reservation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Reservation fetched successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+                      building:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
+                          name:
+                            type: string
+                            example: Jakarta Convention Center
+                          picture:
+                            type: string
+                            example: https://example.com/picture.jpg
+                          city:
+                            type: string
+                            example: Jakarta
+                          district:
+                            type: string
+                            example: Kebayoran Baru
+                          address:
+                            type: string
+                            example: Jl. Jend. Sudirman Kav. 1
+                      companyName:
+                        type: string
+                        example: Alterra
+                      startDate:
+                        type: string
+                        format: date
+                        description: Start date of the reservation with format YYYY-MM-DD
+                        example: 2022-02-02 08:00:00
+                      endDate:
+                        type: string
+                        format: date
+                        description: End date of the reservation with format YYYY-MM-DD
+                        example: 2022-02-02 08:00:00
+                      status:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          message:
+                            type: string
+                            example: Pending
+                      createdAt:
+                        type: string
+                        format: date-time
+                        description: Date and time of the reservation creation  with format YYYY-MM-DDTHH:MM:SSZ
+                        example: 2022-12-04T19:48:04+08:00
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        description: Date and time of the reservation update with format YYYY-MM-DDTHH:MM:SSZ
+                        example: 2022-12-04T19:48:04+08:00
+        404:
+          $ref: '#/components/responses/ReservationNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+        
     delete:
-      summary: Delete a reservation
+      summary: Cancel a reservation
       operationId: deleteReservation
       security:
         - access_token: []
@@ -605,7 +1005,7 @@ paths:
             example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
       responses:
         200:
-          description: Successfully deleted reservation
+          description: Successfully cancel reservation
           content:
             application/json:
               schema:
@@ -613,41 +1013,45 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: reservation deleted successfully
+                    example: Reservation canceled successfully
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          description: User is not authorized to cancel the reservation of other user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: you don't have permission to perform the action
         404:
           $ref: '#/components/responses/ReservationNotFound'
+        409:
+          description: The reservation is still active
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: reservation is still active
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  /admin/buildings/picture:
-    post:
-      summary: Upload a picture for a building
-      operationId: uploadBuildingPicture
+  /admin/buildings/id:
+    get:
+      summary: Get empty building ID for uploading building picture and creating building
+      operationId: getEmptyBuildingID
       security:
         - access_token: []
       tags:
         - Admin.Buildings
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              required:
-                - picture
-              properties:
-                picture:
-                  type: string
-                  format: binary
-                  description: Picture of the building
-                alt:
-                  type: string
-                  description: Alternative text for the picture
-        required: true
       responses:
-        201:
-          description: Successfully uploaded building picture
+        200:
+          description: Successfully retrieved empty building ID
           content:
             application/json:
               schema:
@@ -655,20 +1059,14 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: building picture uploaded successfully
+                    example: building id requested successfully
                   data:
                     type: object
                     properties:
-                      pictureID:
+                      id:
                         type: string
                         format: uuid
-                        example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
-                      url:
-                        type: string
-                        example: https://ik.imagekit.io/fortyfour/default-image.jpg
-                      alt:
-                        type: string
-                        example: Jakarta Convention Center
+                        example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         403:
@@ -677,112 +1075,133 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
   /admin/buildings:
-    post:
-      summary: Create a building
-      operationId: createBuilding
+    get:
+      summary: Get all buildings in the system
+      description: Get all buildings in the system with custom filters
+      operationId: getBuildings
       security:
         - access_token: []
       tags:
         - Admin.Buildings
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - name
-                - picture
-                - description
-                - facilities
-                - capacity
-                - price
-                - location
-              properties:
-                name:
-                  type: string
-                  example: Jakarta Convention Center
-                picture:
-                  type: array
-                  items:
-                    type: object
-                    required:
-                      - index
-                      - pictureID
-                    properties:
-                      index:
-                        type: integer
-                        example: 0
-                      pictureID:
-                        type: string
-                        example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
-                description:
-                  type: string
-                  example: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                facilities:
-                  type: array
-                  items:
-                    type: object
-                    required:
-                      - name
-                      - iconID
-                    properties:
-                      name:
-                        type: string
-                        example: Wifi
-                      iconID:
-                        type: integer
-                        example: 1
-                      description:
-                        type: string
-                        example: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                capacity:
-                  type: integer
-                  example: 1000
-                price:
-                  type: object
-                  required:
-                    - annual
-                    - monthly
-                  properties:
-                    annual:
-                      type: integer
-                      example: 100000000
-                    monthly:
-                      type: integer
-                      example: 10000000
-                location:
-                  type: object
-                  required:
-                    - districtID
-                    - cityID
-                    - address
-                    - geo
-                  properties:
-                    districtID:
-                      type: integer
-                      example: 1
-                    cityID:
-                      type: integer
-                      example: 1
-                    address:
-                      type: string
-                      example: Jl. MH Thamrin No. 1, RT.1/RW.2, Gondangdia, Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10340
-                    geo:
-                      type: object
-                      required:
-                        - lat
-                        - long
-                      properties:
-                        lat:
-                          type: number
-                          example: -6.175392
-                        long:
-                          type: number
-                          example: 106.827153
-        required: true
+      parameters:
+        - name: buildingName
+          in: query
+          description: Search query string to filter buildings by name (*)
+          required: false
+          schema:
+            type: string
+            example: Jakarta Convention Center
+        - name: cityId
+          in: query
+          description: City ID to filter buildings by city (*)
+          required: false
+          schema:
+            type: integer
+            example: 155
+        - name: districtId
+          in: query
+          description: District ID to filter buildings by district (*)
+          required: false
+          schema:
+            type: integer
+            example: 1624
+        - name: annualPriceMin
+          in: query
+          description: Minimum annual price to filter buildings by annual price 
+          required: false
+          schema:
+            type: integer
+            example: 100000000
+        - name: annualPriceMax
+          in: query
+          description: Maximum annual price to filter buildings by annual price 
+          required: false
+          schema:
+            type: integer
+            example: 100000000
+        - name: monthlyPriceMin
+          in: query
+          description: Minimum monthly price to filter buildings by monthly price 
+          required: false
+          schema:
+            type: integer
+            example: 10000000
+        - name: monthlyPriceMax
+          in: query
+          description: Maximum monthly price to filter buildings by monthly price 
+          required: false
+          schema:
+            type: integer
+            example: 10000000
+        - name: capacityMin
+          in: query
+          description: Minimum capacity to filter buildings by capacity 
+          required: false
+          schema:
+            type: integer
+            example: 100
+        - name: capacityMax
+          in: query
+          description: Maximum capacity to filter buildings by capacity 
+          required: false
+          schema:
+            type: integer
+            example: 100
+        - name: startDate
+          in: query
+          description: Start date to filter buildings by availability in yyyy-mm-dd format. Must be used together with duration
+          required: false
+          schema:
+            type: string
+            format: date
+            example: 2022-02-02
+        - name: duration
+          in: query
+          description: Duration of reservation to be checked its availability. Must be used together with startDate
+          required: false
+          schema:
+            type: integer
+            example: 1
+        - name: sortBy
+          in: query
+          description: Sort buildings by column name
+          required: false
+          schema:
+            type: string
+            enum:
+              - annual_price
+              - monthly_price
+              - capacity
+              - pinpoint
+        - name: order
+          in: query
+          description: Sort order of buildings
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+        - name: latitude
+          in: query
+          description: Latitude of the location to filter buildings by distance, must present if sort by pinpoint
+          required: false
+          schema:
+            type: number
+            format: floa
+        - name: longitude
+          in: query
+          description: Longitude of the location to filter buildings by distance, must present if sort by pinpoint
+          required: false
+          schema:
+            type: number
+            format: float
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/page'
+
       responses:
-        201:
-          description: Successfully created building
+        200:
+          description: Successfully retrieved buildings
           content:
             application/json:
               schema:
@@ -790,35 +1209,68 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: building created successfully
+                    example: buildings retrieved successfully
                   data:
-                    type: object
-                    properties:
-                      buildingID:
-                        type: string
-                        format: uuid
-                        example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BriefBuildingDetails'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+
         400:
-          description: Invalid request body
+          description: Bad parameter request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BaseResponse'
               examples:
-                InvalidPictureID:
-                  $ref: '#/components/examples/InvalidPictureID'
-                InvalidDistrictID:
-                  $ref: '#/components/examples/InvalidDistrictID'
-                InvalidCityID:
-                  $ref: '#/components/examples/InvalidCityID'
-        401:
-          $ref: '#/components/responses/InvalidOrMissingToken'
-        403:
-          $ref: '#/components/responses/RolesNotSupported'
+                InvalidParameterValue:
+                  description: Invalid parameter value provided
+                  value:
+                    message: Invalid parameter value
+                ParameterRequired:
+                  description: Required parameter not provided
+                  value:
+                    message: Parameter required
+        404:
+          $ref: '#/components/responses/BuildingNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
-  
+
   /admin/buildings/{buildingID}:
+    get:
+      summary: Get building detail by ID
+      operationId: getBuildingByID
+      tags:
+        - Admin.Buildings
+      security:
+        - access_token: []
+      parameters:
+        - name: buildingID
+          in: path
+          description: ID of the building
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426655440000
+      responses:
+        200:
+          description: Successfully retrieved building
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building retrieved successfully
+                  data:
+                    $ref: '#/components/schemas/BuildingDetails'
+        404:
+          $ref: '#/components/responses/BuildingNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
     put:
       summary: Update a building
       operationId: updateBuilding
@@ -845,40 +1297,44 @@ paths:
                 name:
                   type: string
                   example: Jakarta Convention Center
-                picture:
-                  type: array
-                  items:
-                    type: object
-                    required:
-                      - index
-                      - pictureID
-                    properties:
-                      index:
-                        type: integer
-                        example: 0
-                      pictureID:
-                        type: string
-                        example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
-                description:
-                  type: string
-                  example: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
                 facilities:
                   type: array
                   items:
                     type: object
                     required:
-                      - name
-                      - iconID
+                    - facilityId
                     properties:
+                      facilityId:
+                        type: integer
+                        example: 5
                       name:
                         type: string
-                        example: Wifi
-                      iconID:
+                        example: Meeting Room
+                      iconId:
                         type: integer
-                        example: 1
+                        example: 5
                       description:
                         type: string
-                        example: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                        example: Meeting room with 10 seats
+                pictures:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                    - pictureId
+                    properties:
+                      pictureId:
+                        type: string
+                        example: 6asjfakjdshkasd
+                      index:
+                        type: integer
+                        example: 5
+                      alt:
+                        type: string
+                        example: Jakarta Convention Center
+                description:
+                  type: string
+                  example: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
                 capacity:
                   type: integer
                   example: 1000
@@ -896,10 +1352,10 @@ paths:
                   type: object
                   minProperties: 1
                   properties:
-                    districtID:
+                    districtId:
                       type: integer
                       example: 1
-                    cityID:
+                    cityId:
                       type: integer
                       example: 1
                     address:
@@ -915,6 +1371,10 @@ paths:
                         long:
                           type: number
                           example: 106.827153
+                isPublished:
+                  type: boolean
+                  description: Set to true to publish the building, only published building will be shown in the app. And to publish the building, the building must have at least 1 picture, 1 facility and all required fields must be filled.
+                  example: true
         required: true
       responses:
         200:
@@ -928,24 +1388,54 @@ paths:
                     type: string
                     example: building updated successfully
         400:
-          description: Conflict
+          description: Bad request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BaseResponse'
               examples:
-                InvalidPictureID:
-                  $ref: '#/components/examples/InvalidPictureID'
                 InvalidDistrictID:
                   $ref: '#/components/examples/InvalidDistrictID'
                 InvalidCityID:
                   $ref: '#/components/examples/InvalidCityID'
+                InvalidFacilityCategory:
+                  $ref: '#/components/examples/InvalidFacilityIconID'
+                InvalidPictureIndex:
+                  $ref: '#/components/examples/InvalidPictureIndex'
+                InvalidFacilityName:
+                  $ref: '#/components/examples/InvalidFacilityName'
+                InvalidFacilityDescription:
+                  $ref: '#/components/examples/InvalidFacilityDescription'
+                InvalidFacilityIconID:
+                  $ref: '#/components/examples/InvalidFacilityIconID'
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         403:
           $ref: '#/components/responses/RolesNotSupported'
         404:
           $ref: '#/components/responses/BuildingNotFound'
+        409:
+          description: Conflict resource, for trying to publish non valid building
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building is not valid, please check the required fields
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                          example: name
+                        reason:
+                          type: string
+                          example: name is required
+
         500:
           $ref: '#/components/responses/InternalServerError'
     delete:
@@ -981,6 +1471,273 @@ paths:
           $ref: '#/components/responses/RolesNotSupported'
         404:
           $ref: '#/components/responses/BuildingNotFound'
+        409:
+          description: Conflict resource, for trying to delete building that has been booked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building has active reservation
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /admin/buildings/{buildingID}/pictures:
+    post:
+      summary: Upload a picture for a building
+      operationId: uploadBuildingPicture
+      security:
+        - access_token: []
+      tags:
+        - Admin.Buildings
+      parameters:
+        - name: buildingID
+          in: path
+          description: ID of the building to be added with picture
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - picture
+                - index
+              properties:
+                picture:
+                  type: string
+                  format: binary
+                  description: Picture of the building
+                index:
+                  type: integer
+                  description: Index of the picture
+                alt:
+                  type: string
+                  description: Alternative text for the picture
+        required: true
+      responses:
+        201:
+          description: Successfully uploaded building picture
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building picture uploaded successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+                      url:
+                        type: string
+                        example: https://ik.imagekit.io/fortyfour/default-image.jpg
+                      alt:
+                        type: string
+                        example: Jakarta Convention Center
+        400:
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidPictureIndex:
+                  $ref: '#/components/examples/InvalidPictureIndex'
+                InvalidPicture:
+                  $ref: '#/components/examples/InvalidPicture'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  
+  /admin/buildings/{buildingID}/facilities:
+    post:
+      summary: Add a facility to a building
+      operationId: addBuildingFacility
+      security:
+        - access_token: []
+      tags:
+        - Admin.Buildings
+      parameters:
+        - name: buildingID
+          in: path
+          description: ID of the building to be added with facility
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                required:
+                  - name
+                  - iconId
+                properties:
+                  name:
+                    type: string
+                    example: Meeting Room
+                  iconId:
+                    type: integer
+                    example: 5
+                  description:
+                    type: string
+                    example: Meeting room with 10 seats 
+        required: true
+      responses:
+        201:
+          description: Successfully added building facility
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building facility added successfully
+        400:
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidFacilityName:
+                  $ref: '#/components/examples/InvalidFacilityName'
+                InvalidFacilityDescription:
+                  $ref: '#/components/examples/InvalidFacilityDescription'
+                InvalidFacilityIconID:
+                  $ref: '#/components/examples/InvalidFacilityIconID'
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+          
+  /admin/buildings/{buildingID}/pictures/{pictureID}:
+    delete:
+      summary: Delete a picture from a building
+      operationId: deleteBuildingPicture
+      security:
+        - access_token: []
+      tags:
+        - Admin.Buildings
+      parameters:
+        - name: buildingID
+          in: path
+          description: ID of the building to be deleted
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+        - name: pictureID
+          in: path
+          description: ID of the picture to be deleted
+          required: true
+          schema:
+            type: string
+            example: 6asjfakjdshkasd
+      responses:
+        200:
+          description: Successfully deleted picture
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building picture deleted successfully
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        404:
+          $ref: '#/components/responses/PictureNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/buildings/{buildingID}/facilities/{facilityID}:
+    delete:
+      summary: Delete a facility from a building
+      operationId: deleteBuildingFacility
+      security:
+        - access_token: []
+      tags:
+        - Admin.Buildings
+      parameters:
+        - name: buildingID
+          in: path
+          description: ID of the building to be deleted
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+        - name: facilityID
+          in: path
+          description: ID of the facility to be deleted
+          required: true
+          schema:
+            type: integer
+            example: 6
+      responses:
+        200:
+          description: Successfully deleted facility
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building facility deleted successfully
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: facility id is invalid
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        404:
+          description: Facility not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: facility not found
         500:
           $ref: '#/components/responses/InternalServerError'
 
@@ -993,37 +1750,36 @@ paths:
       tags:
         - Admin.Reservations
       parameters:
-        - name: status
+        - name: statusId
           in: query
           description: Status of the reservation
           required: false
           schema:
             type: string
             enum:
-              - pending
-              - payment
-              - approved
-              - rejected
-              - cancelled
-              - finished
-              - null
+              - 1
+              - 2
+              - 3
+              - 4
+              - 5
+              - 6
             description: >
               status of the reservation
-              * `pending` - reservation is waiting for manual approval from admin
-              * `payment` - reservation is waiting for payment
-              * `approved` - reservation is approved
-              * `rejected` - reservation is rejected
-              * `cancelled` - reservation is cancelled
-              * `finished` - reservation is finished
+              * `1` - reservation is waiting for manual approval from admin
+              * `2` - reservation is rejected
+              * `3` - reservation is cancelled
+              * `3` - reservation is waiting for payment
+              * `5` - reservation is active
+              * `6` - reservation is finished
             
-        - name: buildingID
+        - name: buildingId
           in: query
           description: ID of the building that the reservation is made for
           required: false
           schema:
             type: string
             format: uuid
-        - name: userID
+        - name: userId
           in: query
           description: ID of the user
           required: false
@@ -1090,18 +1846,18 @@ paths:
             schema:
               type: object
               required:
-                - userID
-                - buildingID
+                - userId
+                - buildingId
                 - companyName
                 - startDate
-                - endDate
+                - duration
               properties:
-                userID:
+                userId:
                   type: string
                   description: ID of the user that made the reservation
                   format: uuid
                   example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
-                buildingID:
+                buildingId:
                   type: string
                   format: uuid
                   example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
@@ -1113,11 +1869,10 @@ paths:
                   format: date
                   description: Start date of the reservation with format YYYY-MM-DD
                   example: 2020-01-01
-                endDate:
-                  type: string
-                  format: date
-                  description: End date of the reservation with format YYYY-MM-DD
-                  example: 2020-01-01
+                duration:
+                  type: integer
+                  description: Duration of the reservation in months
+                  example: 1
         required: true
       responses:
         201:
@@ -1133,7 +1888,7 @@ paths:
                   data:
                     type: object
                     properties:
-                      reservationID:
+                      reservationId:
                         type: string
                         format: uuid
                         example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
@@ -1146,10 +1901,6 @@ paths:
               examples:
                 InvalidRequestBody:
                   $ref: '#/components/examples/InvalidRequestBody'
-                InvalidStartDate:
-                  $ref: '#/components/examples/InvalidStartDate'
-                InvalidEndDate:
-                  $ref: '#/components/examples/InvalidEndDate'
                 InvalidDateRange:
                   $ref: '#/components/examples/InvalidDateRange'
                 InvalidBuildingID:
@@ -1159,7 +1910,7 @@ paths:
         403:
           $ref: '#/components/responses/RolesNotSupported'
         409:
-          description: Reservation date range is not available
+          description: The building to be reserved is not available
           content:
             application/json:
               schema:
@@ -1167,10 +1918,119 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: reservation date range is not available
+                    example: building is not available
         500:
-          $ref: '#/components/responses/InternalServerError'    
+          $ref: '#/components/responses/InternalServerError'
+
   /admin/reservations/{reservationID}:
+    get:
+      summary: Get a user reservation by ID
+      operationId: getUserReservationByID
+      security:
+        - access_token: []
+      tags:
+        - Admin.Reservations
+      parameters:
+        - name: reservationID
+          in: path
+          description: ID of the reservation
+          required: true
+          schema:
+            type: string
+            format: uuids
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+      responses:
+        200:
+          description: Successfully retrieved reservation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Reservation fetched successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+                      building:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
+                          name:
+                            type: string
+                            example: Jakarta Convention Center
+                          picture:
+                            type: string
+                            example: https://example.com/picture.jpg
+                          city:
+                            type: string
+                            example: Jakarta
+                          district:
+                            type: string
+                            example: Kebayoran Baru
+                          address:
+                            type: string
+                            example: Jl. Jend. Sudirman Kav. 1
+                      tenant:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+                          name:
+                            type: string
+                            example: Alterra
+                          email:
+                            type: string
+                            format: email
+                            example: oz@mail.com
+                          picture:
+                            type: string
+                            example: https://example.com/picture.jpg
+                      companyName:
+                        type: string
+                        example: Alterra
+                      startDate:
+                        type: string
+                        format: date
+                        description: Start date of the reservation with format YYYY-MM-DD
+                        example: 2022-02-02 08:00:00
+                      endDate:
+                        type: string
+                        format: date
+                        description: End date of the reservation with format YYYY-MM-DD
+                        example: 2022-02-02 08:00:00
+                      status:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          message:
+                            type: string
+                            example: Pending
+                      createdAt:
+                        type: string
+                        format: date-time
+                        description: Date and time of the reservation creation  with format YYYY-MM-DDTHH:MM:SSZ
+                        example: 2022-12-04T19:48:04+08:00
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        description: Date and time of the reservation update with format YYYY-MM-DDTHH:MM:SSZ
+                        example: 2022-12-04T19:48:04+08:00
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        404:
+          $ref: '#/components/responses/ReservationNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
     put:
       summary: Update a reservation
       operationId: updateReservation
@@ -1193,45 +2053,47 @@ paths:
               type: object
               minProperties: 1
               properties:
-                companyName:
+                userId:
                   type: string
-                  example: Alterra
-                buildingID:
+                  format: uuid
+                  example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+                buildingId:
                   type: string
                   format: uuid
                   example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
+                companyName:
+                  type: string
+                  example: Alterra
                 startDate:
                   type: string
                   format: date
-                  description: Start date of the reservation with format YYYY-MM-DD
+                  description: Start date of the reservation with format YYYY-MM-DD, if provided, duration must be also provided
                   example: 2020-01-01
-                endDate:
-                  type: string
-                  format: date
-                  description: End date of the reservation with format YYYY-MM-DD
-                  example: 2020-01-01
-                status:
+                duration:
+                  type: integer
+                  description: Duration of the reservation in months
+                  example: 1
+                statusId:
                   type: string
                   enum:
-                    - pending
-                    - payment
-                    - approved
-                    - rejected
-                    - cancelled
-                    - finished
-                    - null
+                   - 1
+                   - 2
+                   - 3
+                   - 4
+                   - 5
+                   - 6
+                   - null
                   description: >
                     status of the reservation
-                    * `pending` - reservation is waiting for manual approval from admin
-                    * `payment` - reservation is waiting for payment
-                    * `approved` - reservation is approved
-                    * `rejected` - reservation is rejected
-                    * `cancelled` - reservation is cancelled
-                    * `finished` - reservation is finished
+                    * `1` - reservation is waiting for manual approval from admin
+                    * `2` - reservation is rejected
+                    * `3` - reservation is cancelled
+                    * `3` - reservation is waiting for payment
+                    * `5` - reservation is active
+                    * `6` - reservation is finished
                 message:
                   type: string
-                  description: Message from admin to user
-                  example: Your reservation is approved
+                  example: Your reservation has been rejected
         required: true
       responses:
         200:
@@ -1255,12 +2117,14 @@ paths:
                   $ref: '#/components/examples/InvalidRequestBody'
                 InvalidStartDate:
                   $ref: '#/components/examples/InvalidStartDate'
-                InvalidEndDate:
-                  $ref: '#/components/examples/InvalidEndDate'
                 InvalidDateRange:
                   $ref: '#/components/examples/InvalidDateRange'
                 InvalidBuildingID:
                   $ref: '#/components/examples/InvalidBuildingID'
+                InvalidUserID:
+                  $ref: '#/components/examples/InvalidUserID'
+                InvalidStatus:
+                  $ref: '#/components/examples/InvalidStatusID'
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         403:
@@ -1276,7 +2140,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: reservation date range is not available
+                    example: building is not available
         500:
           $ref: '#/components/responses/InternalServerError'
     delete:
@@ -1304,7 +2168,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: reservation deleted successfully
+                    example: Reservation deleted successfully
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         403:
@@ -1335,41 +2199,137 @@ paths:
                   data:
                     type: object
                     properties:
-                      pending:
-                        type: integer
-                        example: 1
-                      payment:
-                        type: integer
-                        example: 1
-                      approved:
-                        type: integer
-                        example: 1
-                      rejected:
-                        type: integer
-                        example: 1
-                      cancelled:
-                        type: integer
-                        example: 1
-                      monthly:
-                        type: integer
-                        example: 1
+                      byStatus:
+                        type: array
+                        example: 
+                          - statusId: 1
+                            statusName: Pending
+                            count: 1
+                          - statusId: 2
+                            statusName: Rejected
+                            count: 1
+                          - statusId: 3
+                            statusName: Cancelled
+                            count: 1
+                          - statusId: 4
+                            statusName: Awaiting Payment
+                            count: 1
+                          - statusId: 5
+                            statusName: Active
+                            count: 1
+                          - statusId: 6
+                            statusName: Finished
+                            count: 1
+                      byTimeframe:
+                        type: object
+                        properties:
+                          today:
+                            type: integer
+                            example: 1
+                          thisWeek:
+                            type: integer
+                            example: 1
+                          thisMonth:
+                            type: integer
+                            example: 1
+                          thisYear:
+                            type: integer
+                            example: 1
+                          total:
+                            type: integer
+                            example: 1
+
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         403:
           $ref: '#/components/responses/RolesNotSupported'
         500:
           $ref: '#/components/responses/InternalServerError'
-  /admin/reservations/statistic:
+
+  # /admin/reservations/statistic:
+  #   get:
+  #     summary: Get weekly statistic of reservations 
+  #     operationId: getReservationStatistic
+  #     security:
+  #       - access_token: []
+  #     tags:
+  #       - Admin.Reservations
+  #     responses:
+  #       200:
+  #         description: Successfully get statistic of reservations
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: object
+  #               properties:
+  #                 message:
+  #                   type: string
+  #                   example: reservations statistic retrieved successfully
+  #                 data:
+  #                   type: array
+  #                   items:
+  #                     $ref: '#/components/schemas/ReservationsStat'
+  #                   example:
+  #                     - date: 2020-01-01
+  #                       total: 1
+  #                     - date: 2020-01-02
+  #                       total: 1
+  #                     - date: 2020-01-03
+  #                       total: 1
+  #                     - date: 2020-01-04
+  #                       total: 1
+  #                     - date: 2020-01-05
+  #                       total: 1
+  #                     - date: 2020-01-06
+  #                       total: 1
+  #                     - date: 2020-01-07
+  #                       total: 1
+  #       401:
+  #         $ref: '#/components/responses/InvalidOrMissingToken'
+  #       403:
+  #         $ref: '#/components/responses/RolesNotSupported'
+  #       500:
+  #         $ref: '#/components/responses/InternalServerError'
+  /admin/users:
     get:
-      summary: Get weekly statistic of reservations 
-      operationId: getReservationStatistic
+      summary: Get all users
+      operationId: getAllUsers
       security:
         - access_token: []
       tags:
-        - Admin.Reservations
+        - Admin.Users
+      parameters:
+        - name : role
+          in: query
+          description: role of the user
+          required: true
+          schema:
+            type: integer
+            example: 1
+        - name: page
+          in: query
+          description: Page number
+          required: false
+          schema:
+            type: integer
+            example: 1
+        - name: limit
+          in: query
+          description: Number of users per page
+          required: false
+          schema:
+            type: integer
+            example: 10
+        - name: q
+          in: query
+          description: Search user by name 
+          required: false
+          schema:
+            type: string
+            example: John
       responses:
         200:
-          description: Successfully get statistic of reservations
+          description: Successfully get all users
           content:
             application/json:
               schema:
@@ -1377,30 +2337,145 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: reservations statistic retrieved successfully
+                    example: users retrieved successfully
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/ReservationsStat'
-                    example:
-                      - date: 2020-01-01
-                        total: 1
-                      - date: 2020-01-02
-                        total: 1
-                      - date: 2020-01-03
-                        total: 1
-                      - date: 2020-01-04
-                        total: 1
-                      - date: 2020-01-05
-                        total: 1
-                      - date: 2020-01-06
-                        total: 1
-                      - date: 2020-01-07
-                        total: 1
+                      $ref: '#/components/schemas/BriefUserDetails'
+                  meta:
+                    $ref: '#/components/schemas/Meta'
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         403:
           $ref: '#/components/responses/RolesNotSupported'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Register a new user
+      operationId: registerUserfromAdmin
+      tags:
+        - Admin.Users
+      security:
+        - access_token: []
+      requestBody:
+        description: User registration details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: John Doe
+                email:
+                  type: string
+                  format: email
+                  example: oz@mail.com
+                password:
+                  type: string
+                  format: password
+                  example: password
+                phone:
+                  type: string
+                  example: +1 234 567 890
+      responses:
+        201:
+          description: Successfully registering a new user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: user created successfully
+                  data:
+                    type: object
+                    properties:
+                      uid:
+                        type: string
+                        example: 5f7f9c9c-8b9a-4b9c-9c9c-8b9a4b9c9c9c
+        409:
+          $ref: '#/components/responses/EmailAlreadyUsed'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidEmail:
+                  $ref: '#/components/examples/InvalidEmail'
+                InvalidPassword:
+                  $ref: '#/components/examples/InvalidPassword'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/users/admin:
+    post:
+      summary: Register a new admin
+      operationId: registerAdminfromAdmin
+      tags:
+        - Admin.Users
+      security:
+        - access_token: []
+      requestBody:
+        description: Admin registration details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: John Doe
+                email:
+                  type: string
+                  format: email
+                  example: oz@mail.com
+                password:
+                  type: string
+                  format: password
+                  example: password
+                phone:
+                  type: string
+                  example: +1 234 567 890
+      responses:
+        201:
+          description: Successfully registering a new admin
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: admin created successfully
+                  data:
+                    type: object
+                    properties:
+                      uid:
+                        type: string
+                        example: 5f7f9c9c-8b9a-4b9c-9c9c-8b9a4b9c9c9c
+        409:
+          $ref: '#/components/responses/EmailAlreadyUsed'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidEmail:
+                  $ref: '#/components/examples/InvalidEmail'
+                InvalidPassword:
+                  $ref: '#/components/examples/InvalidPassword'
         500:
           $ref: '#/components/responses/InternalServerError'
 
@@ -1474,16 +2549,6 @@ paths:
                 phone: 
                   type: string
                   example: 0123456789
-                pictureID:
-                  type: string
-                  example: 1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p
-                role:
-                  type: integer
-                  enum:
-                    - 1
-                    - 2
-                  description: 1 for user, 2 for admin
-                  example: 1
         required: true
       responses:
         200:
@@ -1552,36 +2617,47 @@ paths:
           $ref: '#/components/responses/RolesNotSupported'
         404:
           $ref: '#/components/responses/UserNotFound'
+        409:
+          description: User has active reservations with status "pending", "accepted", "awaiting payment" or "active"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              example:
+                message: user has active reservation
+
         500:
           $ref: '#/components/responses/InternalServerError'
-  
-  /admin/payments/logo:
-    post:
-      summary: Upload logo for payment
-      operationId: uploadPaymentLogo
+
+  /admin/users/{userID}/picture:
+    put:
+      summary: Upload and change another user avatar
+      operationId: uploadAnotherUserPicture
       security:
-        - access_token: []
+        - access_token: [ ]
       tags:
-        - Admin.Payments
+        - Admin.Users
+      parameters:
+        - name: userID
+          in: path
+          description: ID of the user
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
-        description: Logo for payment
         content:
           multipart/form-data:
             schema:
               type: object
-              required:
-                - logo
               properties:
-                logo:
+                picture:
                   type: string
                   format: binary
-                alt:
-                  type: string
-                  example: logo BRI
         required: true
       responses:
-        201:
-          description: Successfully uploaded logo
+        200:
+          description: Successfully changed user picture
           content:
             application/json:
               schema:
@@ -1589,19 +2665,9 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: logo uploaded successfully
-                  data:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                        format: uuid
-                        example: 1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p
-                      url:
-                        type: string
-                        example: https://ik.imagekit.io/fortyfour/default-image.jpg
+                    example: user avatar updated successfully
         400:
-          description: Invalid input
+          description: Bad request
           content:
             application/json:
               schema:
@@ -1609,9 +2675,59 @@ paths:
               examples:
                 InvalidRequestBody:
                   $ref: '#/components/examples/InvalidRequestBody'
-                InvalidLogo:
-                  value:
-                    message: invalid logo
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        404:
+          $ref: '#/components/responses/UserNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/users/statistics:
+    get:
+      summary: Get joined users statistics per month from 12 months ago to now 
+      operationId: getUsersStatistics
+      security:
+        - access_token: []
+      tags:
+        - Admin.Users
+      responses:
+        200:
+          description: Successfully get users statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: users statistics retrieved successfully
+                  data:
+                    type: array
+                    example:
+                      - month: January
+                        total: 1
+                      - month: February
+                        total: 1
+                      - month: March
+                        total: 1
+                      - month: April
+                        total: 1
+                      - month: May
+                        total: 1
+                      - month: June
+                        total: 1
+                      - month: July
+                        total: 1
+                      - month: August
+                        total: 1
+                      - month: September
+                        total: 1
+                      - month: October  
+                        total: 1
+                      - month: November 
+                        total: 1
+                      - month: December
+                        total: 1
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         403:
@@ -1634,17 +2750,16 @@ paths:
             schema:
               type: object
               required:
-                - name
-                - logo
+                - bankID
                 - accountNumber
-                - description
+                - accountName
               properties:
-                name:
+                bankId:
+                  type: integer
+                  example: 1
+                accountName:
                   type: string
-                  example: BRI
-                logoID:
-                  type: string
-                  example: 1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p
+                  example: Fortyfour
                 accountNumber:
                   type: string
                   example: 1234567890
@@ -1703,12 +2818,12 @@ paths:
               type: object
               minProperties: 1
               properties:
-                name:
-                  type: string
-                  example: BRI
-                logoID:
+                bankId:
                   type: integer
                   example: 1
+                accountName:
+                  type: string
+                  example: Fortyfour
                 accountNumber:
                   type: string
                   example: 1234567890
@@ -1781,47 +2896,124 @@ paths:
 
   /buildings:
     get:
-      summary: Get all buildings in the system
-      description: Get all buildings in the system with custom filters. (*) denotes required to be provided at least one of the filters
-      operationId: getBuildings
+      summary: Get all published buildings in the system
+      description: Get all buildings in the system with custom filters.
+      operationId: getPublishedBuildings
       tags:
         - Buildings
       parameters:
-        - name: q
+        - name: buildingName
           in: query
           description: Search query string to filter buildings by name (*)
           required: false
           schema:
             type: string
-            example: 'building'
-        - name: city
+            example: Jakarta Convention Center
+        - name: cityId
           in: query
           description: City ID to filter buildings by city (*)
           required: false
           schema:
             type: integer
-        - name: district
+            example: 155
+        - name: districtId
           in: query
           description: District ID to filter buildings by district (*)
           required: false
           schema:
             type: integer
+            example: 1624
+        - name: annualPriceMin
+          in: query
+          description: Minimum annual price to filter buildings by annual price 
+          required: false
+          schema:
+            type: integer
+            example: 100000000
+        - name: annualPriceMax
+          in: query
+          description: Maximum annual price to filter buildings by annual price 
+          required: false
+          schema:
+            type: integer
+            example: 100000000
+        - name: monthlyPriceMin
+          in: query
+          description: Minimum monthly price to filter buildings by monthly price 
+          required: false
+          schema:
+            type: integer
+            example: 10000000
+        - name: monthlyPriceMax
+          in: query
+          description: Maximum monthly price to filter buildings by monthly price 
+          required: false
+          schema:
+            type: integer
+            example: 10000000
+        - name: capacityMin
+          in: query
+          description: Minimum capacity to filter buildings by capacity 
+          required: false
+          schema:
+            type: integer
+            example: 100
+        - name: capacityMax
+          in: query
+          description: Maximum capacity to filter buildings by capacity 
+          required: false
+          schema:
+            type: integer
+            example: 100
         - name: startDate
           in: query
-          description: Start date to filter buildings by availability in yyyy-mm-dd format. Must be used together with endDate
+          description: Start date to filter buildings by availability in yyyy-mm-dd format. Must be used together with duration
           required: false
           schema:
             type: string
             format: date
-            example: '2020-01-01'
-        - name: endDate
+            example: 2022-02-02
+        - name: duration
           in: query
-          description: End date to filter buildings by availability in yyyy-mm-dd format. Must be used together with startDate
+          description: Duration of reservation to be checked its availability. Must be used together with startDate
+          required: false
+          schema:
+            type: integer
+            example: 1
+        - name: sortBy
+          in: query
+          description: Sort buildings by column name
           required: false
           schema:
             type: string
-            format: date
-            example: '2020-01-01'
+            enum:
+              - annual_price
+              - monthly_price
+              - capacity
+              - pinpoint
+        - name: order
+          in: query
+          description: Sort order of buildings
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+        - name: latitude
+          in: query
+          description: Latitude of the location to filter buildings by distance, must present if sort by pinpoint
+          required: false
+          schema:
+            type: number
+            format: floa
+        - name: longitude
+          in: query
+          description: Longitude of the location to filter buildings by distance, must present if sort by pinpoint
+          required: false
+          schema:
+            type: number
+            format: float
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/page'
 
@@ -1839,7 +3031,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/BriefBuildingDetails'
+                      $ref: '#/components/schemas/BriefPublishedBuildingDetails'
                   meta:
                     $ref: '#/components/schemas/Meta'
 
@@ -1864,8 +3056,8 @@ paths:
           $ref: '#/components/responses/InternalServerError'
   /buildings/{buildingID}:
     get:
-      summary: Get building detail by ID
-      operationId: getBuildingByID
+      summary: Get published building detail by ID
+      operationId: getPublishedBuildingByID
       tags:
         - Buildings
       parameters:
@@ -1889,12 +3081,13 @@ paths:
                     type: string
                     example: building retrieved successfully
                   data:
-                    $ref: '#/components/schemas/BuildingDetails'
+                    $ref: '#/components/schemas/PublishedBuildingDetails'
         404:
           $ref: '#/components/responses/BuildingNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
-  /buildings/faclities/categories:
+
+  /buildings/facilities/category:
     get:
       summary: Get all building facilities categories
       operationId: getBuildingFacilitiesCategories
@@ -1910,7 +3103,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: building facilities categories retrieved successfully
+                    example: facility categories fetched successfully
                   data:
                     type: array
                     items: 
@@ -1931,7 +3124,7 @@ paths:
 
   /payments:
     get:
-      summary: Get all payments in the system
+      summary: Get all payments method in the system
       operationId: getPayments
       tags:
         - Payments
@@ -1954,24 +3147,181 @@ paths:
                         id:
                           type: integer
                           example: 1
-                        name:
+                        bankName:
                           type: string
-                          example: Bank Transfer
-                        logo:
+                          example: BNI
+                        bankIcon:
                           type: string
                           example: https://ik.imagekit.io/fortyfour/default-image.jpg
+                        accountName:
+                          type: string
+                          example: Fortyfour
                         accountNumber:
                           type: string
                           example: 1234567890
                         description:
                           type: string
                           example: Bank Transfer
-                  meta:
-                    $ref: '#/components/schemas/Meta'
-        
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /payments/{paymentID}:
+    get:
+      summary: Get payments method by id
+      operationId: getPaymentsById
+      tags:
+        - Payments
+      parameters:
+        - name: paymentID
+          in: path
+          description: ID of the payment
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        200:
+          description: Successfully retrieved payments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: payments retrieved successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      bankName:
+                        type: string
+                        example: BNI
+                      bankIcon:
+                        type: string
+                        example: https://ik.imagekit.io/fortyfour/default-image.jpg
+                      accountName:
+                        type: string
+                        example: Fortyfour
+                      accountNumber:
+                        type: string
+                        example: 1234567890
+                      description:
+                        type: string
+                        example: Bank Transfer
+        404:
+          $ref: '#/components/responses/PaymentNotFound'                         
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /payments/banks:
+    get:
+      summary: Get all banks in the system
+      operationId: getBanks
+      tags:
+        - Payments
+      responses:
+        200:
+          description: Successfully retrieved banks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: banks retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: BNI
+                        icon:
+                          type: string
+                          example: https://ik.imagekit.io/fortyfour/default-image.jpg
         500:
           $ref: '#/components/responses/InternalServerError'
 
+  /locations/cities:
+    get:
+      summary: Get all cities
+      operationId: getCities
+      tags:
+        - Locations
+      responses:
+        200:
+          description: Successfully retrieved cities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: cities retrieved successfully
+                  data:
+                    type: array
+                    example: 
+                      - id: 155
+                        name: Jakarta
+                      - id: 156
+                        name: Bandung
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    
+  /locations/districts:
+    get:
+      summary: Get all districts
+      operationId: getDistricts
+      tags:
+        - Locations
+      parameters:
+        - name: cityID
+          in: query
+          description: ID of the city
+          required: true
+          schema:
+            type: integer
+            example: 154
+      responses:
+        200:
+          description: Successfully retrieved districts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: districts retrieved successfully
+                  data:
+                    type: array
+                    example: 
+                      - id: 1888
+                        cityId: 154
+                        name: Mampang Prapatan
+                      - id: 1889
+                        cityId: 154
+                        name: Pancoran
+        400:
+          description: Bad parameter request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidParameterValue:
+                  description: Invalid parameter value provided
+                  value:
+                    message: invalid query params
+        500:
+          $ref: '#/components/responses/InternalServerError'
 
 components:
   responses:
@@ -2025,6 +3375,16 @@ components:
               message:
                 type: string
                 example: payment not found
+    PictureNotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: picture not found
     InvalidOrMissingToken:
       description: Invalid or expired JWT
       content:
@@ -2044,7 +3404,7 @@ components:
             properties:
               message:
                 type: string
-                example: role not supported
+                example: you don't have permission to perform the action
     InternalServerError:
       description: Unexpected error occurred
       content:
@@ -2096,6 +3456,40 @@ components:
         limit:
           type: integer
           example: 20
+    BriefPublishedBuildingDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+        name:
+          type: string
+          example: Jakarta Convention Center
+        picture:
+          type: string
+          example: https://ik.imagekit.io/fortyfour/default-image.jpg
+        price:
+          type: object
+          properties:
+            annual:
+              type: integer
+              example: 12000000
+            monthly:
+              type: integer
+              example: 1000000
+        owner:
+          type: string
+          example: PT. Graha Sidang Pratama
+        location:
+          type: object
+          properties:
+            city:
+              type: string
+              example: Jakarta Selatan
+            district:
+              type: string
+              example: Tanah Abang
     BriefBuildingDetails:
       type: object
       properties:
@@ -2130,7 +3524,10 @@ components:
             district:
               type: string
               example: Tanah Abang
-    BuildingDetails:
+        isPublished:
+          type: boolean
+          example: true
+    PublishedBuildingDetails:
       type: object
       properties:
         id:
@@ -2149,6 +3546,9 @@ components:
                 type: string
                 format: uuid
                 example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+              index:
+                type: integer
+                example: 1
               url:
                 type: string
                 example: https://ik.imagekit.io/fortyfour/default-image.jpg
@@ -2211,8 +3611,93 @@ components:
                 long:
                   type: number
                   example: 106.827153
-
-              
+    BuildingDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+        name:
+          type: string
+          example: Jakarta Convention Center
+        pictures:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+              index:
+                type: integer
+                example: 1
+              url:
+                type: string
+                example: https://ik.imagekit.io/fortyfour/default-image.jpg
+              alt:
+                type: string
+                example: Jakarta Convention Center
+        description:
+          type: string
+          example: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas quis bibendum ipsum. Maecenas in ante at velit rhoncus facilisis vel lacinia turpis. Fusce blandit ac augue a tincidunt. Pellentesque tristique augue rhoncus tortor dapibus vulputate condimentum in dolor. Aenean imperdiet augue eu facilisis luctus. Vivamus pretium in mauris sed interdum. Pellentesque cursus sem eget turpis tempus, nec ultrices elit porta.
+        facilities:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                example: Meeting Room
+              icon:
+                type: string
+                example: https://ik.imagekit.io/fortyfour/default-image.jpg
+              iconName:
+                type: string
+                example: meeting-room
+              description:
+                type: string
+                example: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas quis bibendum ipsum.
+        capacity:
+          type: integer
+          example: 1000
+        price:
+          type: object
+          properties:
+            annual:
+              type: integer
+              example: 12000000
+            monthly:
+              type: integer
+              example: 1000000
+        owner:
+          type: string
+          example: PT. Graha Sidang Pratama
+        location:
+          type: object
+          properties:
+            address:
+              type: string
+              example: Jl. Jend. Sudirman Kav. 1
+            city:
+              type: string
+              example: Jakarta Selatan
+            district:
+              type: string
+              example: Tanah Abang
+            geo:
+              type: object
+              properties:
+                lat:
+                  type: number
+                  example: -6.1753924
+                long:
+                  type: number
+                  example: 106.827153
+        isPublished:
+          type: boolean
+          example: true
 
     ReservationsStat:
       type: object
@@ -2239,6 +3724,13 @@ components:
             name:
               type: string
               example: Jakarta Convention Center
+            pictures:
+              type: string
+              format: url
+              example: https://ik.imagekit.io/fortyfour/default-image.jpg
+            city:
+              type: string
+              example: Jakarta Selatan
         tenant:
           type: object
           properties:
@@ -2249,6 +3741,13 @@ components:
             name:
               type: string
               example: PT. Graha Sidang Pratama
+            email:
+              type: string
+              example: oz@mail.com
+            picture:
+              type: string
+              format: url
+              example: https://ik.imagekit.io/fortyfour/default-image.jpg
         startDate:
           type: string
           format: date
@@ -2258,11 +3757,18 @@ components:
           format: date
           example: 2020-01-01
         status:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            status:
+              type: string
+              example: Pending
+        createdAt:
           type: string
-          example: pending
-        message:
-          type: string
-          example: Please contact me for further details
+          format: date-time
+          example: 2020-01-01T00:00:00.000Z
     BriefUserDetails:
       type: object
       properties:
@@ -2279,6 +3785,10 @@ components:
         phone:
           type: string
           example: 081234567890
+        picture:
+          type: string
+          format: url
+          example: https://ik.imagekit.io/fortyfour/default-image.jpg
     UserDetail:
       type: object
       properties:
@@ -2316,6 +3826,9 @@ components:
         
   
   examples:
+    InvalidOrMissingToken:
+      value:
+        message: invalid or expired JWT
     InvalidRequestBody:
       description: Invalid request body due to either syntactically incorrect or confrom to the schema (e.g. missing required fields)
       value:
@@ -2323,11 +3836,21 @@ components:
     InvalidEmail:
       description: Invalid email format
       value:
-        message: invalid email format
+        message: invalid request body
+        data:
+          - field: email
+            message: must be email
     InvalidPassword:
-      description: Invalid password format
+      description: invalid request body
       value:
         message: invalid password format
+        data:
+          - field: password
+            message: must be at least 8 characters
+    InvalidOTP:
+      description: invalid OTP, either expired or not found
+      value:
+        message: invalid OTP
     InvalidPictureID:
       description: picture id is invalid either because it is not a valid uuid or it does not exist in the database
       value:
@@ -2344,18 +3867,54 @@ components:
       description: building id is invalid either because it is not a valid id or it does not exist in the database
       value:
         message: building id is invalid
+    InvalidUserID:
+      description: user id is invalid either because it is not a valid id or it does not exist in the database
+      value:
+        message: user id is invalid
+    InvalidStatusID:
+      description: status is invalid either because it is not a valid status
+      value:
+        message: status id is invalid
     InvalidStartDate:
       description: Start date is in invalid format
       value:
         message: invalid start date
-    InvalidEndDate:
-      description: End date is in invalid format
-      value:
-        message: invalid end date
     InvalidDateRange:
       description: End date is before start date
       value:
-        message: invalid date range
+        message: start date must be before end date
+    InvalidPictureIndex:
+      description: Invalid picture index
+      value:
+        message: invalid request body
+        data:
+          - field: index
+            message: must be greater than or equal to 0
+    InvalidPicture:
+      description: Invalid picture
+      value:
+        message: invalid request body
+        data:
+          - field: picture
+            message: must be a valid picture
+    InvalidFacilityDescription:
+      description: Invalid facility description
+      value:
+        message: invalid request body
+        data:
+          - field: description
+            message: must be at least 3 characters
+    InvalidFacilityName:
+      description: Invalid facility name
+      value:
+        message: invalid request body
+        data:
+          - field: name
+            message: must be at least 3 characters
+    InvalidFacilityIconID:
+      description: Invalid facility icon id
+      value:
+        message: invalid facility icon id
 
   securitySchemes:
     access_token:
@@ -2386,3 +3945,5 @@ tags:
     description: Buildings related endpoints
   - name: Payments
     description: Payments related endpoints
+  - name: Locations
+    description: Locations related endpoints

@@ -1,12 +1,13 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"office-booking-backend/pkg/database/mysql"
 	"office-booking-backend/pkg/entity"
 	"office-booking-backend/pkg/utils/password"
 	"office-booking-backend/pkg/utils/ptr"
-	"os"
 
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
@@ -14,28 +15,38 @@ import (
 )
 
 func main() {
-	args := os.Args
-	if len(args) == 1 {
-		log.Fatal("Please specify the config file")
-	}
+	var dbHost, dbPort, dbUser, dbPass, dbName, config string
+	flag.StringVar(&dbHost, "host", "localhost", "Database host")
+	flag.StringVar(&dbPort, "port", "3306", "Database port")
+	flag.StringVar(&dbUser, "user", "root", "Database user")
+	flag.StringVar(&dbPass, "pass", "root", "Database password")
+	flag.StringVar(&dbName, "name", "", "Database name")
+	flag.StringVar(&config, "config", "", "Config file path")
+	flag.Parse()
 
-	conf := viper.New()
-	conf.SetConfigFile(args[1])
+	if config != "" {
+		conf := viper.New()
+		conf.SetConfigFile(config)
 
-	err := conf.ReadInConfig()
-	if err != nil {
-		log.Fatalf("Error reading config file: %v", err)
+		err := conf.ReadInConfig()
+		if err != nil {
+			log.Fatalf("Error reading config file: %v", err)
+		}
+
+		fmt.Println(conf.GetString("database.host"))
+
+		dbHost = conf.GetString("service.db.host")
+		dbPort = conf.GetString("service.db.port")
+		dbUser = conf.GetString("service.db.user")
+		dbPass = conf.GetString("service.db.pass")
+		dbName = conf.GetString("service.db.name")
 	}
 
 	db := mysql.InitDatabase(
-		conf.GetString("service.db.host"),
-		conf.GetString("service.db.port"),
-		conf.GetString("service.db.user"),
-		conf.GetString("service.db.pass"),
-		conf.GetString("service.db.name"),
+		dbHost, dbPort, dbUser, dbPass, dbName,
 	)
 
-	err = db.AutoMigrate(
+	err := db.AutoMigrate(
 		&entity.User{},
 		&entity.UserDetail{},
 		&entity.Building{},

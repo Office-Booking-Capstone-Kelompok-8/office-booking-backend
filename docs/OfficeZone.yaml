@@ -1040,6 +1040,182 @@ paths:
                     example: reservation is still active
         500:
           $ref: '#/components/responses/InternalServerError'
+  /reservations/{reservationID}/reviews:
+    post:
+      summary: Create a review for a reservation
+      operationId: createReview
+      security:
+        - access_token: []
+      tags:
+        - EndUser.Reservations
+      parameters:
+        - name: reservationID
+          in: path
+          description: ID of the reservation
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+      requestBody:
+        description: Review data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rating:
+                  type: integer
+                  example: 5
+                comment:
+                  type: string
+                  example: Great place to work
+      responses:
+        201:
+          description: Successfully created review
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Review created successfully
+        400:
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidRating:
+                  value:
+                    message: Invalid request body
+                    data:
+                      - field: rating
+                        reason: Rating must be between 1 and 5
+                InvalidComment:
+                  value:
+                    message: Invalid request body
+                    data:
+                      - field: comment
+                        reason: Comment must be between 1 and 255 characters
+            
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          description: User is not authorized to create review for other user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: you don't have permission to perform the action
+        404:
+          $ref: '#/components/responses/ReservationNotFound'
+        409:
+          description: The reservation is not yet finished
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: reservation is not yet finished
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      summary: Get reviews for a reservation
+      operationId: getReviews
+      security:
+        - access_token: []
+      tags:
+        - EndUser.Reservations
+      parameters:
+        - name: reservationID
+          in: path
+          description: ID of the reservation
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+      responses:
+        200:
+          description: Successfully retrieved reviews
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Reviews retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+                        rating:
+                          type: integer
+                          example: 5
+                        comment:
+                          type: string
+                          example: Great place to work
+                        createdAt:
+                          type: string
+                          format: date-time
+                          description: Date and time of the review creation  with format YYYY-MM-DDTHH:MM:SSZ
+                          example: 2022-12-04T19:48:04+08:00
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        404:
+          $ref: '#/components/responses/ReservationNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Delete review for a reservation
+      operationId: deleteReview
+      security:
+        - access_token: []
+      tags:
+        - EndUser.Reservations
+      parameters:
+        - name: reservationID
+          in: path
+          description: ID of the reservation
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+      responses:
+        200:
+          description: Successfully deleted review
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Review deleted successfully
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        404:
+          $ref: '#/components/responses/ReservationNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
 
   /admin/buildings/id:
     get:
@@ -3839,14 +4015,14 @@ components:
         message: invalid request body
         data:
           - field: email
-            message: must be email
+            reason: must be email
     InvalidPassword:
       description: invalid request body
       value:
         message: invalid password format
         data:
           - field: password
-            message: must be at least 8 characters
+            reason: must be at least 8 characters
     InvalidOTP:
       description: invalid OTP, either expired or not found
       value:
@@ -3889,28 +4065,28 @@ components:
         message: invalid request body
         data:
           - field: index
-            message: must be greater than or equal to 0
+            reason: must be greater than or equal to 0
     InvalidPicture:
       description: Invalid picture
       value:
         message: invalid request body
         data:
           - field: picture
-            message: must be a valid picture
+            reason: must be a valid picture
     InvalidFacilityDescription:
       description: Invalid facility description
       value:
         message: invalid request body
         data:
           - field: description
-            message: must be at least 3 characters
+            reason: must be at least 3 characters
     InvalidFacilityName:
       description: Invalid facility name
       value:
         message: invalid request body
         data:
           - field: name
-            message: must be at least 3 characters
+            reason: must be at least 3 characters
     InvalidFacilityIconID:
       description: Invalid facility icon id
       value:

@@ -59,3 +59,10 @@ func (n *NullAbleProfilePicture) ConvertToProfilePicture() ProfilePicture {
 		Url: n.Url.String,
 	}
 }
+
+type MonthlyRegisteredStat struct {
+	Month string `gorm:"column:month"`
+	Total int64  `gorm:"column:total"`
+}
+
+type MonthlyRegisteredStatList []MonthlyRegisteredStat

@@ -64,3 +64,25 @@ func NewBriefUsersResponse(users *entity.Users) *BriefUsersResponse {
 	}
 	return &briefUsers
 }
+
+type RegisteredStatResponse struct {
+	Month string `json:"month"`
+	Total int64  `json:"total"`
+}
+
+func NewRegisteredStatResponse(stat *entity.MonthlyRegisteredStat) *RegisteredStatResponse {
+	return &RegisteredStatResponse{
+		Month: stat.Month,
+		Total: stat.Total,
+	}
+}
+
+type RegisteredStatResponseList []RegisteredStatResponse
+
+func NewRegisteredStatResponseList(stats *entity.MonthlyRegisteredStatList) *RegisteredStatResponseList {
+	var statList RegisteredStatResponseList
+	for _, stat := range *stats {
+		statList = append(statList, *NewRegisteredStatResponse(&stat))
+	}
+	return &statList
+}

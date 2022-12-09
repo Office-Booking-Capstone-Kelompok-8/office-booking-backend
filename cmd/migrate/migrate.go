@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"office-booking-backend/pkg/config"
 	"office-booking-backend/pkg/database/mysql"
 	"office-booking-backend/pkg/entity"
 	"office-booking-backend/pkg/utils/password"
@@ -10,26 +9,22 @@ import (
 	"os"
 
 	"github.com/google/uuid"
-	"github.com/joho/godotenv"
+	"github.com/spf13/viper"
 	"gorm.io/gorm"
 )
 
-func init() {
-	if os.Getenv("ENV") == "production" {
-		return
-	}
-
-	//	load env variables from .env file for local development
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
-}
-
 func main() {
-	conf, err := config.LoadConfig()
+	args := os.Args
+	if len(args) == 1 {
+		log.Fatal("Please specify the config file")
+	}
+
+	conf := viper.New()
+	conf.SetConfigFile(args[1])
+
+	err := conf.ReadInConfig()
 	if err != nil {
-		log.Fatalf("Error loading config: %v", err)
+		log.Fatalf("Error reading config file: %v", err)
 	}
 
 	db := mysql.InitDatabase(

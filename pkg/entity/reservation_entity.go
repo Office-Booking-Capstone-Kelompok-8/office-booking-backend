@@ -35,3 +35,19 @@ type Status struct {
 	ID      int `gorm:"primaryKey; type:int; not null"`
 	Message string
 }
+
+// only used for returning stats
+type StatusStat struct {
+	StatusID   int64
+	StatusName string
+	Total      int64
+}
+
+type StatusesStat []StatusStat
+
+type TimeframeStat struct {
+	Day   int64
+	Week  int64
+	Month int64
+	Year  int64
+}

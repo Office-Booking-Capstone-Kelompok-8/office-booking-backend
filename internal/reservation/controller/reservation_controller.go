@@ -126,6 +126,18 @@ func (r *ReservationController) GetUserReservationDetailByID(c *fiber.Ctx) error
 	})
 }
 
+func (r *ReservationController) GetReservationTotal(c *fiber.Ctx) error {
+	stat, err := r.service.GetReservationStat(c.Context())
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "Reservation total fetched successfully",
+		Data:    stat,
+	})
+}
+
 func (r *ReservationController) CreateReservation(c *fiber.Ctx) error {
 	token := c.Locals("user").(*jwt.Token)
 	claims := token.Claims.(jwt.MapClaims)

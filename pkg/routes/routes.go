@@ -104,6 +104,7 @@ func (r *Routes) Init(app *fiber.App) {
 	aReservation := admin.Group("/reservations")
 	aReservation.Get("/", r.adminAccessTokenMiddleware, r.reservation.GetReservations)
 	aReservation.Post("/", r.adminAccessTokenMiddleware, r.reservation.CreateAdminReservation)
+	aReservation.Get("/total", r.adminAccessTokenMiddleware, r.reservation.GetReservationTotal)
 	aReservation.Get("/:reservationID", r.adminAccessTokenMiddleware, r.reservation.GetReservationDetailByID)
 	aReservation.Put("/:reservationID", r.adminAccessTokenMiddleware, r.reservation.UpdateReservation)
 	aReservation.Delete("/:reservationID", r.adminAccessTokenMiddleware, r.reservation.DeleteReservation)

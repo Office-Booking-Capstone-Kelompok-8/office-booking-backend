@@ -6,6 +6,7 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func InitDatabase(dbHost string, dbPort string, dbUsername string, dbPassword string, dbName string) *gorm.DB {
@@ -13,6 +14,7 @@ func InitDatabase(dbHost string, dbPort string, dbUsername string, dbPassword st
 
 	gormConfig := &gorm.Config{
 		SkipDefaultTransaction: true,
+		Logger:                 logger.Default.LogMode(logger.Info),
 	}
 
 	db, err := gorm.Open(mysql.Open(dsn), gormConfig)

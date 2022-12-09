@@ -114,6 +114,46 @@ func (r *ReservationServiceImpl) GetReservationByID(ctx context.Context, reserva
 	return reservationDto, nil
 }
 
+func (r *ReservationServiceImpl) GetReservationStat(ctx context.Context) (*dto.ReservationStatResponse, error) {
+	statByStatus := new(dto.ReservationTotals)
+	statByTimeframe := new(dto.TimeframeStat)
+
+	errgroup := errgroup.Group{}
+
+	errgroup.Go(func() error {
+		total, err := r.repo.GetReservationCount(ctx)
+		if err != nil {
+			log.Println("error while getting this year reservation count: ", err)
+			return err
+		}
+
+		statByTimeframe = dto.NewTimeframeStat(total)
+		return nil
+	})
+
+	errgroup.Go(func() error {
+		stat, err := r.repo.GetReservationTotal(ctx)
+		if err != nil {
+			log.Println("error while getting total reservation count: ", err)
+			return err
+		}
+		statByStatus = dto.NewReservationStatsResponse(stat)
+		return nil
+	})
+
+	err := errgroup.Wait()
+	if err != nil {
+		return nil, err
+	}
+
+	res := &dto.ReservationStatResponse{
+		ByTimeframe: statByTimeframe,
+		ByStatus:    statByStatus,
+	}
+
+	return res, nil
+}
+
 func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, userID string, reservation *dto.AddReservartionRequest) (string, error) {
 	errGroup := errgroup.Group{}
 	errGroup.Go(func() error {

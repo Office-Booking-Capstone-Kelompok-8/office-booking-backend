@@ -193,3 +193,48 @@ func NewFullReservationResponse(reservation *entity.Reservation) *FullReservatio
 		UpdatedAt:   reservation.UpdatedAt,
 	}
 }
+
+type ReservationStatResponse struct {
+	ByStatus    *ReservationTotals `json:"byStatus"`
+	ByTimeframe *TimeframeStat     `json:"byTimeframe"`
+}
+
+type ReservationTotal struct {
+	StatusID   int    `json:"statusId"`
+	StatusName string `json:"statusName"`
+	Total      int    `json:"count"`
+}
+
+func NewReservationTotal(stat entity.StatusStat) *ReservationTotal {
+	return &ReservationTotal{
+		StatusID:   int(stat.StatusID),
+		StatusName: stat.StatusName,
+		Total:      int(stat.Total),
+	}
+}
+
+type ReservationTotals []ReservationTotal
+
+func NewReservationStatsResponse(stats *entity.StatusesStat) *ReservationTotals {
+	response := new(ReservationTotals)
+	for _, stat := range *stats {
+		*response = append(*response, *NewReservationTotal(stat))
+	}
+	return response
+}
+
+type TimeframeStat struct {
+	Today     int64 `json:"today"`
+	ThisWeek  int64 `json:"thisWeek"`
+	ThisMonth int64 `json:"thisMonth"`
+	ThisYear  int64 `json:"thisYear"`
+}
+
+func NewTimeframeStat(stats *entity.TimeframeStat) *TimeframeStat {
+	return &TimeframeStat{
+		Today:     stats.Day,
+		ThisWeek:  stats.Week,
+		ThisMonth: stats.Month,
+		ThisYear:  stats.Year,
+	}
+}

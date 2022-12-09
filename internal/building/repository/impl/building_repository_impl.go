@@ -301,7 +301,6 @@ func (b *BuildingRepositoryImpl) UpdateBuildingByID(ctx context.Context, buildin
 		}
 
 		for _, picture := range building.Pictures {
-			fmt.Println(picture)
 			err := tx.WithContext(ctx).
 				Model(&entity.Picture{}).
 				Where("id = ?", picture.ID).
@@ -461,7 +460,6 @@ func changeNextPictureToIndexZero(ctx context.Context, tx *gorm.DB, buildingID s
 		Where("building_id = ?", buildingID).
 		Order("`pictures`.`index` ASC").
 		First(&nextPicture).Error
-	fmt.Println("nextPicture", nextPicture)
 	if err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return err
@@ -473,7 +471,6 @@ func changeNextPictureToIndexZero(ctx context.Context, tx *gorm.DB, buildingID s
 			Where("id = ?", buildingID).
 			Updates(entity.Building{IsPublished: ptr.Bool(true)}).Error
 	} else {
-		fmt.Println("nextPicture", nextPicture.ID, "changed to index 0")
 		// change next picture index to 0
 		return tx.WithContext(ctx).
 			Model(&entity.Picture{}).

@@ -339,6 +339,61 @@ func (r *ReservationRepositoryImpl) GetUserReservationByID(ctx context.Context, 
 	return &reservation, nil
 }
 
+func (r *ReservationRepositoryImpl) GetReservationTotal(ctx context.Context) (*entity.StatusesStat, error) {
+	rows, err := r.db.WithContext(ctx).
+		Table("statuses").
+		Select("statuses.id, statuses.message, COUNT(reservations.id) AS total").
+		Joins("left join reservations on reservations.status_id = statuses.id").
+		Group("statuses.id").
+		Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err = rows.Close()
+	}()
+
+	stat := entity.StatusesStat{}
+	for rows.Next() {
+		var status entity.StatusStat
+		err = rows.Scan(&status.StatusID, &status.StatusName, &status.Total)
+		if err != nil {
+			return nil, err
+		}
+
+		stat = append(stat, status)
+	}
+
+	return &stat, nil
+}
+
+func (r *ReservationRepositoryImpl) GetReservationCount(ctx context.Context) (*entity.TimeframeStat, error) {
+	rows, err := r.db.WithContext(ctx).
+		Table(
+			"(?) AS today, (?) AS thisWeek, (?) AS thisMonth, (?) AS thisYear",
+			r.db.Table("reservations").Select("count(*)").Where("DATE(created_at) = DATE(?)", time.Now().Format("2006-01-02")),
+			r.db.Table("reservations").Select("count(*)").Where("YEARWEEK(created_at) = YEARWEEK(?)", time.Now().Format("2006-01-02")),
+			r.db.Table("reservations").Select("count(*)").Where("MONTH(created_at) = MONTH(?)", time.Now().Format("2006-01-02")),
+			r.db.Table("reservations").Select("count(*)").Where("YEAR(created_at) = YEAR(?)", time.Now().Format("2006-01-02")),
+		).Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err = rows.Close()
+	}()
+
+	stat := new(entity.TimeframeStat)
+	for rows.Next() {
+		err = rows.Scan(&stat.Day, &stat.Week, &stat.Month, &stat.Year)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return stat, nil
+}
+
 func (r *ReservationRepositoryImpl) AddBuildingReservation(ctx context.Context, reservation *entity.Reservation) error {
 	err := r.db.WithContext(ctx).Create(reservation).Error
 	if err != nil {

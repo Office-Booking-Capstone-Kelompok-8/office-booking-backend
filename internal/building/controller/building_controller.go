@@ -218,7 +218,7 @@ func (b *BuildingController) AddBuildingPicture(c *fiber.Ctx) error {
 	fileHeader, err := c.FormFile("picture")
 	validatorDto := struct {
 		AltText string                `json:"alt" validate:"omitempty,min=3,max=100"`
-		Index   int                   `json:"index" validate:"required,gte=0,lte=9"`
+		Index   int                   `json:"index" validate:"gte=0,lte=9"`
 		Picture *multipart.FileHeader `json:"picture" validate:"multipartImage"`
 	}{
 		AltText: altText,

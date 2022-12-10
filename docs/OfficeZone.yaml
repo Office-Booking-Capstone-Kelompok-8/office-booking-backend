@@ -1947,7 +1947,6 @@ paths:
               * `3` - reservation is waiting for payment
               * `5` - reservation is active
               * `6` - reservation is finished
-            
         - name: buildingId
           in: query
           description: ID of the building that the reservation is made for
@@ -1982,6 +1981,43 @@ paths:
           schema:
             type: string
             format: date
+        - name: createdStart
+          in: query
+          description: Start date of the reservation creation, with format YYYY-MM-DD
+          required: false
+          schema:
+            type: string
+            format: date
+            example: 2020-12-29
+        - name: createdEnd
+          in: query
+          description: End date of the reservation creation, with format YYYY-MM-DD
+          required: false
+          schema:
+            type: string
+            format: date
+            example: 2020-12-29
+        - name: sortBy
+          in: query
+          description: Sort by
+          required: false
+          schema:
+            type: string
+            enum:
+              - created_at
+              - start_date
+              - end_date
+              - building_name
+              - user_name
+        - name: sortOrder
+          in: query
+          description: Sort direction
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/limit'
       responses:

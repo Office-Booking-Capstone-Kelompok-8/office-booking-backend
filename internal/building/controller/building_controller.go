@@ -9,7 +9,6 @@ import (
 	"office-booking-backend/pkg/response"
 	"office-booking-backend/pkg/utils/validator"
 	"strconv"
-	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 
@@ -33,14 +32,6 @@ func (b *BuildingController) GetAllPublishedBuildings(c *fiber.Ctx) error {
 	if err := c.QueryParser(filter); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-
-	starDateStr := c.Query("startDate", "0001-01-01")
-	startDate, err := time.Parse("2006-01-02", starDateStr)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
-	}
-
-	filter.StartDate = startDate
 
 	if errs := b.validator.ValidateQuery(filter); errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
@@ -74,14 +65,6 @@ func (b *BuildingController) GetAllBuildings(c *fiber.Ctx) error {
 	if err := c.QueryParser(filter); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-
-	starDateStr := c.Query("startDate", "0001-01-01")
-	startDate, err := time.Parse("2006-01-02", starDateStr)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
-	}
-
-	filter.StartDate = startDate
 
 	if errs := b.validator.ValidateQuery(filter); errs != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{

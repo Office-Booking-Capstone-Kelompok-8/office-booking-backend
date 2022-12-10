@@ -168,6 +168,7 @@ type FullPublishedBuildingResponse struct {
 	Prices      *Price      `json:"price"`
 	Owner       string      `json:"owner"`
 	Locations   *Location   `json:"location"`
+	Agent       *Agent      `json:"agent"`
 }
 
 func NewFullPublishedBuildingResponse(building *entity.Building) *FullPublishedBuildingResponse {
@@ -193,6 +194,7 @@ func NewFullPublishedBuildingResponse(building *entity.Building) *FullPublishedB
 				Latitude:  building.Latitude,
 			},
 		},
+		Agent: NewAgent(&building.CreatedBy),
 	}
 }
 
@@ -207,6 +209,7 @@ type FullBuildingResponse struct {
 	Prices      *Price      `json:"price" validate:"required,dive"`
 	Owner       string      `json:"owner" validate:"required"`
 	Locations   *Location   `json:"location" validate:"required,dive"`
+	Agent       *Agent      `json:"agent,omitempty"`
 	IsPublished bool        `json:"isPublished" `
 }
 
@@ -233,6 +236,7 @@ func NewFullBuildingResponse(building *entity.Building) *FullBuildingResponse {
 				Latitude:  building.Latitude,
 			},
 		},
+		Agent:       NewAgent(&building.CreatedBy),
 		IsPublished: *building.IsPublished,
 	}
 }
@@ -319,4 +323,22 @@ func NewDistrictsResponse(districts *entity.Districts) *DistrictsResponse {
 		districtsResponse = append(districtsResponse, *NewDistrictResponse(&district))
 	}
 	return &districtsResponse
+}
+
+type Agent struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Email   string `json:"email"`
+	Phone   string `json:"phone"`
+	Picture string `json:"picture"`
+}
+
+func NewAgent(agent *entity.User) *Agent {
+	return &Agent{
+		ID:      agent.ID,
+		Name:    agent.Detail.Name,
+		Email:   agent.Email,
+		Phone:   agent.Detail.Phone,
+		Picture: agent.Detail.Picture.Url,
+	}
 }

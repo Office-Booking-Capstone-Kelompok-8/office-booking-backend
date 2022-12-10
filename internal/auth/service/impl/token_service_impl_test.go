@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"office-booking-backend/pkg/custom"
 	"office-booking-backend/pkg/database/redis"
 	"office-booking-backend/pkg/entity"
-	"office-booking-backend/pkg/utils/ptr"
 	"testing"
 	"time"
 
@@ -54,7 +54,7 @@ func (s *TestSuiteTokenService) TestGenerateAccessToken() {
 		accessToken, tokenID, err := s.service.generateAccessToken(&entity.User{
 			ID:         "123",
 			Role:       1,
-			IsVerified: ptr.Bool(true),
+			IsVerified: custom.Bool(true),
 		}, time.Now().Add(s.service.AccessTokenExp))
 		s.Nil(err)
 		s.NotEmpty(accessToken)
@@ -75,7 +75,7 @@ func (s *TestSuiteTokenService) TestNewTokenPair() {
 	user := &entity.User{
 		ID:         "123",
 		Role:       1,
-		IsVerified: ptr.Bool(true),
+		IsVerified: custom.Bool(true),
 	}
 	s.Run("Success", func() {
 		s.mockRedis.On("Set", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)

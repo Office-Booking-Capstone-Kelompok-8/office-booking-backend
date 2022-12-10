@@ -1,4 +1,4 @@
-package ptr
+package custom
 
 func Bool(b bool) *bool {
 	return &b

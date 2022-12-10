@@ -7,12 +7,12 @@ import (
 	"office-booking-backend/internal/auth/dto"
 	mockRepo "office-booking-backend/internal/auth/repository/mock"
 	mockToken "office-booking-backend/internal/auth/service/mock"
+	"office-booking-backend/pkg/custom"
 	mockRedis "office-booking-backend/pkg/database/redis"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	mockMail "office-booking-backend/pkg/utils/mail"
 	mockPass "office-booking-backend/pkg/utils/password"
-	"office-booking-backend/pkg/utils/ptr"
 	mockRand "office-booking-backend/pkg/utils/random"
 	"testing"
 
@@ -126,7 +126,7 @@ func (s *TestSuiteAuthService) TestLoginUser() {
 		Email:      "someEmail@mail.com",
 		Password:   "somePassword",
 		Role:       1,
-		IsVerified: ptr.Bool(true),
+		IsVerified: custom.Bool(true),
 	}
 	tokenPair := &dto.TokenPair{
 		AccessToken:  "someAccessToken",
@@ -229,7 +229,7 @@ func (s *TestSuiteAuthService) TestCreateOTP() {
 		{
 			Name: "Success",
 			RepoReturn: &entity.User{
-				IsVerified: ptr.Bool(true),
+				IsVerified: custom.Bool(true),
 			},
 			RepoError:     nil,
 			GenerateError: nil,
@@ -398,7 +398,7 @@ func (s *TestSuiteAuthService) TestRefreshToken() {
 			CheckReturn: true,
 			RepoReturn: &entity.User{
 				ID:         "someId",
-				IsVerified: ptr.Bool(true),
+				IsVerified: custom.Bool(true),
 			},
 			GenerateReturn: &dto.TokenPair{
 				AccessToken:  "someAccessToken",
@@ -451,7 +451,7 @@ func (s *TestSuiteAuthService) TestRefreshToken() {
 			CheckReturn: true,
 			RepoReturn: &entity.User{
 				ID:         "someId",
-				IsVerified: ptr.Bool(true),
+				IsVerified: custom.Bool(true),
 			},
 			RepoError:      nil,
 			GenerateReturn: nil,

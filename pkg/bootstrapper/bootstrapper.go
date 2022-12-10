@@ -13,6 +13,9 @@ import (
 	reservationControllerPkg "office-booking-backend/internal/reservation/controller"
 	reservationRepositoryPkg "office-booking-backend/internal/reservation/repository/impl"
 	reservationServicePkg "office-booking-backend/internal/reservation/service/impl"
+	reviewControllerPkg "office-booking-backend/internal/review/controller"
+	reviewRepositoryPkg "office-booking-backend/internal/review/repository/impl"
+	reviewServicePkg "office-booking-backend/internal/review/service/impl"
 	userControllerPkg "office-booking-backend/internal/user/controller"
 	userRepositoryPkg "office-booking-backend/internal/user/repository/impl"
 	userServicePkg "office-booking-backend/internal/user/service/impl"
@@ -47,24 +50,27 @@ func Init(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf *viper.Vi
 	corsMiddleware := middlewares.NewCORSMiddleware(conf.GetStringSlice("server.allowedOrigins"))
 
 	reservationRepository := reservationRepositoryPkg.NewReservationRepositoryImpl(db)
+	reviewRepository := reviewRepositoryPkg.NewReviewRepositoryImpl(db)
 	userRepository := userRepositoryPkg.NewUserRepositoryImpl(db)
 	authRepository := authRepositoryPkg.NewAuthRepositoryImpl(db)
 	buildingRepository := buildingRepositoryPkg.NewBuildingRepositoryImpl(db)
 	paymentRepository := paymentRepositoryPkg.NewPaymentRepositoryImpl(db)
 
 	reservationService := reservationServicePkg.NewReservationServiceImpl(reservationRepository, buildingRepository)
+	reviewService := reviewServicePkg.NewReviewServiceImpl(reviewRepository)
 	userService := userServicePkg.NewUserServiceImpl(userRepository, reservationService, imagekitService)
 	buildingService := buildingServicePkg.NewBuildingServiceImpl(buildingRepository, reservationRepository, imagekitService, validation)
 	authService := authServicePkg.NewAuthServiceImpl(authRepository, tokenService, redisRepo, mailService, passwordService, generator, conf)
 	paymentService := paymentServicePkg.NewPaymentServiceImpl(paymentRepository)
 
 	reservationController := reservationControllerPkg.NewReservationController(reservationService, validation)
+	reviewController := reviewControllerPkg.NewReviewController(reviewService, validation)
 	userController := userControllerPkg.NewUserController(userService, validation)
 	authController := authControllerPkg.NewAuthController(authService, validation)
 	buildingController := buildingControllerPkg.NewBuildingController(buildingService, validation)
 	paymentController := paymentControllerPkg.NewPaymentController(paymentService, validation)
 
 	// init routes
-	route := routes.NewRoutes(authController, userController, buildingController, reservationController, paymentController, limiterMiddeleware, accessTokenMiddleware, adminAccessTokenMiddleware, corsMiddleware)
+	route := routes.NewRoutes(authController, userController, buildingController, reservationController, paymentController, reviewController, limiterMiddeleware, accessTokenMiddleware, adminAccessTokenMiddleware, corsMiddleware)
 	route.Init(app)
 }

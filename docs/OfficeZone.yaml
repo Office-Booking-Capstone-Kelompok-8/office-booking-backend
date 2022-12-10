@@ -3542,7 +3542,7 @@ paths:
       tags:
         - Locations
       parameters:
-        - name: cityID
+        - name: cityId
           in: query
           description: ID of the city
           required: true
@@ -3871,6 +3871,26 @@ components:
                 long:
                   type: number
                   example: 106.827153
+        agent:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+            name:
+              type: string
+              example: Admin 1
+            email:
+              type: string
+              example: oz@mail.com
+            phone:
+              type: string
+              example: 6281234567890
+            picture:
+              type: string
+              example: https://ik.imagekit.io/fortyfour/default-image.jpg
+
     BuildingDetails:
       type: object
       properties:
@@ -3955,6 +3975,25 @@ components:
                 long:
                   type: number
                   example: 106.827153
+        agent:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+            name:
+              type: string
+              example: Admin 1
+            email:
+              type: string
+              example: oz@mail.com
+            phone:
+              type: string
+              example: 6281234567890
+            picture:
+              type: string
+              example: https://ik.imagekit.io/fortyfour/default-image.jpg
         isPublished:
           type: boolean
           example: true

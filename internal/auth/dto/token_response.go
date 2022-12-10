@@ -47,6 +47,18 @@ func NewRefreshToken(user *entity.User, tokenID string, exp time.Time) *RefreshT
 
 type TokenPair struct {
 	Role         int    `json:"role"`
+	AccessExpAt  int64  `json:"accessExpAt"`
 	AccessToken  string `json:"accessToken"`
+	RefreshExpAt int64  `json:"refreshExpAt"`
 	RefreshToken string `json:"refreshToken"`
+}
+
+func NewTokenPair(accessToken string, refreshToken string, accessExpAt int64, refreshExpAt int64, role int) *TokenPair {
+	return &TokenPair{
+		Role:         role,
+		AccessExpAt:  accessExpAt,
+		AccessToken:  accessToken,
+		RefreshExpAt: refreshExpAt,
+		RefreshToken: refreshToken,
+	}
 }

@@ -93,12 +93,12 @@ func (r *ReservationRepositoryImpl) CountReservation(ctx context.Context, filter
 		query = query.Where(sq.Eq{"r.status_id": filter.StatusID})
 	}
 
-	if !filter.StartDate.IsZero() {
-		query = query.Where(sq.GtOrEq{"r.start_date": filter.StartDate})
+	if !filter.StartDate.ToTime().IsZero() {
+		query = query.Where(sq.GtOrEq{"r.start_date": filter.StartDate.ToTime()})
 	}
 
-	if !filter.EndDate.IsZero() {
-		query = query.Where(sq.LtOrEq{"r.end_date": filter.EndDate})
+	if !filter.EndDate.ToTime().IsZero() {
+		query = query.Where(sq.LtOrEq{"r.end_date": filter.EndDate.ToTime()})
 	}
 
 	rows, err := query.RunWith(db).QueryContext(ctx)
@@ -174,12 +174,12 @@ func (r *ReservationRepositoryImpl) GetReservations(ctx context.Context, filter 
 		query = query.Where(sq.Eq{"r.status_id": filter.StatusID})
 	}
 
-	if !filter.StartDate.IsZero() {
-		query = query.Where(sq.GtOrEq{"r.start_date": filter.StartDate})
+	if !filter.StartDate.ToTime().IsZero() {
+		query = query.Where(sq.GtOrEq{"r.start_date": filter.StartDate.ToTime()})
 	}
 
-	if !filter.EndDate.IsZero() {
-		query = query.Where(sq.LtOrEq{"r.end_date": filter.EndDate})
+	if !filter.EndDate.ToTime().IsZero() {
+		query = query.Where(sq.LtOrEq{"r.end_date": filter.EndDate.ToTime()})
 	}
 
 	rows, err := query.
@@ -397,7 +397,14 @@ func (r *ReservationRepositoryImpl) GetReservationCount(ctx context.Context) (*e
 func (r *ReservationRepositoryImpl) AddBuildingReservation(ctx context.Context, reservation *entity.Reservation) error {
 	err := r.db.WithContext(ctx).Create(reservation).Error
 	if err != nil {
-		return err
+		switch {
+		case strings.Contains(err.Error(), "CONSTRAINT `fk_reservations_building`"):
+			return err2.ErrBuildingNotFound
+		case strings.Contains(err.Error(), "CONSTRAINT `fk_reservations_user`"):
+			return err2.ErrInvalidUserID
+		default:
+			return err
+		}
 	}
 
 	return nil
@@ -416,9 +423,9 @@ func (r *ReservationRepositoryImpl) UpdateReservation(ctx context.Context, reser
 			return err2.ErrUserNotFound
 		case strings.Contains(res.Error.Error(), "CONSTRAINT `fk_reservations_status`"):
 			return err2.ErrInvalidStatus
+		default:
+			return res.Error
 		}
-
-		return res.Error
 	}
 
 	if res.RowsAffected == 0 {

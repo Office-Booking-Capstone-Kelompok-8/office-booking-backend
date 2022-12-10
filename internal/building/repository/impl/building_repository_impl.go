@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"office-booking-backend/internal/building/dto"
 	"office-booking-backend/internal/building/repository"
+	"office-booking-backend/pkg/custom"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
-	"office-booking-backend/pkg/utils/ptr"
 	"strings"
 
 	"gorm.io/gorm"
@@ -45,7 +45,7 @@ func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, filter *dt
 		query = query.Where("`District`.`id` = ?", filter.DistrictID)
 	}
 
-	if !filter.StartDate.IsZero() && !filter.EndDate.IsZero() {
+	if !filter.StartDate.ToTime().IsZero() && !filter.EndDate.IsZero() {
 		query = query.Where("NOT EXISTS (SELECT * FROM `reservations` WHERE `reservations`.`building_id` = `buildings`.`id` AND `reservations`.`start_date` <= ? AND `reservations`.`end_date` >= ?)", filter.EndDate, filter.StartDate)
 	}
 
@@ -469,7 +469,7 @@ func changeNextPictureToIndexZero(ctx context.Context, tx *gorm.DB, buildingID s
 		return tx.WithContext(ctx).
 			Model(&entity.Building{}).
 			Where("id = ?", buildingID).
-			Updates(entity.Building{IsPublished: ptr.Bool(true)}).Error
+			Updates(entity.Building{IsPublished: custom.Bool(true)}).Error
 	} else {
 		// change next picture index to 0
 		return tx.WithContext(ctx).

@@ -8,10 +8,10 @@ import (
 	"office-booking-backend/internal/user/dto"
 	mockRepo "office-booking-backend/internal/user/repository/mock"
 	"office-booking-backend/internal/user/service"
+	"office-booking-backend/pkg/custom"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	mockImageKitSrv "office-booking-backend/pkg/utils/imagekit"
-	"office-booking-backend/pkg/utils/ptr"
 	"testing"
 )
 
@@ -42,7 +42,7 @@ func TestUserService(t *testing.T) {
 }
 func (s *TestSuiteUserService) TestGetFullUserByID_Success() {
 	s.mockRepo.On("GetFullUserByID", mock.Anything, mock.Anything).Return(&entity.User{
-		IsVerified: ptr.Bool(true),
+		IsVerified: custom.Bool(true),
 	}, nil)
 	_, err := s.userService.GetFullUserByID(context.Background(), "")
 	s.NoError(err)
@@ -83,7 +83,7 @@ func (s *TestSuiteUserService) TestUpdateUserByID() {
 				Email:      "123@123.com",
 				Password:   "asdasd",
 				Role:       1,
-				IsVerified: ptr.Bool(true),
+				IsVerified: custom.Bool(true),
 			},
 			UserRepoErr:   nil,
 			DetailRepoErr: nil,
@@ -96,7 +96,7 @@ func (s *TestSuiteUserService) TestUpdateUserByID() {
 			},
 			UserEntitty: &entity.User{
 				Email:      "123@mail.com",
-				IsVerified: ptr.Bool(false),
+				IsVerified: custom.Bool(false),
 			},
 			UserRepoErr:   nil,
 			DetailRepoErr: nil,

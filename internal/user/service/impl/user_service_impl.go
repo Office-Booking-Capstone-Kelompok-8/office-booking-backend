@@ -2,19 +2,18 @@ package impl
 
 import (
 	"context"
+	"github.com/google/uuid"
+	"golang.org/x/sync/errgroup"
 	"io"
 	"log"
 	service2 "office-booking-backend/internal/reservation/service"
 	"office-booking-backend/internal/user/dto"
 	"office-booking-backend/internal/user/repository"
 	"office-booking-backend/internal/user/service"
+	"office-booking-backend/pkg/custom"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/utils/imagekit"
-	"office-booking-backend/pkg/utils/ptr"
-
-	"github.com/google/uuid"
-	"golang.org/x/sync/errgroup"
 )
 
 type UserServiceImpl struct {
@@ -70,7 +69,7 @@ func (u *UserServiceImpl) UpdateUserByID(ctx context.Context, id string, user *d
 	userEntity.Detail.UserID = id
 
 	if userEntity.Email != "" {
-		userEntity.IsVerified = ptr.Bool(false)
+		userEntity.IsVerified = custom.Bool(false)
 	}
 
 	errGroup, c := errgroup.WithContext(ctx)

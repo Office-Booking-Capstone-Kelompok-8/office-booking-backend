@@ -164,6 +164,8 @@ func (r *ReservationController) CreateReservation(c *fiber.Ctx) error {
 			return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidBuildingID.Error())
 		case err2.ErrBuildingNotAvailable:
 			return fiber.NewError(fiber.StatusConflict, err.Error())
+		case err2.ErrInvalidUserID:
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		default:
 			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 		}

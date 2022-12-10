@@ -194,6 +194,7 @@ func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, filter *dt
 func (b *BuildingRepositoryImpl) GetBuildingDetailByID(ctx context.Context, id string, isPublishedOnly bool) (*entity.Building, error) {
 	building := &entity.Building{}
 
+	// TODO: Optimize this query (maybe use raw query instead of gorm)
 	query := b.db.WithContext(ctx).
 		Preload("Pictures", func(db *gorm.DB) *gorm.DB {
 			return db.Order("`pictures`.`index` ASC")
@@ -201,6 +202,7 @@ func (b *BuildingRepositoryImpl) GetBuildingDetailByID(ctx context.Context, id s
 		Preload("Facilities", func(db *gorm.DB) *gorm.DB {
 			return db.Joins("Category")
 		}).
+		Preload("CreatedBy.Detail.Picture").
 		Joins("District").
 		Joins("City").
 		Model(&entity.Building{}).

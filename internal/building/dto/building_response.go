@@ -164,6 +164,7 @@ type FullPublishedBuildingResponse struct {
 	Description string      `json:"description"`
 	Facilities  *Facilities `json:"facilities"`
 	Capacity    int         `json:"capacity"`
+	Size        int         `json:"size"`
 	Prices      *Price      `json:"price"`
 	Owner       string      `json:"owner"`
 	Locations   *Location   `json:"location"`
@@ -177,6 +178,7 @@ func NewFullPublishedBuildingResponse(building *entity.Building) *FullPublishedB
 		Description: building.Description,
 		Facilities:  NewFacilities(&building.Facilities),
 		Capacity:    building.Capacity,
+		Size:        building.Size,
 		Prices: &Price{
 			AnnualPrice:  building.AnnualPrice,
 			MonthlyPrice: building.MonthlyPrice,

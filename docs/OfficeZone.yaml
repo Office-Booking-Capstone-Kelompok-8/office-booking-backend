@@ -3502,7 +3502,7 @@ paths:
       tags:
         - Locations
       parameters:
-        - name: cityID
+        - name: cityId
           in: query
           description: ID of the city
           required: true

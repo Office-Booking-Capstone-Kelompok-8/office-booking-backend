@@ -1,7 +1,6 @@
 package custom
 
 import (
-	"fmt"
 	"reflect"
 	"time"
 
@@ -32,7 +31,6 @@ func (d *Date) ToTime() time.Time {
 }
 
 var timeConverter = func(value string) reflect.Value {
-	fmt.Println("timeConverter", value)
 	if v, err := time.Parse("2006-01-02", value); err == nil {
 		return reflect.ValueOf(v)
 	}

@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"fmt"
 	"office-booking-backend/internal/reservation/dto"
 	"office-booking-backend/internal/reservation/repository"
 	"office-booking-backend/pkg/entity"
@@ -182,9 +183,31 @@ func (r *ReservationRepositoryImpl) GetReservations(ctx context.Context, filter 
 		query = query.Where(sq.LtOrEq{"r.end_date": filter.EndDate.ToTime()})
 	}
 
+	if !filter.CreatedStart.ToTime().IsZero() && !filter.CreatedEnd.ToTime().IsZero() {
+		query = query.Where("DATE(r.created_at) BETWEEN DATE(?) AND DATE(?)", filter.CreatedStart.ToTime(), filter.CreatedEnd.ToTime())
+	}
+
+	switch filter.SortBy {
+	case "":
+	case "created_at":
+		fmt.Println("Not this one")
+		filter.SortBy = "r.created_at"
+	case "start_date":
+		filter.SortBy = "r.start_date"
+	case "end_date":
+		filter.SortBy = "r.end_date"
+	case "building_name":
+		filter.SortBy = "b.name"
+	case "user_name":
+		filter.SortBy = "ud.name"
+	default:
+		filter.SortBy = ""
+	}
+
 	rows, err := query.
 		Offset(uint64(filter.Offset)).
 		Limit(uint64(filter.Limit)).
+		OrderBy(fmt.Sprintf("%s %s", filter.SortBy, filter.SortOrder)).
 		RunWith(db).QueryContext(ctx)
 	if err != nil {
 		return nil, err

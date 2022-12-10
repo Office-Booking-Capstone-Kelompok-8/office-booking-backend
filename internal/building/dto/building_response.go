@@ -89,7 +89,7 @@ func NewBriefBuildingsResponse(buildings *entity.Buildings) *BriefBuildingsRespo
 type Facility struct {
 	ID          int    `json:"id"`
 	Name        string `json:"name" validate:"required,min=3,max=100"`
-	Icon        string `json:"icon" `
+	Icon        string `json:"icon"`
 	IconName    string `json:"iconName"`
 	Description string `json:"description" validate:"omitempty,min=3,max=100"`
 }
@@ -202,8 +202,8 @@ type FullBuildingResponse struct {
 	Pictures    *Pictures   `json:"pictures" validate:"required,min=1,dive"`
 	Description string      `json:"description" validate:"required,min=3,max=10000"`
 	Facilities  *Facilities `json:"facilities" validate:"required,min=1,dive"`
-	Capacity    int         `json:"capacity" validate:"required,min=1,max=100"`
-	Size        int         `json:"size" validate:"required,min=1,max=10000"`
+	Capacity    int         `json:"capacity" validate:"required,min=1"`
+	Size        int         `json:"size" validate:"required,gte=1"`
 	Prices      *Price      `json:"price" validate:"required,dive"`
 	Owner       string      `json:"owner" validate:"required"`
 	Locations   *Location   `json:"location" validate:"required,dive"`

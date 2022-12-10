@@ -846,6 +846,8 @@ paths:
                   example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
                 companyName:
                   type: string
+                  minLength: 3
+                  maxLength: 255
                   example: Alterra
                 startDate:
                   type: string
@@ -855,6 +857,7 @@ paths:
                 duration:
                   type: integer
                   description: Duration of the reservation in months
+                  minimum: 1
                   example: 1
         required: true
       responses:
@@ -1480,6 +1483,8 @@ paths:
               properties:
                 name:
                   type: string
+                  minLength: 3
+                  maxLength: 100
                   example: Jakarta Convention Center
                 facilities:
                   type: array
@@ -1493,12 +1498,16 @@ paths:
                         example: 5
                       name:
                         type: string
+                        minLength: 3
+                        maxLength: 100
                         example: Meeting Room
                       iconId:
                         type: integer
                         example: 5
                       description:
                         type: string
+                        minLength: 3
+                        maxLength: 1000
                         example: Meeting room with 10 seats
                 pictures:
                   type: array
@@ -1509,18 +1518,29 @@ paths:
                     properties:
                       pictureId:
                         type: string
+                        description: ID of the picture to be updated that can be obtained from the response of upload picture endpoint or get building detail endpoint
                         example: 6asjfakjdshkasd
                       index:
                         type: integer
+                        minimum: 0
+                        maximum: 9
                         example: 5
                       alt:
                         type: string
                         example: Jakarta Convention Center
                 description:
                   type: string
+                  description: Description of the building
+                  minLength: 3
+                  maxLength: 1000
                   example: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
                 capacity:
                   type: integer
+                  minimum: 1
+                  example: 1000
+                size:
+                  type: integer
+                  minimum: 1
                   example: 1000
                 price:
                   type: object
@@ -1544,6 +1564,7 @@ paths:
                       example: 1
                     address:
                       type: string
+                      minLength: 3
                       example: Jl. MH Thamrin No. 1, RT.1/RW.2, Gondangdia, Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10340
                     geo:
                       type: object
@@ -1557,7 +1578,7 @@ paths:
                           example: 106.827153
                 isPublished:
                   type: boolean
-                  description: Set to true to publish the building, only published building will be shown in the app. And to publish the building, the building must have at least 1 picture, 1 facility and all required fields must be filled.
+                  description: Set to true to publish the building, only published building will be shown in the app. And to publish the building, the building must have at least 1 picture and all required fields must be filled, e.g. name, size, price, etc.
                   example: true
         required: true
       responses:
@@ -1699,6 +1720,8 @@ paths:
                   description: Picture of the building
                 index:
                   type: integer
+                  minimum: 0
+                  maximum: 9
                   description: Index of the picture
                 alt:
                   type: string
@@ -1778,12 +1801,16 @@ paths:
                 properties:
                   name:
                     type: string
+                    minLength: 3
+                    maxLength: 100
                     example: Meeting Room
                   iconId:
                     type: integer
                     example: 5
                   description:
                     type: string
+                    minLength: 3
+                    maxLength: 1000
                     example: Meeting room with 10 seats 
         required: true
       responses:
@@ -1962,6 +1989,7 @@ paths:
           schema:
             type: string
             format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
         - name: userId
           in: query
           description: ID of the user
@@ -1969,12 +1997,14 @@ paths:
           schema:
             type: string
             format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
         - name: userName
           in: query
           description: Name of the user
           required: false
           schema:
             type: string
+            example: John Doe
         - name: startDate
           in: query
           description: Start date of the reservation
@@ -1982,6 +2012,7 @@ paths:
           schema:
             type: string
             format: date
+            example: 2020-12-29
         - name: endDate
           in: query
           description: End date of the reservation
@@ -1989,6 +2020,7 @@ paths:
           schema:
             type: string
             format: date
+            example: 2020-12-29
         - name: createdStart
           in: query
           description: Start date of the reservation creation, with format YYYY-MM-DD
@@ -2083,6 +2115,8 @@ paths:
                   example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
                 companyName:
                   type: string
+                  minLength: 3
+                  maxLength: 255
                   example: Alterra
                 startDate:
                   type: string
@@ -2092,6 +2126,7 @@ paths:
                 duration:
                   type: integer
                   description: Duration of the reservation in months
+                  minimum: 1
                   example: 1
         required: true
       responses:
@@ -2283,6 +2318,8 @@ paths:
                   example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
                 companyName:
                   type: string
+                  minLength: 3
+                  maxLength: 255
                   example: Alterra
                 startDate:
                   type: string
@@ -2292,6 +2329,7 @@ paths:
                 duration:
                   type: integer
                   description: Duration of the reservation in months
+                  minimum: 1
                   example: 1
                 statusId:
                   type: string
@@ -2313,7 +2351,9 @@ paths:
                     * `6` - reservation is finished
                 message:
                   type: string
-                  example: Your reservation has been rejected
+                  minLength: 3
+                  maxLength: 255
+                  example: Your reservation has been rejected because of the following reason...
         required: true
       responses:
         200:

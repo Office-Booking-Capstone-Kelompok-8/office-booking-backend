@@ -34,8 +34,8 @@ type UpdateBuildingRequest struct {
 	Description string                  `json:"description" validate:"omitempty,min=3,max=10000"`
 	Facilities  UpdateFacilitiesRequest `json:"facilities" validate:"omitempty,dive"`
 	Pictures    PicturesRequest         `json:"pictures" validate:"omitempty,dive"`
-	Capacity    int                     `json:"capacity" validate:"omitempty,gte=1,lte=1000"`
-	Size        int                     `json:"size" validate:"omitempty,gte=1,lte=1000"`
+	Capacity    int                     `json:"capacity" validate:"omitempty,gte=1"`
+	Size        int                     `json:"size" validate:"omitempty,gte=1"`
 	Prices      PriceRequest            `json:"price" validate:"omitempty,dive"`
 	Owner       string                  `json:"owner" validate:"omitempty"`
 	Locations   LocationRequest         `json:"location" validate:"omitempty,dive"`
@@ -114,12 +114,12 @@ func (f *UpdateFacilitiesRequest) ToEntity(buildingID string) *entity.Facilities
 }
 
 type PriceRequest struct {
-	AnnualPrice  int `json:"annual" validate:"omitempty,gte=0"`
-	MonthlyPrice int `json:"monthly" validate:"omitempty,gte=0"`
+	AnnualPrice  int `json:"annual" validate:"omitempty,gte=1"`
+	MonthlyPrice int `json:"monthly" validate:"omitempty,gte=1"`
 }
 
 type LocationRequest struct {
-	Address    string `json:"address" validate:"omitempty,min=3,max=100"`
+	Address    string `json:"address" validate:"omitempty,min=3"`
 	DistrictID int    `json:"districtId" validate:"omitempty"`
 	CityID     int    `json:"cityId" validate:"omitempty"`
 	Geo        Geo    `json:"geo" validate:"omitempty,dive"`

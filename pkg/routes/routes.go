@@ -117,6 +117,10 @@ func (r *Routes) Init(app *fiber.App) {
 	aReservation.Put("/:reservationID", r.adminAccessTokenMiddleware, r.reservation.UpdateReservation)
 	aReservation.Delete("/:reservationID", r.adminAccessTokenMiddleware, r.reservation.DeleteReservation)
 
+	// Admin.Review routes
+	aReview := admin.Group("/reviews")
+	aReview.Delete("/:reservationID", r.adminAccessTokenMiddleware, r.review.DeleteReviewByID)
+
 	// Admin.Payment routes
 	aPayment := admin.Group("/payments")
 	aPayment.Post("/", r.adminAccessTokenMiddleware, r.payment.CreatePayment)

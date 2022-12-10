@@ -28,3 +28,13 @@ func (rv *ReviewServiceImpl) CreateReservationReview(ctx context.Context, review
 
 	return nil
 }
+
+func (rv *ReviewServiceImpl) DeleteReviewByID(ctx context.Context, reservationID string) error {
+	err := rv.repo.DeleteReviewByID(ctx, reservationID)
+	if err != nil {
+		log.Println("error while deleting review by reservation id: ", err)
+		return err
+	}
+
+	return nil
+}

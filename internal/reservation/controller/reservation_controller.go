@@ -288,6 +288,6 @@ func (r *ReservationController) DeleteReservation(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
-		Message: "Reservation deleted successfully",
+		Message: "Review deleted successfully",
 	})
 }

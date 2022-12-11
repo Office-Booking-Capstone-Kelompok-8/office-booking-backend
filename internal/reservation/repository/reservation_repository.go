@@ -26,4 +26,5 @@ type ReservationRepository interface {
 	UpdateReservation(ctx context.Context, reservation *entity.Reservation) error
 	DeleteReservationByID(ctx context.Context, reservationID string) error
 	DeleteAdminReservationReviews(ctx context.Context, reservationID string) error
+	DeleteUserReservationReviews(ctx context.Context, reservationID string) error
 }

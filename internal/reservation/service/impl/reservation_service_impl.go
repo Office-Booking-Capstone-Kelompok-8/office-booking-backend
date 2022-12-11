@@ -393,3 +393,14 @@ func (r *ReservationServiceImpl) DeleteAdminReservationReviews(ctx context.Conte
 
 	return nil
 }
+
+// delete review for user
+func (r *ReservationServiceImpl) DeleteUserReservationReviews(ctx context.Context, reservationID string) error {
+	err := r.repo.DeleteUserReservationReviews(ctx, reservationID)
+	if err != nil {
+		log.Println("error while deleting review by reservationID: ", err)
+		return err
+	}
+
+	return nil
+}

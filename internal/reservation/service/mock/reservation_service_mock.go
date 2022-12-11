@@ -86,3 +86,8 @@ func (r *ReservationServiceMock) DeleteAdminReservationReviews(ctx context.Conte
 	args := r.Called(ctx, reservationID)
 	return args.Error(0)
 }
+
+func (r *ReservationServiceMock) DeleteUserReservationReviews(ctx context.Context, reservationID string) error {
+	args := r.Called(ctx, reservationID)
+	return args.Error(0)
+}

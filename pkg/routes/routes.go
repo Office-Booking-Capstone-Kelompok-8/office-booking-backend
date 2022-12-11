@@ -76,6 +76,7 @@ func (r *Routes) Init(app *fiber.App) {
 	reservation.Delete("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.CancelReservation)
 	reservation.Get("/:reservationID/reviews", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.GetReservationReviews)
 	reservation.Post("/:reservationID/reviews", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.CreateReservationReviews)
+	reservation.Delete("/:reservationID/reviews", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.DeleteUserReservationReviews)
 
 	// Admin routes
 	admin := v1.Group("/admin")

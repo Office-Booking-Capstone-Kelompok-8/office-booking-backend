@@ -467,3 +467,20 @@ func (r *ReservationRepositoryImpl) AddReservationReviews(ctx context.Context, r
 
 	return nil
 }
+
+// delete review for admin
+func (r *ReservationRepositoryImpl) DeleteAdminReservationReviews(ctx context.Context, reservationID string) error {
+	res := r.db.WithContext(ctx).
+		Model(&entity.Review{}).
+		Where("id = ?", reservationID).
+		Delete(&entity.Review{})
+	if res.Error != nil {
+		return res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return err2.ErrReservationNotFound
+	}
+
+	return nil
+}

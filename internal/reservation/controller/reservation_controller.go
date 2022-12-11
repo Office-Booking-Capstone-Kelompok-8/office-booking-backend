@@ -333,3 +333,21 @@ func (r *ReservationController) CreateReservationReviews(c *fiber.Ctx) error {
 		Message: "Review created successfully",
 	})
 }
+
+func (r *ReservationController) DeleteAdminReservationReviews(c *fiber.Ctx) error {
+	reservationID := c.Params("reservationID")
+
+	err := r.service.DeleteAdminReservationReviews(c.Context(), reservationID)
+	if err != nil {
+		switch err {
+		case err2.ErrReservationNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "Review deleted successfully",
+	})
+}

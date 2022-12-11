@@ -133,6 +133,19 @@ func (b *BuildingServiceImpl) GetDistrictsByCityID(ctx context.Context, cityID i
 func (b *BuildingServiceImpl) UpdateBuilding(ctx context.Context, building *dto.UpdateBuildingRequest, buildingID string) error {
 	buildingEntity := building.ToEntity(buildingID)
 
+	if buildingEntity.DistrictID != 0 || buildingEntity.CityID != 0 {
+		//	check if district in the city
+		district, err := b.repo.GetDistrictByID(ctx, buildingEntity.DistrictID)
+		if err != nil {
+			log.Println("error when getting district by id: ", err)
+			return err
+		}
+
+		if district.CityID != buildingEntity.CityID {
+			return err2.ErrDistrictNotInCity
+		}
+	}
+
 	err := b.repo.UpdateBuildingByID(ctx, buildingEntity)
 	if err != nil {
 		log.Println("error when creating building: ", err)

@@ -1584,9 +1584,11 @@ paths:
                   properties:
                     districtId:
                       type: integer
+                      description: ID of the district, can be obtained from the response of get districts endpoint. Required if cityId is present.
                       example: 1
                     cityId:
                       type: integer
+                      description: ID of the city, can be obtained from the response of get cities endpoint. Required if districtId is present.
                       example: 1
                     address:
                       type: string

@@ -260,6 +260,19 @@ func (b *BuildingRepositoryImpl) GetDistrictsByCityID(ctx context.Context, cityI
 	return districts, nil
 }
 
+func (b *BuildingRepositoryImpl) GetDistrictByID(ctx context.Context, districtID int) (*entity.District, error) {
+	district := new(entity.District)
+	err := b.db.WithContext(ctx).
+		Model(entity.District{}).
+		Where("id = ?", districtID).
+		First(district).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return district, nil
+}
+
 func (b *BuildingRepositoryImpl) CreateBuilding(ctx context.Context, building *entity.Building) error {
 	err := b.db.WithContext(ctx).
 		Model(&entity.Building{}).

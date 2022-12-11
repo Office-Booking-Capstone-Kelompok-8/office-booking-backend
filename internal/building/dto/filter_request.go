@@ -18,7 +18,7 @@ type SearchBuildingQueryParam struct {
 	Latitude        float64     `query:"latitude" validate:"required_if=SortBy pinpoint"`
 	Longitude       float64     `query:"longitude" validate:"required_if=SortBy pinpoint"`
 	StartDate       custom.Date `query:"-" validate:"required_with=Duration"`
-	Duration        int         `query:"duration" validate:"required_with=StartDate"`
+	Duration        int         `query:"duration" validate:"omitempty,required_with=StartDate,gte=1"`
 	EndDate         time.Time   `query:"-"`
 	SortBy          string      `query:"sortBy" validate:"omitempty,oneof=annual_price monthly_price capacity pinpoint"`
 	Order           string      `query:"order" validate:"omitempty,oneof=asc desc"`

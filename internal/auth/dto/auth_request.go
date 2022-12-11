@@ -5,8 +5,8 @@ import "office-booking-backend/pkg/entity"
 type SignupRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=8"`
-	Name     string `json:"name" validate:"required"`
-	Phone    string `json:"phone" validate:"required"`
+	Name     string `json:"name" validate:"required,min=3"`
+	Phone    string `json:"phone" validate:"required,number"`
 }
 
 func (s *SignupRequest) ToEntity() *entity.User {

@@ -61,7 +61,8 @@ paths:
                   example: password
                 phone:
                   type: string
-                  example: +1 234 567 890
+                  description: Phone number, numbers only
+                  example: 6212342342
       responses:
         201:
           description: Successfully registering a new user
@@ -116,6 +117,7 @@ paths:
                 password:
                   type: string
                   format: password
+                  minLength: 8
                   example: password
         required: true
       responses:
@@ -213,6 +215,7 @@ paths:
               properties:
                 refreshToken:
                   type: string
+                  format: jwt
                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzA0NTgwNDksImp0aSI6IjBiNGFmZmY5LTg0NzAtNDkxNi04NDEyLTllNjY3M2RhMmU0NyIsInVpZCI6IjY4ZjA2M2M0LTBjZGItNDJlNi1hNjFiLTg4NTg3MzkwMmJmZCIsImNhdCI6InJlZnJlc2gifQ.X0a_rKDJzQVSbgtN2BahhhVgJThemckCuImo6Axp0vg
         required: true
       responses:
@@ -229,10 +232,21 @@ paths:
                   data:
                     type: object
                     properties:
-                      access_token:
+                      role:
+                        type: integer
+                        example: 1
+                      accessExpAt:
+                        type: integer
+                        description: Access token expiration at time in unix timestamp
+                        example: 1670702055
+                      accessToken:
                         type: string
                         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiI3MTg1OGNmMS1lNDhkLTQzYmQtOGU0YS1jZDNkNGE1YjIwMDMiLCJyb2xlIjoxLCJleHAiOjB9.G0PITHn6gz-fu6kqrZYwBc_bAca1YCZvMNGFvKHDytk
-                      refresh_token:
+                      refreshExpAt:
+                        type: integer
+                        description: Refresh token expiration at time in unix timestamp
+                        example: 1670702055
+                      refreshToken:
                         type: string
                         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiI3MTg1OGNmMS1lNDhkLTQzYmQtOGU0YS1jZDNkNGE1YjIwMDMiLCJyb2xlIjoxLCJleHAiOjB9.G0PITHn6gz-fu6kqrZYwBc_bAca1YCZvMNGFvKHDytk
         401:
@@ -482,6 +496,7 @@ paths:
                   example: 12345adaasdadd6
                 password:
                   type: string
+                  minLength: 8
                   example: 123456789
         required: true
       responses:
@@ -593,7 +608,8 @@ paths:
                   example: oz@email.com
                 phone:
                   type: string
-                  example: +1 234 567 890
+                  description: phone number, numbers only
+                  example: 1234567890
         required: true
       responses:
         200:
@@ -691,10 +707,12 @@ paths:
                 oldPassword:
                   type: string
                   format: password
+                  minLength: 8
                   example: password
                 newPassword:
                   type: string
                   format: password
+                  minLength: 8
                   example: password
         required: true
       responses:
@@ -921,7 +939,7 @@ paths:
           required: true
           schema:
             type: string
-            format: uuids
+            format: uuid
             example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
       responses:
         200:
@@ -1277,6 +1295,7 @@ paths:
           required: false
           schema:
             type: string
+            minLength: 3
             example: Jakarta Convention Center
         - name: cityId
           in: query
@@ -1298,6 +1317,7 @@ paths:
           required: false
           schema:
             type: integer
+            minimum: 0
             example: 100000000
         - name: annualPriceMax
           in: query
@@ -1305,6 +1325,7 @@ paths:
           required: false
           schema:
             type: integer
+            minimum: 0
             example: 100000000
         - name: monthlyPriceMin
           in: query
@@ -1312,6 +1333,7 @@ paths:
           required: false
           schema:
             type: integer
+            minimum: 0
             example: 10000000
         - name: monthlyPriceMax
           in: query
@@ -1319,6 +1341,7 @@ paths:
           required: false
           schema:
             type: integer
+            minimum: 0
             example: 10000000
         - name: capacityMin
           in: query
@@ -1326,6 +1349,7 @@ paths:
           required: false
           schema:
             type: integer
+            minimum: 0
             example: 100
         - name: capacityMax
           in: query
@@ -1333,6 +1357,7 @@ paths:
           required: false
           schema:
             type: integer
+            minimum: 0
             example: 100
         - name: startDate
           in: query
@@ -1348,6 +1373,7 @@ paths:
           required: false
           schema:
             type: integer
+            minimum: 1
             example: 1
         - name: sortBy
           in: query
@@ -1375,7 +1401,7 @@ paths:
           required: false
           schema:
             type: number
-            format: floa
+            format: float
         - name: longitude
           in: query
           description: Longitude of the location to filter buildings by distance, must present if sort by pinpoint
@@ -2004,6 +2030,8 @@ paths:
           required: false
           schema:
             type: string
+            minLength: 3
+            maxLength: 50
             example: John Doe
         - name: startDate
           in: query
@@ -2192,7 +2220,7 @@ paths:
           required: true
           schema:
             type: string
-            format: uuids
+            format: uuid
             example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
       responses:
         200:
@@ -2301,6 +2329,7 @@ paths:
           schema:
             type: string
             format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
       requestBody:
         content:
           application/json:
@@ -2418,6 +2447,7 @@ paths:
           schema:
             type: string
             format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
       responses:
         200:
           description: Successfully deleted reservation
@@ -2565,28 +2595,20 @@ paths:
           required: true
           schema:
             type: integer
-            example: 1
-        - name: page
-          in: query
-          description: Page number
-          required: false
-          schema:
-            type: integer
-            example: 1
-        - name: limit
-          in: query
-          description: Number of users per page
-          required: false
-          schema:
-            type: integer
-            example: 10
+            enum:
+              - 1
+              - 2
         - name: q
           in: query
           description: Search user by name 
           required: false
           schema:
             type: string
+            minLength: 3
+            maxLength: 50
             example: John
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/page'
       responses:
         200:
           description: Successfully get all users
@@ -2627,6 +2649,7 @@ paths:
               properties:
                 name:
                   type: string
+                  minLength: 3
                   example: John Doe
                 email:
                   type: string
@@ -2634,11 +2657,13 @@ paths:
                   example: oz@mail.com
                 password:
                   type: string
+                  minLength: 8
                   format: password
                   example: password
                 phone:
                   type: string
-                  example: +1 234 567 890
+                  description: phone number, number only
+                  example: 08123456789
       responses:
         201:
           description: Successfully registering a new user
@@ -2692,6 +2717,7 @@ paths:
               properties:
                 name:
                   type: string
+                  minLength: 3
                   example: John Doe
                 email:
                   type: string
@@ -2699,11 +2725,13 @@ paths:
                   example: oz@mail.com
                 password:
                   type: string
+                  minLength: 8
                   format: password
                   example: password
                 phone:
                   type: string
-                  example: +1 234 567 890
+                  description: phone number, number only
+                  example: 08123456789
       responses:
         201:
           description: Successfully registering a new admin
@@ -2801,6 +2829,7 @@ paths:
               properties:
                 name:
                   type: string
+                  minLength: 3
                   example: John Doe
                 email:
                   type: string
@@ -2808,6 +2837,7 @@ paths:
                   example: oz@mail.com
                 phone: 
                   type: string
+                  description: phone number, number only
                   example: 0123456789
         required: true
       responses:

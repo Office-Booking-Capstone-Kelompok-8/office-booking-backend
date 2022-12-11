@@ -443,3 +443,17 @@ func (r *ReservationRepositoryImpl) DeleteReservationByID(ctx context.Context, r
 
 	return nil
 }
+
+// get review for reservation
+func (r *ReservationRepositoryImpl) GetReservationReviews(ctx context.Context) (*entity.Reviews, error) {
+	review := new(entity.Reviews)
+	err := r.db.WithContext(ctx).
+		Model(&entity.Review{}).
+		Joins("Reservation").
+		Find(review).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return review, nil
+}

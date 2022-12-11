@@ -359,3 +359,14 @@ func (r *ReservationServiceImpl) DeleteReservationByID(ctx context.Context, rese
 
 	return nil
 }
+
+// get review for reservation
+func (r *ReservationServiceImpl) GetReservationReviews(ctx context.Context) (*dto.BriefReviewsResponse, error) {
+	reviews, err := r.repo.GetReservationReviews(ctx)
+	if err != nil {
+		log.Println("error when getting all banks: ", err)
+		return nil, err
+	}
+
+	return dto.NewBriefReviewsResponse(reviews), nil
+}

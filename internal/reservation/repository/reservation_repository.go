@@ -20,6 +20,7 @@ type ReservationRepository interface {
 	GetUserReservationByID(ctx context.Context, reservationID string, userID string) (*entity.Reservation, error)
 	GetReservationTotal(ctx context.Context) (*entity.StatusesStat, error)
 	GetReservationCount(ctx context.Context) (*entity.TimeframeStat, error)
+	GetReservationReviews(ctx context.Context) (*entity.Reviews, error)
 	AddBuildingReservation(ctx context.Context, reservation *entity.Reservation) error
 	UpdateReservation(ctx context.Context, reservation *entity.Reservation) error
 	DeleteReservationByID(ctx context.Context, reservationID string) error

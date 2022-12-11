@@ -291,3 +291,15 @@ func (r *ReservationController) DeleteReservation(c *fiber.Ctx) error {
 		Message: "Review deleted successfully",
 	})
 }
+
+func (r *ReservationController) GetReservationReviews(c *fiber.Ctx) error {
+	reviews, err := r.service.GetReservationReviews(c.Context())
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "Reviews retrieved successfully",
+		Data:    reviews,
+	})
+}

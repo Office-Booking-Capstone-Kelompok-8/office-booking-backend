@@ -5,7 +5,6 @@ import (
 	bc "office-booking-backend/internal/building/controller"
 	pr "office-booking-backend/internal/payment/controller"
 	rc "office-booking-backend/internal/reservation/controller"
-	rv "office-booking-backend/internal/review/controller"
 	uc "office-booking-backend/internal/user/controller"
 	"office-booking-backend/pkg/middlewares"
 
@@ -18,21 +17,19 @@ type Routes struct {
 	building                   *bc.BuildingController
 	reservation                *rc.ReservationController
 	payment                    *pr.PaymentController
-	review                     *rv.ReviewController
 	limiter                    *middlewares.Limiter
 	cors                       fiber.Handler
 	accessTokenMiddleware      fiber.Handler
 	adminAccessTokenMiddleware fiber.Handler
 }
 
-func NewRoutes(authController *ac.AuthController, userControllerPkg *uc.UserController, buildingController *bc.BuildingController, reservationController *rc.ReservationController, paymentController *pr.PaymentController, reviewController *rv.ReviewController, limiter *middlewares.Limiter, accessTokenMiddleware fiber.Handler, adminAccessTokenMiddleware fiber.Handler, cors fiber.Handler) *Routes {
+func NewRoutes(authController *ac.AuthController, userControllerPkg *uc.UserController, buildingController *bc.BuildingController, reservationController *rc.ReservationController, paymentController *pr.PaymentController, limiter *middlewares.Limiter, accessTokenMiddleware fiber.Handler, adminAccessTokenMiddleware fiber.Handler, cors fiber.Handler) *Routes {
 	return &Routes{
 		auth:                       authController,
 		user:                       userControllerPkg,
 		building:                   buildingController,
 		reservation:                reservationController,
 		payment:                    paymentController,
-		review:                     reviewController,
 		limiter:                    limiter,
 		cors:                       cors,
 		accessTokenMiddleware:      accessTokenMiddleware,
@@ -77,11 +74,7 @@ func (r *Routes) Init(app *fiber.App) {
 	reservation.Post("/", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.CreateReservation)
 	reservation.Get("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.GetUserReservationDetailByID)
 	reservation.Delete("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.CancelReservation)
-
-	// Enduser.Review routes
-	review := v1.Group("/reviews")
-	review.Post("/", r.accessTokenMiddleware, r.review.CreateReservationReview)
-	review.Delete("/:reservationID", r.accessTokenMiddleware, r.review.DeleteReviewByID)
+	reservation.Get("/:reservationID/reviews", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.GetReservationReviews)
 
 	// Admin routes
 	admin := v1.Group("/admin")
@@ -117,10 +110,6 @@ func (r *Routes) Init(app *fiber.App) {
 	aReservation.Get("/:reservationID", r.adminAccessTokenMiddleware, r.reservation.GetReservationDetailByID)
 	aReservation.Put("/:reservationID", r.adminAccessTokenMiddleware, r.reservation.UpdateReservation)
 	aReservation.Delete("/:reservationID", r.adminAccessTokenMiddleware, r.reservation.DeleteReservation)
-
-	// Admin.Review routes
-	aReview := admin.Group("/reviews")
-	aReview.Delete("/:reservationID", r.adminAccessTokenMiddleware, r.review.DeleteReviewByID)
 
 	// Admin.Payment routes
 	aPayment := admin.Group("/payments")

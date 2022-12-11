@@ -81,6 +81,7 @@ func (r *Routes) Init(app *fiber.App) {
 	// Enduser.Review routes
 	review := v1.Group("/reviews")
 	review.Post("/", r.accessTokenMiddleware, r.review.CreateReservationReview)
+	review.Delete("/:reservationID", r.accessTokenMiddleware, r.review.DeleteReviewByID)
 
 	// Admin routes
 	admin := v1.Group("/admin")

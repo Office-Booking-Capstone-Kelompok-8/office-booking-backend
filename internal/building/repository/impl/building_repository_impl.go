@@ -46,7 +46,7 @@ func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, filter *dt
 	}
 
 	if !filter.StartDate.ToTime().IsZero() && !filter.EndDate.IsZero() {
-		query = query.Where("NOT EXISTS (SELECT * FROM `reservations` WHERE `reservations`.`building_id` = `buildings`.`id` AND `reservations`.`start_date` <= ? AND `reservations`.`end_date` >= ?)", filter.EndDate, filter.StartDate)
+		query = query.Where("NOT EXISTS (SELECT * FROM `reservations` WHERE `reservations`.`building_id` = `buildings`.`id` AND `reservations`.`start_date` <= ? AND `reservations`.`end_date` >= ?)", filter.EndDate, filter.StartDate.ToTime())
 	}
 
 	if filter.AnnualPriceMin != 0 {

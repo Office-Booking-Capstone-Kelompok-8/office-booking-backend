@@ -17,7 +17,7 @@ type SearchBuildingQueryParam struct {
 	CapacityMax     int         `query:"capacityMax" validate:"omitempty,gte=0"`
 	Latitude        float64     `query:"latitude" validate:"required_if=SortBy pinpoint"`
 	Longitude       float64     `query:"longitude" validate:"required_if=SortBy pinpoint"`
-	StartDate       custom.Date `query:"-" validate:"required_with=Duration"`
+	StartDate       custom.Date `query:"startDate" validate:"required_with=Duration"`
 	Duration        int         `query:"duration" validate:"omitempty,required_with=StartDate,gte=1"`
 	EndDate         time.Time   `query:"-"`
 	SortBy          string      `query:"sortBy" validate:"omitempty,oneof=annual_price monthly_price capacity pinpoint"`

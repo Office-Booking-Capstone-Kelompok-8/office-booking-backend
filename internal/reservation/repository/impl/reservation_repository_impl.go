@@ -457,3 +457,13 @@ func (r *ReservationRepositoryImpl) GetReservationReviews(ctx context.Context) (
 
 	return review, nil
 }
+
+// add review after reservation status is completed
+func (r *ReservationRepositoryImpl) AddReservationReviews(ctx context.Context, review *entity.Review) error {
+	err := r.db.WithContext(ctx).Create(review).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

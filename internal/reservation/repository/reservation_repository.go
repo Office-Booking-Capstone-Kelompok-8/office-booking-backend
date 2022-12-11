@@ -22,6 +22,7 @@ type ReservationRepository interface {
 	GetReservationCount(ctx context.Context) (*entity.TimeframeStat, error)
 	GetReservationReviews(ctx context.Context) (*entity.Reviews, error)
 	AddBuildingReservation(ctx context.Context, reservation *entity.Reservation) error
+	AddReservationReviews(ctx context.Context, review *entity.Review) error
 	UpdateReservation(ctx context.Context, reservation *entity.Reservation) error
 	DeleteReservationByID(ctx context.Context, reservationID string) error
 }

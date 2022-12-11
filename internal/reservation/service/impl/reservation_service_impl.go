@@ -370,3 +370,15 @@ func (r *ReservationServiceImpl) GetReservationReviews(ctx context.Context) (*dt
 
 	return dto.NewBriefReviewsResponse(reviews), nil
 }
+
+// add review after reservation status is completed
+func (r *ReservationServiceImpl) CreateReservationReviews(ctx context.Context, review *dto.AddReviewRequest) error {
+	reviewEntity := review.ToEntity()
+	err := r.repo.AddReservationReviews(ctx, reviewEntity)
+	if err != nil {
+		log.Println("error when create review: ", err)
+		return err
+	}
+
+	return nil
+}

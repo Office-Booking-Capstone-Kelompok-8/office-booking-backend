@@ -79,3 +79,15 @@ func (u *UpdateReservationRequest) ToEntity(reservationID string) *entity.Reserv
 		Message:     u.Message,
 	}
 }
+
+type AddReviewRequest struct {
+	Rating  int    `json:"rating" validate:"required"`
+	Message string `json:"comment" validate:"required"`
+}
+
+func (a *AddReviewRequest) ToEntity() *entity.Review {
+	return &entity.Review{
+		Rating:  a.Rating,
+		Message: a.Message,
+	}
+}

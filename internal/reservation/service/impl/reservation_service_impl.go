@@ -342,6 +342,10 @@ func (r *ReservationServiceImpl) UpdateReservation(ctx context.Context, reservat
 	}
 
 	newReservation := reservation.ToEntity(reservationID)
+	if reservation.StatusID == 4 {
+		newReservation.AcceptedAt = time.Now()
+	}
+
 	err = r.repo.UpdateReservation(ctx, newReservation)
 	if err != nil {
 		log.Println("error while updating reservation: ", err)

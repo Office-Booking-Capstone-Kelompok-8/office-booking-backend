@@ -112,9 +112,9 @@ func (r *Routes) Init(app *fiber.App) {
 
 	// Admin.Payment routes
 	aPayment := admin.Group("/payments")
-	aPayment.Post("/", r.adminAccessTokenMiddleware, r.payment.CreatePayment)
-	aPayment.Put("/:paymentID", r.adminAccessTokenMiddleware, r.payment.UpdatePayment)
-	aPayment.Delete("/:paymentID", r.adminAccessTokenMiddleware, r.payment.DeletePayment)
+	aPayment.Post("/", r.adminAccessTokenMiddleware, r.payment.CreatePaymentMethod)
+	aPayment.Put("/:paymentID", r.adminAccessTokenMiddleware, r.payment.UpdatePaymentMethod)
+	aPayment.Delete("/:paymentID", r.adminAccessTokenMiddleware, r.payment.DeletePaymentMethod)
 
 	// Buildings routes
 	building := v1.Group("/buildings")
@@ -129,9 +129,9 @@ func (r *Routes) Init(app *fiber.App) {
 
 	// Payment routes
 	payment := v1.Group("/payments")
-	payment.Get("/", r.payment.GetAllPayment)
-	payment.Get("/banks", r.payment.GetBanks)
-	payment.Get("/:paymentID", r.payment.GetPaymentByID)
+	payment.Get("/methods", r.payment.GetAllPaymentMethod)
+	payment.Get("/methods/banks", r.payment.GetBanks)
+	payment.Get("/methods/:paymentMethodID", r.payment.GetPaymentMethodByID)
 }
 
 func ping(c *fiber.Ctx) error {

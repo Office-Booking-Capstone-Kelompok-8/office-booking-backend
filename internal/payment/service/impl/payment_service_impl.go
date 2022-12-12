@@ -28,7 +28,7 @@ func (p *PaymentServiceImpl) GetBanks(ctx context.Context) (*dto.BanksResponse, 
 	return dto.NewBanksResponse(banks), nil
 }
 
-func (p *PaymentServiceImpl) GetAllPayment(ctx context.Context) (*dto.PaymentsResponse, error) {
+func (p *PaymentServiceImpl) GetAllPaymentMethod(ctx context.Context) (*dto.PaymentsResponse, error) {
 	payments, err := p.repo.GetAllPayment(ctx)
 	if err != nil {
 		log.Println("error when getting all payments: ", err)
@@ -38,7 +38,7 @@ func (p *PaymentServiceImpl) GetAllPayment(ctx context.Context) (*dto.PaymentsRe
 	return dto.NewPaymentsResponse(payments), nil
 }
 
-func (p *PaymentServiceImpl) GetPaymentByID(ctx context.Context, paymentID int) (*dto.PaymentResponse, error) {
+func (p *PaymentServiceImpl) GetPaymentMethodByID(ctx context.Context, paymentID int) (*dto.PaymentResponse, error) {
 	payment, err := p.repo.GetPaymentByID(ctx, paymentID)
 	if err != nil {
 		log.Println("error when get payment by id: ", err)
@@ -48,7 +48,7 @@ func (p *PaymentServiceImpl) GetPaymentByID(ctx context.Context, paymentID int) 
 	return dto.NewPaymentResponse(payment), nil
 }
 
-func (p *PaymentServiceImpl) CreatePayment(ctx context.Context, payment *dto.CreatePaymentRequest) error {
+func (p *PaymentServiceImpl) CreatePaymentMethod(ctx context.Context, payment *dto.CreatePaymentRequest) error {
 	paymentEntity := payment.ToEntity()
 	err := p.repo.CreatePayment(ctx, paymentEntity)
 	if err != nil {
@@ -58,7 +58,7 @@ func (p *PaymentServiceImpl) CreatePayment(ctx context.Context, payment *dto.Cre
 
 	return nil
 }
-func (p *PaymentServiceImpl) UpdatePayment(ctx context.Context, paymentID int, payment *dto.UpdatePaymentRequest) error {
+func (p *PaymentServiceImpl) UpdatePaymentMethod(ctx context.Context, paymentID int, payment *dto.UpdatePaymentRequest) error {
 	paymentEntity := payment.ToEntity()
 	paymentEntity.ID = uint(paymentID)
 	err := p.repo.UpdatePayment(ctx, paymentEntity)
@@ -70,7 +70,7 @@ func (p *PaymentServiceImpl) UpdatePayment(ctx context.Context, paymentID int, p
 	return nil
 }
 
-func (p *PaymentServiceImpl) DeletePayment(ctx context.Context, paymentID int) error {
+func (p *PaymentServiceImpl) DeletePaymentMethod(ctx context.Context, paymentID int) error {
 	err := p.repo.DeletePayment(ctx, paymentID)
 	if err != nil {
 		log.Println("error when delete payment: ", err)

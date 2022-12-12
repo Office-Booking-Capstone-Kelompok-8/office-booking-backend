@@ -35,8 +35,8 @@ func (p *PaymentController) GetBanks(c *fiber.Ctx) error {
 	})
 }
 
-func (p *PaymentController) GetAllPayment(c *fiber.Ctx) error {
-	payments, err := p.service.GetAllPayment(c.Context())
+func (p *PaymentController) GetAllPaymentMethod(c *fiber.Ctx) error {
+	payments, err := p.service.GetAllPaymentMethod(c.Context())
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
@@ -47,14 +47,14 @@ func (p *PaymentController) GetAllPayment(c *fiber.Ctx) error {
 	})
 }
 
-func (p *PaymentController) GetPaymentByID(c *fiber.Ctx) error {
-	paymentID := c.Params("paymentID")
+func (p *PaymentController) GetPaymentMethodByID(c *fiber.Ctx) error {
+	paymentID := c.Params("paymentMethodID")
 	paymentIDInt, err := strconv.Atoi(paymentID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidPaymentID.Error())
 	}
 
-	payment, err := p.service.GetPaymentByID(c.Context(), paymentIDInt)
+	payment, err := p.service.GetPaymentMethodByID(c.Context(), paymentIDInt)
 	if err != nil {
 		switch err {
 		case err2.ErrPaymentNotFound:
@@ -70,7 +70,7 @@ func (p *PaymentController) GetPaymentByID(c *fiber.Ctx) error {
 	})
 }
 
-func (p *PaymentController) CreatePayment(c *fiber.Ctx) error {
+func (p *PaymentController) CreatePaymentMethod(c *fiber.Ctx) error {
 	paymentRequest := new(dto.CreatePaymentRequest)
 	err := c.BodyParser(paymentRequest)
 	if err != nil {
@@ -85,7 +85,7 @@ func (p *PaymentController) CreatePayment(c *fiber.Ctx) error {
 		})
 	}
 
-	err = p.service.CreatePayment(c.Context(), paymentRequest)
+	err = p.service.CreatePaymentMethod(c.Context(), paymentRequest)
 	if err != nil {
 		switch err {
 		case err2.ErrInvalidBankID:
@@ -100,7 +100,7 @@ func (p *PaymentController) CreatePayment(c *fiber.Ctx) error {
 	})
 }
 
-func (p *PaymentController) UpdatePayment(c *fiber.Ctx) error {
+func (p *PaymentController) UpdatePaymentMethod(c *fiber.Ctx) error {
 	paymentRequest := new(dto.UpdatePaymentRequest)
 	err := c.BodyParser(paymentRequest)
 	if err != nil {
@@ -121,7 +121,7 @@ func (p *PaymentController) UpdatePayment(c *fiber.Ctx) error {
 		})
 	}
 
-	err = p.service.UpdatePayment(c.Context(), paymentIDInt, paymentRequest)
+	err = p.service.UpdatePaymentMethod(c.Context(), paymentIDInt, paymentRequest)
 	if err != nil {
 		switch err {
 		case err2.ErrPaymentNotFound:
@@ -138,14 +138,14 @@ func (p *PaymentController) UpdatePayment(c *fiber.Ctx) error {
 	})
 }
 
-func (p *PaymentController) DeletePayment(c *fiber.Ctx) error {
+func (p *PaymentController) DeletePaymentMethod(c *fiber.Ctx) error {
 	paymentID := c.Params("paymentID")
 	paymentIDInt, err := strconv.Atoi(paymentID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidPaymentID.Error())
 	}
 
-	err = p.service.DeletePayment(c.Context(), paymentIDInt)
+	err = p.service.DeletePaymentMethod(c.Context(), paymentIDInt)
 	if err != nil {
 		switch err {
 		case err2.ErrPaymentNotFound:

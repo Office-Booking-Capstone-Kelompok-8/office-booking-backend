@@ -2,17 +2,18 @@ package impl
 
 import (
 	"context"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/suite"
 	mockReservationSrv "office-booking-backend/internal/reservation/service/mock"
 	"office-booking-backend/internal/user/dto"
 	mockRepo "office-booking-backend/internal/user/repository/mock"
 	"office-booking-backend/internal/user/service"
+	"office-booking-backend/pkg/custom"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	mockImageKitSrv "office-booking-backend/pkg/utils/imagekit"
-	"office-booking-backend/pkg/utils/ptr"
 	"testing"
+
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
 )
 
 type TestSuiteUserService struct {
@@ -42,7 +43,7 @@ func TestUserService(t *testing.T) {
 }
 func (s *TestSuiteUserService) TestGetFullUserByID_Success() {
 	s.mockRepo.On("GetFullUserByID", mock.Anything, mock.Anything).Return(&entity.User{
-		IsVerified: ptr.Bool(true),
+		IsVerified: custom.Bool(true),
 	}, nil)
 	_, err := s.userService.GetFullUserByID(context.Background(), "")
 	s.NoError(err)
@@ -55,14 +56,26 @@ func (s *TestSuiteUserService) TestGetFullUserByID_Fail() {
 }
 
 func (s *TestSuiteUserService) TestGetAllUsers_Success() {
-	s.mockRepo.On("GetAllUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&entity.Users{}, int64(0), nil)
-	_, _, err := s.userService.GetAllUsers(context.Background(), "", 1, 0, 0)
+	filter := &dto.UserFilterRequest{
+		Query: "",
+		Role:  1,
+		Page:  0,
+		Limit: 0,
+	}
+	s.mockRepo.On("GetAllUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&entity.Users{}, 0, nil)
+	_, _, err := s.userService.GetAllUsers(context.Background(), filter)
 	s.NoError(err)
 }
 
 func (s *TestSuiteUserService) TestGetAllUsers_Fail() {
-	s.mockRepo.On("GetAllUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return((*entity.Users)(nil), int64(0), err2.ErrUserNotFound)
-	_, _, err := s.userService.GetAllUsers(context.Background(), "", 1, 0, 0)
+	filter := &dto.UserFilterRequest{
+		Query: "",
+		Role:  1,
+		Page:  0,
+		Limit: 0,
+	}
+	s.mockRepo.On("GetAllUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return((*entity.Users)(nil), 0, err2.ErrUserNotFound)
+	_, _, err := s.userService.GetAllUsers(context.Background(), filter)
 	s.Error(err)
 }
 
@@ -83,7 +96,7 @@ func (s *TestSuiteUserService) TestUpdateUserByID() {
 				Email:      "123@123.com",
 				Password:   "asdasd",
 				Role:       1,
-				IsVerified: ptr.Bool(true),
+				IsVerified: custom.Bool(true),
 			},
 			UserRepoErr:   nil,
 			DetailRepoErr: nil,
@@ -96,7 +109,7 @@ func (s *TestSuiteUserService) TestUpdateUserByID() {
 			},
 			UserEntitty: &entity.User{
 				Email:      "123@mail.com",
-				IsVerified: ptr.Bool(false),
+				IsVerified: custom.Bool(false),
 			},
 			UserRepoErr:   nil,
 			DetailRepoErr: nil,
@@ -129,6 +142,7 @@ func (s *TestSuiteUserService) TestUpdateUserByID() {
 	} {
 		s.SetupTest()
 		s.Run(tc.Name, func() {
+			s.mockRepo.On("GetFullUserByID", mock.Anything, mock.Anything).Return(tc.UserEntitty, nil)
 			s.mockRepo.On("UpdateUserByID", mock.Anything, mock.Anything).Return(tc.UserRepoErr)
 			s.mockRepo.On("UpdateUserDetailByID", mock.Anything, mock.Anything).Return(tc.DetailRepoErr)
 			err := s.userService.UpdateUserByID(context.Background(), "", tc.User)

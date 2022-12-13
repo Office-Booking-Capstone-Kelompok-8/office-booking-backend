@@ -55,11 +55,14 @@ func (t *TokenServiceImpl) generateRefreshToken(user *entity.User, exp time.Time
 }
 
 func (t *TokenServiceImpl) NewTokenPair(ctx context.Context, user *entity.User) (*dto.TokenPair, error) {
-	accessToken, accessID, err := t.generateAccessToken(user, time.Now().Add(t.AccessTokenExp))
+	accessTokenExp := time.Now().Add(t.AccessTokenExp)
+	accessToken, accessID, err := t.generateAccessToken(user, accessTokenExp)
 	if err != nil {
 		return nil, err
 	}
-	refreshToken, refreshID, err := t.generateRefreshToken(user, time.Now().Add(t.RefreshTokenExp))
+
+	refreshTokenExp := time.Now().Add(t.RefreshTokenExp)
+	refreshToken, refreshID, err := t.generateRefreshToken(user, refreshTokenExp)
 	if err != nil {
 		return nil, err
 	}
@@ -79,12 +82,7 @@ func (t *TokenServiceImpl) NewTokenPair(ctx context.Context, user *entity.User) 
 		return nil, err
 	}
 
-	return &dto.TokenPair{
-			Role:         user.Role,
-			AccessToken:  accessToken,
-			RefreshToken: refreshToken,
-		},
-		nil
+	return dto.NewTokenPair(accessToken, refreshToken, accessTokenExp.Unix(), refreshTokenExp.Unix(), user.Role, user.ID), nil
 }
 
 func (t *TokenServiceImpl) DeleteTokenPair(ctx context.Context, uid string) error {

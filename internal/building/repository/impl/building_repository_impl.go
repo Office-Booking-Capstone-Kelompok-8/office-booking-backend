@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"office-booking-backend/internal/building/dto"
 	"office-booking-backend/internal/building/repository"
+	"office-booking-backend/pkg/custom"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
-	"office-booking-backend/pkg/utils/ptr"
 	"strings"
 
 	"gorm.io/gorm"
@@ -45,8 +45,8 @@ func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, filter *dt
 		query = query.Where("`District`.`id` = ?", filter.DistrictID)
 	}
 
-	if !filter.StartDate.IsZero() && !filter.EndDate.IsZero() {
-		query = query.Where("NOT EXISTS (SELECT * FROM `reservations` WHERE `reservations`.`building_id` = `buildings`.`id` AND `reservations`.`start_date` <= ? AND `reservations`.`end_date` >= ?)", filter.EndDate, filter.StartDate)
+	if !filter.StartDate.ToTime().IsZero() && !filter.EndDate.IsZero() {
+		query = query.Where("NOT EXISTS (SELECT * FROM `reservations` WHERE `reservations`.`building_id` = `buildings`.`id` AND `reservations`.`start_date` <= ? AND `reservations`.`end_date` >= ?)", filter.EndDate, filter.StartDate.ToTime())
 	}
 
 	if filter.AnnualPriceMin != 0 {
@@ -194,6 +194,7 @@ func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, filter *dt
 func (b *BuildingRepositoryImpl) GetBuildingDetailByID(ctx context.Context, id string, isPublishedOnly bool) (*entity.Building, error) {
 	building := &entity.Building{}
 
+	// TODO: Optimize this query (maybe use raw query instead of gorm)
 	query := b.db.WithContext(ctx).
 		Preload("Pictures", func(db *gorm.DB) *gorm.DB {
 			return db.Order("`pictures`.`index` ASC")
@@ -201,6 +202,7 @@ func (b *BuildingRepositoryImpl) GetBuildingDetailByID(ctx context.Context, id s
 		Preload("Facilities", func(db *gorm.DB) *gorm.DB {
 			return db.Joins("Category")
 		}).
+		Preload("CreatedBy.Detail.Picture").
 		Joins("District").
 		Joins("City").
 		Model(&entity.Building{}).
@@ -256,6 +258,19 @@ func (b *BuildingRepositoryImpl) GetDistrictsByCityID(ctx context.Context, cityI
 	}
 
 	return districts, nil
+}
+
+func (b *BuildingRepositoryImpl) GetDistrictByID(ctx context.Context, districtID int) (*entity.District, error) {
+	district := new(entity.District)
+	err := b.db.WithContext(ctx).
+		Model(entity.District{}).
+		Where("id = ?", districtID).
+		First(district).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return district, nil
 }
 
 func (b *BuildingRepositoryImpl) CreateBuilding(ctx context.Context, building *entity.Building) error {
@@ -469,7 +484,7 @@ func changeNextPictureToIndexZero(ctx context.Context, tx *gorm.DB, buildingID s
 		return tx.WithContext(ctx).
 			Model(&entity.Building{}).
 			Where("id = ?", buildingID).
-			Updates(entity.Building{IsPublished: ptr.Bool(true)}).Error
+			Updates(entity.Building{IsPublished: custom.Bool(true)}).Error
 	} else {
 		// change next picture index to 0
 		return tx.WithContext(ctx).

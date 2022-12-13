@@ -6,6 +6,7 @@ import (
 	"office-booking-backend/internal/reservation/dto"
 	"office-booking-backend/internal/reservation/repository"
 	"office-booking-backend/internal/reservation/service"
+	"office-booking-backend/pkg/custom"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"time"
@@ -171,7 +172,7 @@ func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, userID s
 	})
 
 	errGroup.Go(func() error {
-		endDate := reservation.StartDate.AddDate(0, reservation.Duration, 0)
+		endDate := reservation.StartDate.ToTime().AddDate(0, reservation.Duration, 0)
 		isAvailable, err := r.repo.IsBuildingAvailable(ctx, reservation.BuildingID, reservation.StartDate.ToTime(), endDate)
 		if err != nil {
 			log.Println("error while checking building availability: ", err)
@@ -216,7 +217,7 @@ func (r *ReservationServiceImpl) CreateAdminReservation(ctx context.Context, res
 	})
 
 	errGroup.Go(func() error {
-		endDate := reservation.StartDate.AddDate(0, reservation.Duration, 0)
+		endDate := reservation.StartDate.ToTime().AddDate(0, reservation.Duration, 0)
 		isAvailable, err := r.repo.IsBuildingAvailable(ctx, reservation.BuildingID, reservation.StartDate.ToTime(), endDate)
 		if err != nil {
 			log.Println("error while checking building availability: ", err)
@@ -287,18 +288,18 @@ func (r *ReservationServiceImpl) UpdateReservation(ctx context.Context, reservat
 		return err2.ErrReservationNotFound
 	}
 
-	if reservation.BuildingID != "" || !reservation.StartDate.IsZero() || reservation.Duration > 0 {
+	if reservation.BuildingID != "" || !reservation.StartDate.ToTime().IsZero() || reservation.Duration > 0 {
 		buildingID := savedReservation.BuildingID
 		if reservation.BuildingID != "" {
 			buildingID = reservation.BuildingID
 		}
 
 		startDate := savedReservation.StartDate
-		if !reservation.StartDate.IsZero() {
+		if !reservation.StartDate.ToTime().IsZero() {
 			startDate = reservation.StartDate.ToTime()
 		} else {
 			// if start date is not provided, we will use the saved start date so we can calculate the end date correctly
-			reservation.StartDate.Time = savedReservation.StartDate
+			reservation.StartDate = custom.Date(savedReservation.StartDate)
 		}
 
 		endDate := savedReservation.EndDate

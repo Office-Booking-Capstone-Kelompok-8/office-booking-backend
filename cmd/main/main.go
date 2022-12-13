@@ -6,6 +6,7 @@ import (
 	"net"
 	"office-booking-backend/pkg/bootstrapper"
 	"office-booking-backend/pkg/config"
+	"office-booking-backend/pkg/custom"
 	"office-booking-backend/pkg/database/mysql"
 	"office-booking-backend/pkg/database/redis"
 	"office-booking-backend/pkg/response"
@@ -96,6 +97,12 @@ func main() {
 		Prefork:      conf.GetBool("server.prefork"),
 		ReadTimeout:  conf.GetDuration("server.read_timeout"),
 		ErrorHandler: response.DefaultErrorHandler,
+	})
+
+	fiber.SetParserDecoder(fiber.ParserConfig{
+		IgnoreUnknownKeys: true,
+		ParserType:        []fiber.ParserType{custom.CustomDate},
+		ZeroEmpty:         true,
 	})
 
 	bootstrapper.Init(app, db, rs, conf)

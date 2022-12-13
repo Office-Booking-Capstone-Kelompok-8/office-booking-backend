@@ -33,7 +33,7 @@ func NewBuildingServiceImpl(repo repository.BuildingRepository, reservationRepo 
 }
 
 func (b *BuildingServiceImpl) GetAllPublishedBuildings(ctx context.Context, filter *dto.SearchBuildingQueryParam) (*dto.BriefPublishedBuildingsResponse, int64, error) {
-	filter.EndDate = filter.StartDate.AddDate(0, 0, filter.Duration)
+	filter.EndDate = filter.StartDate.ToTime().AddDate(0, 0, filter.Duration)
 
 	count := int64(0)
 
@@ -50,7 +50,7 @@ func (b *BuildingServiceImpl) GetAllPublishedBuildings(ctx context.Context, filt
 }
 
 func (b *BuildingServiceImpl) GetAllBuildings(ctx context.Context, filter *dto.SearchBuildingQueryParam) (*dto.BriefBuildingsResponse, int64, error) {
-	filter.EndDate = filter.StartDate.AddDate(0, 0, filter.Duration)
+	filter.EndDate = filter.StartDate.ToTime().AddDate(0, 0, filter.Duration)
 
 	count := int64(0)
 
@@ -132,6 +132,19 @@ func (b *BuildingServiceImpl) GetDistrictsByCityID(ctx context.Context, cityID i
 
 func (b *BuildingServiceImpl) UpdateBuilding(ctx context.Context, building *dto.UpdateBuildingRequest, buildingID string) error {
 	buildingEntity := building.ToEntity(buildingID)
+
+	if buildingEntity.DistrictID != 0 || buildingEntity.CityID != 0 {
+		//	check if district in the city
+		district, err := b.repo.GetDistrictByID(ctx, buildingEntity.DistrictID)
+		if err != nil {
+			log.Println("error when getting district by id: ", err)
+			return err
+		}
+
+		if district.CityID != buildingEntity.CityID {
+			return err2.ErrDistrictNotInCity
+		}
+	}
 
 	err := b.repo.UpdateBuildingByID(ctx, buildingEntity)
 	if err != nil {

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"office-booking-backend/internal/user/dto"
 	"office-booking-backend/internal/user/repository"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
@@ -171,7 +172,14 @@ func (s *TestSuiteUserRepository) TestGetAllUsers() {
 				s.mock.ExpectQuery(count).WillReturnRows(sqlmock.NewRows([]string{"count(*)"}).AddRow(1))
 			}
 
-			_, _, err := s.repo.GetAllUsers(context.Background(), "123", 1, 1, 1)
+			filter := &dto.UserFilterRequest{
+				Query:  "123",
+				Role:   1,
+				Limit:  1,
+				Offset: 1,
+			}
+
+			_, _, err := s.repo.GetAllUsers(context.Background(), filter)
 
 			s.Equal(tc.ExpectedErr, err)
 		})

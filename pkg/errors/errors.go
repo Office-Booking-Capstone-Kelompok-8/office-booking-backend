@@ -78,6 +78,9 @@ var (
 	// ErrBuildingNotAvailable is returned when the building is not available for the given time
 	ErrBuildingNotAvailable = errors.New("building is not available")
 
+	// ErrDistrictNotInCity is returned when the district is not in the city
+	ErrDistrictNotInCity = errors.New("district is not in the city")
+
 	// ErrReservationNotFound is returned when the reservation is not found
 	ErrReservationNotFound = errors.New("reservation not found")
 

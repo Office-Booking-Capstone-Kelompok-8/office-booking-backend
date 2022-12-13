@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"office-booking-backend/internal/user/dto"
 	"office-booking-backend/pkg/entity"
 
 	"github.com/stretchr/testify/mock"
@@ -21,9 +22,9 @@ func (u *UserRepositoryMock) GetFullUserByID(ctx context.Context, id string) (*e
 	return args.Get(0).(*entity.User), args.Error(1)
 }
 
-func (u *UserRepositoryMock) GetAllUsers(ctx context.Context, q string, role int, limit int, offset int) (*entity.Users, int64, error) {
-	args := u.Called(ctx, q, role, limit, offset)
-	return args.Get(0).(*entity.Users), args.Get(1).(int64), args.Error(2)
+func (u *UserRepositoryMock) GetAllUsers(ctx context.Context, filter *dto.UserFilterRequest) (*entity.Users, int64, error) {
+	args := u.Called(ctx, filter)
+	return args.Get(0).(*entity.Users), int64(args.Int(1)), args.Error(2)
 }
 
 func (u *UserRepositoryMock) GetRegisteredMemberStat(ctx context.Context) (*entity.MonthlyRegisteredStatList, error) {

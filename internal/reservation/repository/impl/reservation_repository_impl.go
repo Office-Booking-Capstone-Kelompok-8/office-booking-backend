@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"fmt"
 	"office-booking-backend/internal/reservation/dto"
 	"office-booking-backend/internal/reservation/repository"
 	"office-booking-backend/pkg/entity"
@@ -93,12 +94,12 @@ func (r *ReservationRepositoryImpl) CountReservation(ctx context.Context, filter
 		query = query.Where(sq.Eq{"r.status_id": filter.StatusID})
 	}
 
-	if !filter.StartDate.IsZero() {
-		query = query.Where(sq.GtOrEq{"r.start_date": filter.StartDate})
+	if !filter.StartDate.ToTime().IsZero() {
+		query = query.Where(sq.GtOrEq{"r.start_date": filter.StartDate.ToTime()})
 	}
 
-	if !filter.EndDate.IsZero() {
-		query = query.Where(sq.LtOrEq{"r.end_date": filter.EndDate})
+	if !filter.EndDate.ToTime().IsZero() {
+		query = query.Where(sq.LtOrEq{"r.end_date": filter.EndDate.ToTime()})
 	}
 
 	rows, err := query.RunWith(db).QueryContext(ctx)
@@ -174,17 +175,39 @@ func (r *ReservationRepositoryImpl) GetReservations(ctx context.Context, filter 
 		query = query.Where(sq.Eq{"r.status_id": filter.StatusID})
 	}
 
-	if !filter.StartDate.IsZero() {
-		query = query.Where(sq.GtOrEq{"r.start_date": filter.StartDate})
+	if !filter.StartDate.ToTime().IsZero() {
+		query = query.Where(sq.GtOrEq{"r.start_date": filter.StartDate.ToTime()})
 	}
 
-	if !filter.EndDate.IsZero() {
-		query = query.Where(sq.LtOrEq{"r.end_date": filter.EndDate})
+	if !filter.EndDate.ToTime().IsZero() {
+		query = query.Where(sq.LtOrEq{"r.end_date": filter.EndDate.ToTime()})
+	}
+
+	if !filter.CreatedStart.ToTime().IsZero() && !filter.CreatedEnd.ToTime().IsZero() {
+		query = query.Where("DATE(r.created_at) BETWEEN DATE(?) AND DATE(?)", filter.CreatedStart.ToTime(), filter.CreatedEnd.ToTime())
+	}
+
+	switch filter.SortBy {
+	case "":
+	case "created_at":
+		fmt.Println("Not this one")
+		filter.SortBy = "r.created_at"
+	case "start_date":
+		filter.SortBy = "r.start_date"
+	case "end_date":
+		filter.SortBy = "r.end_date"
+	case "building_name":
+		filter.SortBy = "b.name"
+	case "user_name":
+		filter.SortBy = "ud.name"
+	default:
+		filter.SortBy = ""
 	}
 
 	rows, err := query.
 		Offset(uint64(filter.Offset)).
 		Limit(uint64(filter.Limit)).
+		OrderBy(fmt.Sprintf("%s %s", filter.SortBy, filter.SortOrder)).
 		RunWith(db).QueryContext(ctx)
 	if err != nil {
 		return nil, err
@@ -397,7 +420,14 @@ func (r *ReservationRepositoryImpl) GetReservationCount(ctx context.Context) (*e
 func (r *ReservationRepositoryImpl) AddBuildingReservation(ctx context.Context, reservation *entity.Reservation) error {
 	err := r.db.WithContext(ctx).Create(reservation).Error
 	if err != nil {
-		return err
+		switch {
+		case strings.Contains(err.Error(), "CONSTRAINT `fk_reservations_building`"):
+			return err2.ErrBuildingNotFound
+		case strings.Contains(err.Error(), "CONSTRAINT `fk_reservations_user`"):
+			return err2.ErrInvalidUserID
+		default:
+			return err
+		}
 	}
 
 	return nil
@@ -416,9 +446,9 @@ func (r *ReservationRepositoryImpl) UpdateReservation(ctx context.Context, reser
 			return err2.ErrUserNotFound
 		case strings.Contains(res.Error.Error(), "CONSTRAINT `fk_reservations_status`"):
 			return err2.ErrInvalidStatus
+		default:
+			return res.Error
 		}
-
-		return res.Error
 	}
 
 	if res.RowsAffected == 0 {

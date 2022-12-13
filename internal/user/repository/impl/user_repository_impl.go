@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"office-booking-backend/internal/user/dto"
 	"office-booking-backend/internal/user/repository"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
@@ -79,21 +80,21 @@ func (u *UserRepositoryImpl) GetFullUserByID(ctx context.Context, id string) (*e
 	return user, nil
 }
 
-func (u *UserRepositoryImpl) GetAllUsers(ctx context.Context, q string, role int, limit int, offset int) (*entity.Users, int64, error) {
+func (u *UserRepositoryImpl) GetAllUsers(ctx context.Context, filter *dto.UserFilterRequest) (*entity.Users, int64, error) {
 	users := &entity.Users{}
 	var count int64
 
 	query := u.db.WithContext(ctx).
 		Joins("Detail").
 		Preload("Detail.Picture")
-	if q != "" {
-		query = query.Where("`Detail`.`name` LIKE ?", "%"+q+"%")
+	if filter.Query != "" {
+		query = query.Where("`Detail`.`name` LIKE ?", "%"+filter.Query+"%")
 	}
 
 	err := query.
-		Where("role = ?", role).
-		Limit(limit).
-		Offset(offset).
+		Where("role = ?", filter.Role).
+		Limit(filter.Limit).
+		Offset(filter.Offset).
 		Find(users).
 		Count(&count).Error
 	if err != nil {

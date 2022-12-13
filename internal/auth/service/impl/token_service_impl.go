@@ -82,7 +82,7 @@ func (t *TokenServiceImpl) NewTokenPair(ctx context.Context, user *entity.User) 
 		return nil, err
 	}
 
-	return dto.NewTokenPair(accessToken, refreshToken, accessTokenExp.Unix(), refreshTokenExp.Unix(), user.Role), nil
+	return dto.NewTokenPair(accessToken, refreshToken, accessTokenExp.Unix(), refreshTokenExp.Unix(), user.Role, user.ID), nil
 }
 
 func (t *TokenServiceImpl) DeleteTokenPair(ctx context.Context, uid string) error {

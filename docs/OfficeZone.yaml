@@ -61,7 +61,8 @@ paths:
                   example: password
                 phone:
                   type: string
-                  example: +1 234 567 890
+                  description: Phone number, numbers only
+                  example: 6212342342
       responses:
         201:
           description: Successfully registering a new user
@@ -116,6 +117,7 @@ paths:
                 password:
                   type: string
                   format: password
+                  minLength: 8
                   example: password
         required: true
       responses:
@@ -135,10 +137,18 @@ paths:
                       role:
                         type: integer
                         example: 1
-                      access_token:
+                      accessExpAt:
+                        type: integer
+                        description: Access token expiration at time in unix timestamp
+                        example: 1670702055
+                      accessToken:
                         type: string
                         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiI3MTg1OGNmMS1lNDhkLTQzYmQtOGU0YS1jZDNkNGE1YjIwMDMiLCJyb2xlIjoxLCJleHAiOjB9.G0PITHn6gz-fu6kqrZYwBc_bAca1YCZvMNGFvKHDytk
-                      refresh_token:
+                      refreshExpAt:
+                        type: integer
+                        description: Refresh token expiration at time in unix timestamp
+                        example: 1670702055
+                      refreshToken:
                         type: string
                         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiI3MTg1OGNmMS1lNDhkLTQzYmQtOGU0YS1jZDNkNGE1YjIwMDMiLCJyb2xlIjoxLCJleHAiOjB9.G0PITHn6gz-fu6kqrZYwBc_bAca1YCZvMNGFvKHDytk
         401:
@@ -205,6 +215,7 @@ paths:
               properties:
                 refreshToken:
                   type: string
+                  format: jwt
                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzA0NTgwNDksImp0aSI6IjBiNGFmZmY5LTg0NzAtNDkxNi04NDEyLTllNjY3M2RhMmU0NyIsInVpZCI6IjY4ZjA2M2M0LTBjZGItNDJlNi1hNjFiLTg4NTg3MzkwMmJmZCIsImNhdCI6InJlZnJlc2gifQ.X0a_rKDJzQVSbgtN2BahhhVgJThemckCuImo6Axp0vg
         required: true
       responses:
@@ -221,10 +232,21 @@ paths:
                   data:
                     type: object
                     properties:
-                      access_token:
+                      role:
+                        type: integer
+                        example: 1
+                      accessExpAt:
+                        type: integer
+                        description: Access token expiration at time in unix timestamp
+                        example: 1670702055
+                      accessToken:
                         type: string
                         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiI3MTg1OGNmMS1lNDhkLTQzYmQtOGU0YS1jZDNkNGE1YjIwMDMiLCJyb2xlIjoxLCJleHAiOjB9.G0PITHn6gz-fu6kqrZYwBc_bAca1YCZvMNGFvKHDytk
-                      refresh_token:
+                      refreshExpAt:
+                        type: integer
+                        description: Refresh token expiration at time in unix timestamp
+                        example: 1670702055
+                      refreshToken:
                         type: string
                         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiI3MTg1OGNmMS1lNDhkLTQzYmQtOGU0YS1jZDNkNGE1YjIwMDMiLCJyb2xlIjoxLCJleHAiOjB9.G0PITHn6gz-fu6kqrZYwBc_bAca1YCZvMNGFvKHDytk
         401:
@@ -474,6 +496,7 @@ paths:
                   example: 12345adaasdadd6
                 password:
                   type: string
+                  minLength: 8
                   example: 123456789
         required: true
       responses:
@@ -585,7 +608,8 @@ paths:
                   example: oz@email.com
                 phone:
                   type: string
-                  example: +1 234 567 890
+                  description: phone number, numbers only
+                  example: 1234567890
         required: true
       responses:
         200:
@@ -683,10 +707,12 @@ paths:
                 oldPassword:
                   type: string
                   format: password
+                  minLength: 8
                   example: password
                 newPassword:
                   type: string
                   format: password
+                  minLength: 8
                   example: password
         required: true
       responses:
@@ -838,6 +864,8 @@ paths:
                   example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
                 companyName:
                   type: string
+                  minLength: 3
+                  maxLength: 255
                   example: Alterra
                 startDate:
                   type: string
@@ -847,6 +875,7 @@ paths:
                 duration:
                   type: integer
                   description: Duration of the reservation in months
+                  minimum: 1
                   example: 1
         required: true
       responses:
@@ -910,7 +939,7 @@ paths:
           required: true
           schema:
             type: string
-            format: uuids
+            format: uuid
             example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
       responses:
         200:
@@ -1266,6 +1295,7 @@ paths:
           required: false
           schema:
             type: string
+            minLength: 3
             example: Jakarta Convention Center
         - name: cityId
           in: query
@@ -1287,6 +1317,7 @@ paths:
           required: false
           schema:
             type: integer
+            minimum: 0
             example: 100000000
         - name: annualPriceMax
           in: query
@@ -1294,6 +1325,7 @@ paths:
           required: false
           schema:
             type: integer
+            minimum: 0
             example: 100000000
         - name: monthlyPriceMin
           in: query
@@ -1301,6 +1333,7 @@ paths:
           required: false
           schema:
             type: integer
+            minimum: 0
             example: 10000000
         - name: monthlyPriceMax
           in: query
@@ -1308,6 +1341,7 @@ paths:
           required: false
           schema:
             type: integer
+            minimum: 0
             example: 10000000
         - name: capacityMin
           in: query
@@ -1315,6 +1349,7 @@ paths:
           required: false
           schema:
             type: integer
+            minimum: 0
             example: 100
         - name: capacityMax
           in: query
@@ -1322,6 +1357,7 @@ paths:
           required: false
           schema:
             type: integer
+            minimum: 0
             example: 100
         - name: startDate
           in: query
@@ -1337,6 +1373,7 @@ paths:
           required: false
           schema:
             type: integer
+            minimum: 1
             example: 1
         - name: sortBy
           in: query
@@ -1364,7 +1401,7 @@ paths:
           required: false
           schema:
             type: number
-            format: floa
+            format: float
         - name: longitude
           in: query
           description: Longitude of the location to filter buildings by distance, must present if sort by pinpoint
@@ -1472,6 +1509,8 @@ paths:
               properties:
                 name:
                   type: string
+                  minLength: 3
+                  maxLength: 100
                   example: Jakarta Convention Center
                 facilities:
                   type: array
@@ -1485,12 +1524,16 @@ paths:
                         example: 5
                       name:
                         type: string
+                        minLength: 3
+                        maxLength: 100
                         example: Meeting Room
                       iconId:
                         type: integer
                         example: 5
                       description:
                         type: string
+                        minLength: 3
+                        maxLength: 1000
                         example: Meeting room with 10 seats
                 pictures:
                   type: array
@@ -1501,18 +1544,29 @@ paths:
                     properties:
                       pictureId:
                         type: string
+                        description: ID of the picture to be updated that can be obtained from the response of upload picture endpoint or get building detail endpoint
                         example: 6asjfakjdshkasd
                       index:
                         type: integer
+                        minimum: 0
+                        maximum: 9
                         example: 5
                       alt:
                         type: string
                         example: Jakarta Convention Center
                 description:
                   type: string
+                  description: Description of the building
+                  minLength: 3
+                  maxLength: 1000
                   example: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
                 capacity:
                   type: integer
+                  minimum: 1
+                  example: 1000
+                size:
+                  type: integer
+                  minimum: 1
                   example: 1000
                 price:
                   type: object
@@ -1530,12 +1584,15 @@ paths:
                   properties:
                     districtId:
                       type: integer
+                      description: ID of the district, can be obtained from the response of get districts endpoint. Required if cityId is present.
                       example: 1
                     cityId:
                       type: integer
+                      description: ID of the city, can be obtained from the response of get cities endpoint. Required if districtId is present.
                       example: 1
                     address:
                       type: string
+                      minLength: 3
                       example: Jl. MH Thamrin No. 1, RT.1/RW.2, Gondangdia, Menteng, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10340
                     geo:
                       type: object
@@ -1549,7 +1606,7 @@ paths:
                           example: 106.827153
                 isPublished:
                   type: boolean
-                  description: Set to true to publish the building, only published building will be shown in the app. And to publish the building, the building must have at least 1 picture, 1 facility and all required fields must be filled.
+                  description: Set to true to publish the building, only published building will be shown in the app. And to publish the building, the building must have at least 1 picture and all required fields must be filled, e.g. name, size, price, etc.
                   example: true
         required: true
       responses:
@@ -1691,6 +1748,8 @@ paths:
                   description: Picture of the building
                 index:
                   type: integer
+                  minimum: 0
+                  maximum: 9
                   description: Index of the picture
                 alt:
                   type: string
@@ -1770,12 +1829,16 @@ paths:
                 properties:
                   name:
                     type: string
+                    minLength: 3
+                    maxLength: 100
                     example: Meeting Room
                   iconId:
                     type: integer
                     example: 5
                   description:
                     type: string
+                    minLength: 3
+                    maxLength: 1000
                     example: Meeting room with 10 seats 
         required: true
       responses:
@@ -1947,7 +2010,6 @@ paths:
               * `3` - reservation is waiting for payment
               * `5` - reservation is active
               * `6` - reservation is finished
-            
         - name: buildingId
           in: query
           description: ID of the building that the reservation is made for
@@ -1955,6 +2017,7 @@ paths:
           schema:
             type: string
             format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
         - name: userId
           in: query
           description: ID of the user
@@ -1962,12 +2025,16 @@ paths:
           schema:
             type: string
             format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
         - name: userName
           in: query
           description: Name of the user
           required: false
           schema:
             type: string
+            minLength: 3
+            maxLength: 50
+            example: John Doe
         - name: startDate
           in: query
           description: Start date of the reservation
@@ -1975,6 +2042,7 @@ paths:
           schema:
             type: string
             format: date
+            example: 2020-12-29
         - name: endDate
           in: query
           description: End date of the reservation
@@ -1982,6 +2050,44 @@ paths:
           schema:
             type: string
             format: date
+            example: 2020-12-29
+        - name: createdStart
+          in: query
+          description: Start date of the reservation creation, with format YYYY-MM-DD
+          required: false
+          schema:
+            type: string
+            format: date
+            example: 2020-12-29
+        - name: createdEnd
+          in: query
+          description: End date of the reservation creation, with format YYYY-MM-DD
+          required: false
+          schema:
+            type: string
+            format: date
+            example: 2020-12-29
+        - name: sortBy
+          in: query
+          description: Sort by
+          required: false
+          schema:
+            type: string
+            enum:
+              - created_at
+              - start_date
+              - end_date
+              - building_name
+              - user_name
+        - name: sortOrder
+          in: query
+          description: Sort direction
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/limit'
       responses:
@@ -2039,6 +2145,8 @@ paths:
                   example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
                 companyName:
                   type: string
+                  minLength: 3
+                  maxLength: 255
                   example: Alterra
                 startDate:
                   type: string
@@ -2048,6 +2156,7 @@ paths:
                 duration:
                   type: integer
                   description: Duration of the reservation in months
+                  minimum: 1
                   example: 1
         required: true
       responses:
@@ -2113,7 +2222,7 @@ paths:
           required: true
           schema:
             type: string
-            format: uuids
+            format: uuid
             example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
       responses:
         200:
@@ -2222,6 +2331,7 @@ paths:
           schema:
             type: string
             format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
       requestBody:
         content:
           application/json:
@@ -2239,6 +2349,8 @@ paths:
                   example: 71858cf1-e48d-43bd-8e4a-cd3d4a5b2003
                 companyName:
                   type: string
+                  minLength: 3
+                  maxLength: 255
                   example: Alterra
                 startDate:
                   type: string
@@ -2248,6 +2360,7 @@ paths:
                 duration:
                   type: integer
                   description: Duration of the reservation in months
+                  minimum: 1
                   example: 1
                 statusId:
                   type: string
@@ -2269,7 +2382,9 @@ paths:
                     * `6` - reservation is finished
                 message:
                   type: string
-                  example: Your reservation has been rejected
+                  minLength: 3
+                  maxLength: 255
+                  example: Your reservation has been rejected because of the following reason...
         required: true
       responses:
         200:
@@ -2334,6 +2449,7 @@ paths:
           schema:
             type: string
             format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
       responses:
         200:
           description: Successfully deleted reservation
@@ -2481,28 +2597,20 @@ paths:
           required: true
           schema:
             type: integer
-            example: 1
-        - name: page
-          in: query
-          description: Page number
-          required: false
-          schema:
-            type: integer
-            example: 1
-        - name: limit
-          in: query
-          description: Number of users per page
-          required: false
-          schema:
-            type: integer
-            example: 10
+            enum:
+              - 1
+              - 2
         - name: q
           in: query
           description: Search user by name 
           required: false
           schema:
             type: string
+            minLength: 3
+            maxLength: 50
             example: John
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/page'
       responses:
         200:
           description: Successfully get all users
@@ -2543,6 +2651,7 @@ paths:
               properties:
                 name:
                   type: string
+                  minLength: 3
                   example: John Doe
                 email:
                   type: string
@@ -2550,11 +2659,13 @@ paths:
                   example: oz@mail.com
                 password:
                   type: string
+                  minLength: 8
                   format: password
                   example: password
                 phone:
                   type: string
-                  example: +1 234 567 890
+                  description: phone number, number only
+                  example: 08123456789
       responses:
         201:
           description: Successfully registering a new user
@@ -2608,6 +2719,7 @@ paths:
               properties:
                 name:
                   type: string
+                  minLength: 3
                   example: John Doe
                 email:
                   type: string
@@ -2615,11 +2727,13 @@ paths:
                   example: oz@mail.com
                 password:
                   type: string
+                  minLength: 8
                   format: password
                   example: password
                 phone:
                   type: string
-                  example: +1 234 567 890
+                  description: phone number, number only
+                  example: 08123456789
       responses:
         201:
           description: Successfully registering a new admin
@@ -2717,6 +2831,7 @@ paths:
               properties:
                 name:
                   type: string
+                  minLength: 3
                   example: John Doe
                 email:
                   type: string
@@ -2724,6 +2839,7 @@ paths:
                   example: oz@mail.com
                 phone: 
                   type: string
+                  description: phone number, number only
                   example: 0123456789
         required: true
       responses:
@@ -3458,7 +3574,7 @@ paths:
       tags:
         - Locations
       parameters:
-        - name: cityID
+        - name: cityId
           in: query
           description: ID of the city
           required: true
@@ -3787,6 +3903,26 @@ components:
                 long:
                   type: number
                   example: 106.827153
+        agent:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+            name:
+              type: string
+              example: Admin 1
+            email:
+              type: string
+              example: oz@mail.com
+            phone:
+              type: string
+              example: 6281234567890
+            picture:
+              type: string
+              example: https://ik.imagekit.io/fortyfour/default-image.jpg
+
     BuildingDetails:
       type: object
       properties:
@@ -3871,6 +4007,25 @@ components:
                 long:
                   type: number
                   example: 106.827153
+        agent:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: 7e4b5c6d-8f9a-4a93-9b0b-c1d2e3f4g5h6
+            name:
+              type: string
+              example: Admin 1
+            email:
+              type: string
+              example: oz@mail.com
+            phone:
+              type: string
+              example: 6281234567890
+            picture:
+              type: string
+              example: https://ik.imagekit.io/fortyfour/default-image.jpg
         isPublished:
           type: boolean
           example: true

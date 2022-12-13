@@ -3,15 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
-	"office-booking-backend/pkg/database/mysql"
-	"office-booking-backend/pkg/entity"
-	"office-booking-backend/pkg/utils/password"
-	"office-booking-backend/pkg/utils/ptr"
-
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
 	"gorm.io/gorm"
+	"log"
+	"office-booking-backend/pkg/custom"
+	"office-booking-backend/pkg/database/mysql"
+	"office-booking-backend/pkg/entity"
+	"office-booking-backend/pkg/utils/password"
 )
 
 func main() {
@@ -111,7 +110,7 @@ func InitAdmin(db *gorm.DB) error {
 		Email:      "admin@mail.fortyfourvisual.com",
 		Password:   string(pass), // admin123
 		Role:       2,
-		IsVerified: ptr.Bool(true),
+		IsVerified: custom.Bool(true),
 		Detail: entity.UserDetail{
 			Name:      "Admin",
 			Phone:     "081234567890",

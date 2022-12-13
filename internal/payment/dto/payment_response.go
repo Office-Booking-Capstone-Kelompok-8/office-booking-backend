@@ -1,8 +1,11 @@
 package dto
 
-import "office-booking-backend/pkg/entity"
+import (
+	"office-booking-backend/pkg/config"
+	"office-booking-backend/pkg/entity"
+)
 
-type PaymentResponse struct {
+type PaymentMethodResponse struct {
 	ID            uint   `json:"id"`
 	BankIcon      string `json:"bankIcon"`
 	BankName      string `json:"bankName"`
@@ -11,8 +14,8 @@ type PaymentResponse struct {
 	Description   string `json:"description"`
 }
 
-func NewPaymentResponse(payment *entity.Payment) *PaymentResponse {
-	return &PaymentResponse{
+func NewPaymentMethodResponse(payment *entity.Payment) *PaymentMethodResponse {
+	return &PaymentMethodResponse{
 		ID:            payment.Model.ID,
 		BankIcon:      payment.Bank.Icon,
 		BankName:      payment.Bank.Name,
@@ -22,12 +25,12 @@ func NewPaymentResponse(payment *entity.Payment) *PaymentResponse {
 	}
 }
 
-type PaymentsResponse []PaymentResponse
+type PaymentMethodsResponse []PaymentMethodResponse
 
-func NewPaymentsResponse(payments *entity.Payments) *PaymentsResponse {
-	var paymentsResponse PaymentsResponse
+func NewPaymentMethodsResponse(payments *entity.Payments) *PaymentMethodsResponse {
+	var paymentsResponse PaymentMethodsResponse
 	for _, payment := range *payments {
-		paymentsResponse = append(paymentsResponse, *NewPaymentResponse(&payment))
+		paymentsResponse = append(paymentsResponse, *NewPaymentMethodResponse(&payment))
 	}
 	return &paymentsResponse
 }
@@ -54,4 +57,46 @@ func NewBanksResponse(banks *entity.Banks) *BanksResponse {
 		banksResponse = append(banksResponse, *NewBankResponse(&bank))
 	}
 	return &banksResponse
+}
+
+type PaymentDetailResponse struct {
+	ID        string                     `json:"id"`
+	Ammount   int                        `json:"ammount"`
+	StartDate string                     `json:"startDate"`
+	EndDate   string                     `json:"endDate"`
+	Method    BriefPaymentMethodResponse `json:"method"`
+	Proof     string                     `json:"proof"`
+	PaidAt    string                     `json:"paidAt"`
+	ExpiredAt string                     `json:"expiredAt"`
+	CreatedAt string                     `json:"createdAt"`
+	UpdatedAt string                     `json:"updatedAt"`
+}
+
+func NewPaymentDetailResponse(payment *entity.Transaction) *PaymentDetailResponse {
+	return &PaymentDetailResponse{
+		ID:        payment.ID,
+		Ammount:   payment.Reservation.Amount,
+		StartDate: payment.Reservation.StartDate.Format(config.DATE_RESPONSE_FORMAT),
+		EndDate:   payment.Reservation.EndDate.Format(config.DATE_RESPONSE_FORMAT),
+		Method: BriefPaymentMethodResponse{
+			ID:            payment.Payment.ID,
+			BankIcon:      payment.Payment.Bank.Icon,
+			BankName:      payment.Payment.Bank.Name,
+			AccountNumber: payment.Payment.AccountNumber,
+			AccountName:   payment.Payment.AccountName,
+		},
+		Proof:     payment.Proof.URL,
+		PaidAt:    payment.PaidAt.Time.Format(config.DATE_RESPONSE_FORMAT),
+		ExpiredAt: payment.ExpiredAt.Time.Format(config.DATE_RESPONSE_FORMAT),
+		CreatedAt: payment.CreatedAt.Format(config.DATE_RESPONSE_FORMAT),
+		UpdatedAt: payment.UpdatedAt.Format(config.DATE_RESPONSE_FORMAT),
+	}
+}
+
+type BriefPaymentMethodResponse struct {
+	ID            uint   `json:"id"`
+	BankIcon      string `json:"bankIcon"`
+	BankName      string `json:"bankName"`
+	AccountNumber string `json:"accountNumber"`
+	AccountName   string `json:"accountName"`
 }

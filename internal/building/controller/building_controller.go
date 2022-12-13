@@ -225,6 +225,7 @@ func (b *BuildingController) AddBuildingPicture(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
+	defer file.Close()
 
 	result, err := b.buildingService.AddBuildingPicture(c.Context(), buildingID, indexInt, altText, file)
 	if err != nil {

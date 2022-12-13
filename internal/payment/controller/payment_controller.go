@@ -70,6 +70,25 @@ func (p *PaymentController) GetPaymentMethodByID(c *fiber.Ctx) error {
 	})
 }
 
+func (p *PaymentController) GetReservationPaymentByID(c *fiber.Ctx) error {
+	reservationID := c.Params("reservationID")
+
+	payment, err := p.service.GetReservationPaymentByID(c.Context(), reservationID)
+	if err != nil {
+		switch err {
+		case err2.ErrPaymentNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "payment method retrieved successfully",
+		Data:    payment,
+	})
+}
+
 func (p *PaymentController) CreatePaymentMethod(c *fiber.Ctx) error {
 	paymentRequest := new(dto.CreatePaymentRequest)
 	err := c.BodyParser(paymentRequest)
@@ -157,5 +176,45 @@ func (p *PaymentController) DeletePaymentMethod(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
 		Message: "payment method deleted successfully",
+	})
+}
+
+func (p *PaymentController) UploadPaymentProof(c *fiber.Ctx) error {
+	reservationID := c.Params("reservationID")
+
+	paymentProof := new(dto.CreateReservationPaymentRequest)
+	if err := c.BodyParser(paymentProof); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	fileHeader, err := c.FormFile("proof")
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+	defer file.Close()
+
+	err = p.service.CreateReservationPayment(c.Context(), reservationID, paymentProof, file)
+	if err != nil {
+		switch err {
+		case err2.ErrInvalidPaymentMethodID:
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		case err2.ErrReservationNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		case err2.ErrPaymentMethodNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		case err2.ErrReservationAlreadyPaid:
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(response.BaseResponse{
+		Message: "payment proof uploaded successfully",
 	})
 }

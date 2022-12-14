@@ -142,6 +142,7 @@ func (s *TestSuiteUserService) TestUpdateUserByID() {
 	} {
 		s.SetupTest()
 		s.Run(tc.Name, func() {
+			s.mockRepo.On("GetFullUserByID", mock.Anything, mock.Anything).Return(tc.UserEntitty, nil)
 			s.mockRepo.On("UpdateUserByID", mock.Anything, mock.Anything).Return(tc.UserRepoErr)
 			s.mockRepo.On("UpdateUserDetailByID", mock.Anything, mock.Anything).Return(tc.DetailRepoErr)
 			err := s.userService.UpdateUserByID(context.Background(), "", tc.User)

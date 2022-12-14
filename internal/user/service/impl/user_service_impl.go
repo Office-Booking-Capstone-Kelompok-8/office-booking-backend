@@ -69,7 +69,13 @@ func (u *UserServiceImpl) UpdateUserByID(ctx context.Context, id string, user *d
 	userEntity.ID = id
 	userEntity.Detail.UserID = id
 
-	if userEntity.Email != "" {
+	savedUser, err := u.userRepository.GetFullUserByID(ctx, id)
+	if err != nil {
+		log.Println("Error while getting user by id: ", err)
+		return err
+	}
+
+	if userEntity.Email != savedUser.Email {
 		userEntity.IsVerified = custom.Bool(false)
 	}
 

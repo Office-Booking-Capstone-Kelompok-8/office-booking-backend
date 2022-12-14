@@ -6,6 +6,7 @@ import (
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
 	"office-booking-backend/pkg/utils/validator"
+	"reflect"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -251,6 +252,10 @@ func (r *ReservationController) UpdateReservation(c *fiber.Ctx) error {
 			Message: err2.ErrInvalidRequestBody.Error(),
 			Data:    errs,
 		})
+	}
+
+	if reflect.DeepEqual(*reservation, dto.UpdateReservationRequest{}) {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
 	err := r.service.UpdateReservation(c.Context(), reservationID, reservation)

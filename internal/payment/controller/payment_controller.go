@@ -6,6 +6,7 @@ import (
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
 	"office-booking-backend/pkg/utils/validator"
+	"reflect"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -138,6 +139,10 @@ func (p *PaymentController) UpdatePaymentMethod(c *fiber.Ctx) error {
 			Message: err2.ErrInvalidRequestBody.Error(),
 			Data:    errs,
 		})
+	}
+
+	if reflect.DeepEqual(*paymentRequest, dto.UpdatePaymentRequest{}) {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
 	err = p.service.UpdatePaymentMethod(c.Context(), paymentIDInt, paymentRequest)

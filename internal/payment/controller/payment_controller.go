@@ -198,7 +198,7 @@ func (p *PaymentController) UploadPaymentProof(c *fiber.Ctx) error {
 	}
 	defer file.Close()
 
-	err = p.service.CreateReservationPayment(c.Context(), reservationID, paymentProof, file)
+	err = p.service.AddPaymentProof(c.Context(), reservationID, paymentProof, file)
 	if err != nil {
 		switch err {
 		case err2.ErrInvalidPaymentMethodID:

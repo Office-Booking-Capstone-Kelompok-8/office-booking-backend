@@ -73,14 +73,13 @@ func (p *PaymentRepositoryImpl) CreatePaymentMethod(ctx context.Context, payment
 	return nil
 }
 
-func (p *PaymentRepositoryImpl) CreateReservationPayment(ctx context.Context, payment *entity.Transaction) error {
-	res := p.db.WithContext(ctx).Create(payment)
-	if res.Error != nil {
-		if strings.Contains(res.Error.Error(), "CONSTRAINT `fk_transactions_payment`") {
+func (p *PaymentRepositoryImpl) CreateNewReservationPayment(ctx context.Context, payment *entity.Transaction) error {
+	err := p.db.WithContext(ctx).Create(payment).Error
+	if err != nil {
+		if strings.Contains(err.Error(), "CONSTRAINT `fk_transactions_payment`") {
 			return err2.ErrPaymentMethodNotFound
 		}
-
-		return res.Error
+		return err
 	}
 
 	return nil
@@ -100,11 +99,11 @@ func (p *PaymentRepositoryImpl) GetReservationPaymentByID(ctx context.Context, r
 		return nil, err
 	}
 
-	rows, err := squirrel.Select("t.id, t.reservation_id, t.payment_id, t.proof_id, t.expired_at, t.paid_at, t.created_at, t.updated_at, p.id, p.account_name, p.account_number, p.account_name, b.icon, r.amount, r.start_date, r.end_date, pp.id, pp.url").
+	rows, err := squirrel.Select("t.id, t.reservation_id, t.payment_id, t.proof_id, t.created_at, t.updated_at, p.id, p.account_name, p.account_number, p.account_name, b.icon, b.name, r.amount, r.start_date, r.end_date, pp.id, pp.url").
 		From("transactions AS t").
+		Join("reservations r ON r.id = t.reservation_id").
 		Join("payments p ON p.id = t.payment_id").
 		Join("banks b ON b.id = p.bank_id").
-		Join("reservations r ON r.id = t.reservation_id").
 		Join("payment_proofs pp ON pp.id = t.proof_id").
 		Where("t.reservation_id = ?", reservationID).
 		RunWith(db).
@@ -119,7 +118,7 @@ func (p *PaymentRepositoryImpl) GetReservationPaymentByID(ctx context.Context, r
 
 	if rows.Next() {
 		var tx entity.Transaction
-		err = rows.Scan(&tx.ID, &tx.ReservationID, &tx.PaymentID, &tx.ProofID, &tx.ExpiredAt, &tx.PaidAt, &tx.CreatedAt, &tx.UpdatedAt, &tx.Payment.ID, &tx.Payment.AccountName, &tx.Payment.AccountNumber, &tx.Payment.AccountName, &tx.Payment.Bank.Icon, &tx.Reservation.Amount, &tx.Reservation.StartDate, &tx.Reservation.EndDate, &tx.Proof.ID, &tx.Proof.URL)
+		err = rows.Scan(&tx.ID, &tx.ReservationID, &tx.PaymentID, &tx.ProofID, &tx.CreatedAt, &tx.UpdatedAt, &tx.Payment.ID, &tx.Payment.AccountName, &tx.Payment.AccountNumber, &tx.Payment.AccountName, &tx.Payment.Bank.Icon, &tx.Payment.Bank.Name, &tx.Reservation.Amount, &tx.Reservation.StartDate, &tx.Reservation.EndDate, &tx.Proof.ID, &tx.Proof.URL)
 		if err != nil {
 			return nil, err
 		}

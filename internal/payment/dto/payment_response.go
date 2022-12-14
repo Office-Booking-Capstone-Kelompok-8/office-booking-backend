@@ -66,8 +66,6 @@ type PaymentDetailResponse struct {
 	EndDate   string                     `json:"endDate"`
 	Method    BriefPaymentMethodResponse `json:"method"`
 	Proof     string                     `json:"proof"`
-	PaidAt    string                     `json:"paidAt"`
-	ExpiredAt string                     `json:"expiredAt"`
 	CreatedAt string                     `json:"createdAt"`
 	UpdatedAt string                     `json:"updatedAt"`
 }
@@ -86,8 +84,6 @@ func NewPaymentDetailResponse(payment *entity.Transaction) *PaymentDetailRespons
 			AccountName:   payment.Payment.AccountName,
 		},
 		Proof:     payment.Proof.URL,
-		PaidAt:    payment.PaidAt.Time.Format(config.DATE_RESPONSE_FORMAT),
-		ExpiredAt: payment.ExpiredAt.Time.Format(config.DATE_RESPONSE_FORMAT),
 		CreatedAt: payment.CreatedAt.Format(config.DATE_RESPONSE_FORMAT),
 		UpdatedAt: payment.UpdatedAt.Format(config.DATE_RESPONSE_FORMAT),
 	}

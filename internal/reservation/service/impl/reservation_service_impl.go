@@ -12,20 +12,23 @@ import (
 	err2 "office-booking-backend/pkg/errors"
 	"time"
 
+	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 
 	"golang.org/x/net/context"
 )
 
 type ReservationServiceImpl struct {
+	config       *viper.Viper
 	repo         repository.ReservationRepository
 	buildingRepo repository2.BuildingRepository
 }
 
-func NewReservationServiceImpl(reservationRepository repository.ReservationRepository, buildingRepository repository2.BuildingRepository) service.ReservationService {
+func NewReservationServiceImpl(reservationRepository repository.ReservationRepository, buildingRepository repository2.BuildingRepository, config *viper.Viper) service.ReservationService {
 	return &ReservationServiceImpl{
 		repo:         reservationRepository,
 		buildingRepo: buildingRepository,
+		config:       config,
 	}
 }
 
@@ -360,13 +363,26 @@ func (r *ReservationServiceImpl) UpdateReservation(ctx context.Context, reservat
 		newReservation.Amount = ammount
 	}
 
-	if reservation.StatusID == 4 {
-		newReservation.AcceptedAt = time.Now()
-	}
-
 	err = r.repo.UpdateReservation(ctx, newReservation)
 	if err != nil {
 		log.Println("error while updating reservation: ", err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *ReservationServiceImpl) UpdateReservationStatus(ctx context.Context, reservationID string, statusRequest *dto.UpdateReservationStatusRequest) error {
+	// 1 = pending, 2 = rejected, 3 = cancelled, 4 = awaiting payment, 5 = active, 6 = completed
+	reservationEntity := statusRequest.ToEntity(reservationID)
+	if statusRequest.StatusID == 4 {
+		reservationEntity.AcceptedAt = time.Now()
+		reservationEntity.ExpiredAt = time.Now().Add(r.config.GetDuration("reservation.expiredAt"))
+	}
+
+	err := r.repo.UpdateReservation(ctx, reservationEntity)
+	if err != nil {
+		log.Println("error while updating reservation status: ", err)
 		return err
 	}
 

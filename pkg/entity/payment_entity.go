@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -36,8 +35,6 @@ type Transaction struct {
 	Payment       Payment
 	ProofID       string
 	Proof         PaymentProof
-	ExpiredAt     sql.NullTime   `gorm:"type:datetime; default:NULL"`
-	PaidAt        sql.NullTime   `gorm:"type:datetime; default:NULL"`
 	CreatedAt     time.Time      `gorm:"autoCreateTime"`
 	UpdatedAt     time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt     gorm.DeletedAt `gorm:"index"`

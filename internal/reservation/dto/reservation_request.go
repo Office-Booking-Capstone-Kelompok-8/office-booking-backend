@@ -46,7 +46,6 @@ type UpdateReservationRequest struct {
 	CompanyName string      `json:"companyName" validate:"omitempty,min=3,max=255"`
 	StartDate   custom.Date `json:"startDate" validate:"omitempty"`
 	Duration    int         `json:"duration" validate:"required_with=StartDate"`
-	StatusID    int         `json:"statusId" validate:"omitempty,gte=1,lte=6"`
 	Message     string      `json:"message" validate:"omitempty,min=3,max=255"`
 }
 
@@ -58,7 +57,17 @@ func (u *UpdateReservationRequest) ToEntity(reservationID string) *entity.Reserv
 		CompanyName: u.CompanyName,
 		StartDate:   u.StartDate.ToTime(),
 		EndDate:     u.StartDate.ToTime().AddDate(0, u.Duration, 0),
-		StatusID:    u.StatusID,
 		Message:     u.Message,
+	}
+}
+
+type UpdateReservationStatusRequest struct {
+	StatusID int `json:"statusId" validate:"required,gte=1,lte=6"`
+}
+
+func (u *UpdateReservationStatusRequest) ToEntity(reservationID string) *entity.Reservation {
+	return &entity.Reservation{
+		ID:       reservationID,
+		StatusID: u.StatusID,
 	}
 }

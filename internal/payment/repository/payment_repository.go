@@ -11,7 +11,7 @@ type PaymentRepository interface {
 	GetPaymentMethodByID(ctx context.Context, paymentID int) (*entity.Payment, error)
 	GetReservationPaymentByID(ctx context.Context, reservationID string) (*entity.Transaction, error)
 	CreatePaymentMethod(ctx context.Context, payment *entity.Payment) error
-	CreateReservationPayment(ctx context.Context, payment *entity.Transaction) error
+	CreateNewReservationPayment(ctx context.Context, payment *entity.Transaction) error
 	UpdatePaymentMethod(ctx context.Context, payment *entity.Payment) error
 	DeletePaymentMethod(ctx context.Context, paymentID int) error
 }

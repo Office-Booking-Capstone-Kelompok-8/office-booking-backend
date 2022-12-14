@@ -21,6 +21,7 @@ type Reservation struct {
 	Status      Status
 	Message     string         `gorm:"type:varchar(255); default:''"`
 	AcceptedAt  time.Time      `gorm:"type:datetime; default:NULL"`
+	ExpiredAt   time.Time      `gorm:"type:datetime; default:NULL"`
 	CreatedAt   time.Time      `gorm:"autoCreateTime"`
 	UpdatedAt   time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"`

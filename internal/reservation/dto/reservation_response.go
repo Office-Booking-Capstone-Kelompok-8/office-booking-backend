@@ -6,15 +6,23 @@ import (
 	"time"
 )
 
+func newDuration(start, end time.Time) int {
+	yearStart, monthStart, _ := start.Date()
+	yearEnd, monthEnd, _ := end.Date()
+	return (yearEnd-yearStart)*12 + (int(monthEnd) - int(monthStart))
+}
+
 type BriefReservationResponse struct {
 	ID          string                `json:"id"`
 	Building    BriefBuildingResponse `json:"building"`
 	CompanyName string                `json:"companyName"`
 	StartDate   string                `json:"startDate"`
 	EndDate     string                `json:"endDate"`
+	Duration    int                   `json:"duration"`
 	Amount      int                   `json:"amount"`
 	Status      StatusResponse        `json:"status"`
-	CreatedAt   time.Time             `json:"createdAt"`
+	ExpiredAt   string                `json:"expiredAt"`
+	CreatedAt   string                `json:"createdAt"`
 }
 
 func NewBriefReservationResponse(reservation *entity.Reservation) *BriefReservationResponse {
@@ -24,9 +32,11 @@ func NewBriefReservationResponse(reservation *entity.Reservation) *BriefReservat
 		CompanyName: reservation.CompanyName,
 		StartDate:   reservation.StartDate.Format(config.DATE_RESPONSE_FORMAT),
 		EndDate:     reservation.EndDate.Format(config.DATE_RESPONSE_FORMAT),
+		Duration:    newDuration(reservation.StartDate, reservation.EndDate),
 		Amount:      reservation.Amount,
 		Status:      *NewStatusResponse(reservation.Status),
-		CreatedAt:   reservation.CreatedAt,
+		ExpiredAt:   reservation.ExpiredAt.Format(config.DATE_RESPONSE_FORMAT),
+		CreatedAt:   reservation.CreatedAt.Format(config.DATE_RESPONSE_FORMAT),
 	}
 }
 
@@ -47,9 +57,11 @@ type BriefAdminReservationResponse struct {
 	CompanyName string                `json:"companyName"`
 	StartDate   string                `json:"startDate"`
 	EndDate     string                `json:"endDate"`
+	Duration    int                   `json:"duration"`
 	Amount      int                   `json:"amount"`
 	Status      StatusResponse        `json:"status"`
-	CreatedAt   time.Time             `json:"createdAt"`
+	ExpiredAt   string                `json:"expiredAt"`
+	CreatedAt   string                `json:"createdAt"`
 }
 
 func NewBriefAdminReservationResponse(reservation *entity.Reservation) *BriefAdminReservationResponse {
@@ -60,9 +72,11 @@ func NewBriefAdminReservationResponse(reservation *entity.Reservation) *BriefAdm
 		CompanyName: reservation.CompanyName,
 		StartDate:   reservation.StartDate.Format(config.DATE_RESPONSE_FORMAT),
 		EndDate:     reservation.EndDate.Format(config.DATE_RESPONSE_FORMAT),
+		Duration:    newDuration(reservation.StartDate, reservation.EndDate),
 		Amount:      reservation.Amount,
 		Status:      *NewStatusResponse(reservation.Status),
-		CreatedAt:   reservation.CreatedAt,
+		ExpiredAt:   reservation.ExpiredAt.Format(config.DATE_RESPONSE_FORMAT),
+		CreatedAt:   reservation.CreatedAt.Format(config.DATE_RESPONSE_FORMAT),
 	}
 }
 
@@ -131,11 +145,13 @@ type FullAdminReservationResponse struct {
 	CompanyName string           `json:"companyName"`
 	StartDate   string           `json:"startDate"`
 	EndDate     string           `json:"endDate"`
+	Duration    int              `json:"duration"`
 	Amount      int              `json:"amount"`
 	Status      StatusResponse   `json:"status"`
 	Message     string           `json:"message"`
-	CreatedAt   time.Time        `json:"createdAt"`
-	UpdatedAt   time.Time        `json:"updatedAt"`
+	ExpiredAt   string           `json:"expiredAt"`
+	CreatedAt   string           `json:"createdAt"`
+	UpdatedAt   string           `json:"updatedAt"`
 }
 
 func NewFullAdminReservationResponse(reservation *entity.Reservation) *FullAdminReservationResponse {
@@ -146,11 +162,13 @@ func NewFullAdminReservationResponse(reservation *entity.Reservation) *FullAdmin
 		CompanyName: reservation.CompanyName,
 		StartDate:   reservation.StartDate.Format(config.DATE_RESPONSE_FORMAT),
 		EndDate:     reservation.EndDate.Format(config.DATE_RESPONSE_FORMAT),
+		Duration:    newDuration(reservation.StartDate, reservation.EndDate),
 		Amount:      reservation.Amount,
 		Status:      *NewStatusResponse(reservation.Status),
 		Message:     reservation.Message,
-		CreatedAt:   reservation.CreatedAt,
-		UpdatedAt:   reservation.UpdatedAt,
+		ExpiredAt:   reservation.ExpiredAt.Format(config.DATE_RESPONSE_FORMAT),
+		CreatedAt:   reservation.CreatedAt.Format(config.DATE_RESPONSE_FORMAT),
+		UpdatedAt:   reservation.UpdatedAt.Format(config.DATE_RESPONSE_FORMAT),
 	}
 }
 
@@ -180,11 +198,13 @@ type FullReservationResponse struct {
 	CompanyName string           `json:"companyName"`
 	StartDate   string           `json:"startDate"`
 	EndDate     string           `json:"endDate"`
+	Duration    int              `json:"duration"`
 	Status      StatusResponse   `json:"status"`
 	Amount      int              `json:"amount"`
 	Message     string           `json:"message"`
-	CreatedAt   time.Time        `json:"createdAt"`
-	UpdatedAt   time.Time        `json:"updatedAt"`
+	ExpiredAt   string           `json:"expiredAt"`
+	CreatedAt   string           `json:"createdAt"`
+	UpdatedAt   string           `json:"updatedAt"`
 }
 
 func NewFullReservationResponse(reservation *entity.Reservation) *FullReservationResponse {
@@ -194,11 +214,13 @@ func NewFullReservationResponse(reservation *entity.Reservation) *FullReservatio
 		CompanyName: reservation.CompanyName,
 		StartDate:   reservation.StartDate.Format(config.DATE_RESPONSE_FORMAT),
 		EndDate:     reservation.EndDate.Format(config.DATE_RESPONSE_FORMAT),
+		Duration:    newDuration(reservation.StartDate, reservation.EndDate),
 		Amount:      reservation.Amount,
 		Status:      *NewStatusResponse(reservation.Status),
 		Message:     reservation.Message,
-		CreatedAt:   reservation.CreatedAt,
-		UpdatedAt:   reservation.UpdatedAt,
+		ExpiredAt:   reservation.ExpiredAt.Format(config.DATE_RESPONSE_FORMAT),
+		CreatedAt:   reservation.CreatedAt.Format(config.DATE_RESPONSE_FORMAT),
+		UpdatedAt:   reservation.UpdatedAt.Format(config.DATE_RESPONSE_FORMAT),
 	}
 }
 

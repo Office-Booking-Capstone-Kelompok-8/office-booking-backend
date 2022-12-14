@@ -113,6 +113,7 @@ func (r *Routes) Init(app *fiber.App) {
 	aReservation.Get("/:reservationID", r.adminAccessTokenMiddleware, r.reservation.GetReservationDetailByID)
 	aReservation.Put("/:reservationID", r.adminAccessTokenMiddleware, r.reservation.UpdateReservation)
 	aReservation.Delete("/:reservationID", r.adminAccessTokenMiddleware, r.reservation.DeleteReservation)
+	aReservation.Put("/:reservationID/status", r.adminAccessTokenMiddleware, r.reservation.UpdateReservationStatus)
 
 	// Admin.Payment routes
 	aPayment := admin.Group("/payments")

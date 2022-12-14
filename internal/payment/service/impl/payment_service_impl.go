@@ -79,7 +79,7 @@ func (p *PaymentServiceImpl) CreatePaymentMethod(ctx context.Context, payment *d
 	return nil
 }
 
-func (p *PaymentServiceImpl) CreateReservationPayment(ctx context.Context, reservationID string, payment *dto.CreateReservationPaymentRequest, file io.Reader) error {
+func (p *PaymentServiceImpl) AddPaymentProof(ctx context.Context, reservationID string, payment *dto.CreateReservationPaymentRequest, file io.Reader) error {
 	reservatrion, err := p.reservationRepo.GetReservationByID(ctx, reservationID)
 	if err != nil {
 		log.Println("error when get reservation by id: ", err)
@@ -103,7 +103,7 @@ func (p *PaymentServiceImpl) CreateReservationPayment(ctx context.Context, reser
 
 	paymentEntity := payment.ToEntity(uploadResponse)
 	paymentEntity.ReservationID = reservationID
-	err = p.repo.CreateReservationPayment(ctx, paymentEntity)
+	err = p.repo.CreateNewReservationPayment(ctx, paymentEntity)
 	if err != nil {
 		log.Println("error when create reservation payment: ", err)
 		return err

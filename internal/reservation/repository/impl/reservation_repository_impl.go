@@ -204,10 +204,17 @@ func (r *ReservationRepositoryImpl) GetReservations(ctx context.Context, filter 
 		filter.SortBy = ""
 	}
 
+	if filter.SortBy != "" {
+		if filter.SortOrder == "desc" {
+			query = query.OrderBy(filter.SortBy + " DESC")
+		} else {
+			query = query.OrderBy(filter.SortBy + " ASC")
+		}
+	}
+
 	rows, err := query.
 		Offset(uint64(filter.Offset)).
 		Limit(uint64(filter.Limit)).
-		OrderBy(fmt.Sprintf("%s %s", filter.SortBy, filter.SortOrder)).
 		RunWith(db).QueryContext(ctx)
 	if err != nil {
 		return nil, err

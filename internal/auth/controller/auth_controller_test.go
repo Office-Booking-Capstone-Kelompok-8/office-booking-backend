@@ -180,7 +180,10 @@ func (s *TestSuiteAuthController) TestLoginUser() {
 				Message: "user logged in successfully",
 				Data: map[string]interface{}{
 					"role":         float64(0),
+					"userId":       "",
+					"accessExpAt":  float64(0),
 					"accessToken":  token.AccessToken,
+					"refreshExpAt": float64(0),
 					"refreshToken": token.RefreshToken,
 				},
 			},
@@ -347,7 +350,10 @@ func (s *TestSuiteAuthController) TestRefreshToken() {
 				Message: "token refreshed successfully",
 				Data: map[string]interface{}{
 					"role":         float64(0),
+					"userId":       "",
+					"accessExpAt":  float64(0),
 					"accessToken":  token.AccessToken,
+					"refreshExpAt": float64(0),
 					"refreshToken": token.RefreshToken,
 				},
 			},

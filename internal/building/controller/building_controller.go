@@ -8,6 +8,7 @@ import (
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
 	"office-booking-backend/pkg/utils/validator"
+	"reflect"
 	"strconv"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -225,6 +226,7 @@ func (b *BuildingController) AddBuildingPicture(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
+	defer file.Close()
 
 	result, err := b.buildingService.AddBuildingPicture(c.Context(), buildingID, indexInt, altText, file)
 	if err != nil {
@@ -287,6 +289,10 @@ func (b *BuildingController) UpdateBuilding(c *fiber.Ctx) error {
 			Message: err2.ErrInvalidRequestBody.Error(),
 			Data:    errs,
 		})
+	}
+
+	if reflect.DeepEqual(*building, dto.UpdateBuildingRequest{}) {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
 	if building.IsPublished {

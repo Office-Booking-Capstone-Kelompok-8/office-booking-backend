@@ -78,6 +78,9 @@ var (
 	// ErrBuildingNotAvailable is returned when the building is not available for the given time
 	ErrBuildingNotAvailable = errors.New("building is not available")
 
+	// ErrDistrictNotInCity is returned when the district is not in the city
+	ErrDistrictNotInCity = errors.New("district is not in the city")
+
 	// ErrReservationNotFound is returned when the reservation is not found
 	ErrReservationNotFound = errors.New("reservation not found")
 
@@ -107,4 +110,16 @@ var (
 
 	// ErrEmailAlreadyVerified is returned when the user email is already verified
 	ErrEmailAlreadyVerified = errors.New("email already verified")
+
+	// ErrInvalidPaymentMethodID is returned when the payment method id is invalid
+	ErrInvalidPaymentMethodID = errors.New("payment method id is invalid")
+
+	// ErrPaymentMethodNotFound is returned when the payment method is not found
+	ErrPaymentMethodNotFound = errors.New("payment method not found")
+
+	// ErrReservationAlreadyPaid is returned when the reservation is already paid
+	ErrReservationAlreadyPaid = errors.New("reservation already paid")
+
+	// ErrReservationNotAwaitingPayment is returned when the reservation is not awaiting payment
+	ErrReservationNotAwaitingPayment = errors.New("reservation is not awaiting payment")
 )

@@ -7,7 +7,7 @@ import (
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
 	"office-booking-backend/pkg/utils/validator"
-	"strconv"
+	"reflect"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
@@ -64,27 +64,20 @@ func (u *UserController) GetFullUserByID(c *fiber.Ctx) error {
 }
 
 func (u *UserController) GetAllUsers(c *fiber.Ctx) error {
-	q := c.Query("q")
-	limit := c.Query("limit", "20")
-	page := c.Query("page", "1")
-	role := c.Query("role") // 1 - user, 2 - admin
-
-	limitInt, err := strconv.Atoi(limit)
+	filter := new(dto.UserFilterRequest)
+	err := c.QueryParser(filter)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
 	}
 
-	pageInt, err := strconv.Atoi(page)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
+	if errs := u.validator.ValidateQuery(*filter); errs != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidQueryParams.Error(),
+			Data:    errs,
+		})
 	}
 
-	roleInt, err := strconv.Atoi(role)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
-	}
-
-	users, total, err := u.userService.GetAllUsers(c.Context(), q, roleInt, limitInt, pageInt)
+	users, total, err := u.userService.GetAllUsers(c.Context(), filter)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
@@ -93,8 +86,8 @@ func (u *UserController) GetAllUsers(c *fiber.Ctx) error {
 		Message: "user fetched successfully",
 		Data:    users,
 		Meta: fiber.Map{
-			"limit": limitInt,
-			"page":  pageInt,
+			"limit": filter.Limit,
+			"page":  filter.Page,
 			"total": total,
 		},
 	})
@@ -125,6 +118,10 @@ func (u *UserController) UpdateUserByID(c *fiber.Ctx) error {
 			Message: err2.ErrInvalidRequestBody.Error(),
 			Data:    errs,
 		})
+	}
+
+	if reflect.DeepEqual(*user, dto.UserUpdateRequest{}) {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
 	if err := u.userService.UpdateUserByID(c.Context(), uid, user); err != nil {
@@ -158,6 +155,10 @@ func (u *UserController) UpdateLoggedUser(c *fiber.Ctx) error {
 			Message: err2.ErrInvalidRequestBody.Error(),
 			Data:    errs,
 		})
+	}
+
+	if reflect.DeepEqual(*user, dto.UserUpdateRequest{}) {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
 	if err := u.userService.UpdateUserByID(c.Context(), uid, user); err != nil {

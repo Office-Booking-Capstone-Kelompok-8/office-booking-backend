@@ -6,6 +6,7 @@ import (
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
 	"office-booking-backend/pkg/utils/validator"
+	"reflect"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -47,7 +48,7 @@ func (r *ReservationController) GetUserReservations(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
-		Message: "Reservations fetched successfully",
+		Message: "reservations fetched successfully",
 		Data:    reservations,
 		Meta: fiber.Map{
 			"total": count,
@@ -76,7 +77,7 @@ func (r *ReservationController) GetReservations(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
-		Message: "Reservations fetched successfully",
+		Message: "reservations fetched successfully",
 		Data:    reservations,
 		Meta: fiber.Map{
 			"total": count,
@@ -87,7 +88,7 @@ func (r *ReservationController) GetReservations(c *fiber.Ctx) error {
 }
 
 func (r *ReservationController) GetReservationDetailByID(c *fiber.Ctx) error {
-	reservationID := c.Params("reservationID")
+	reservationID := c.Params("ReservationID")
 	reservation, err := r.service.GetReservationByID(c.Context(), reservationID)
 	if err != nil {
 		switch err {
@@ -99,7 +100,7 @@ func (r *ReservationController) GetReservationDetailByID(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
-		Message: "Reservation fetched successfully",
+		Message: "reservation fetched successfully",
 		Data:    reservation,
 	})
 }
@@ -109,7 +110,7 @@ func (r *ReservationController) GetUserReservationDetailByID(c *fiber.Ctx) error
 	claims := token.Claims.(jwt.MapClaims)
 	userID := claims["uid"].(string)
 
-	reservationID := c.Params("reservationID")
+	reservationID := c.Params("ReservationID")
 	reservation, err := r.service.GetUserReservationByID(c.Context(), reservationID, userID)
 	if err != nil {
 		switch err {
@@ -121,7 +122,7 @@ func (r *ReservationController) GetUserReservationDetailByID(c *fiber.Ctx) error
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
-		Message: "Reservation fetched successfully",
+		Message: "reservation fetched successfully",
 		Data:    reservation,
 	})
 }
@@ -133,7 +134,7 @@ func (r *ReservationController) GetReservationTotal(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
-		Message: "Reservation total fetched successfully",
+		Message: "reservation total fetched successfully",
 		Data:    stat,
 	})
 }
@@ -172,7 +173,7 @@ func (r *ReservationController) CreateReservation(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(response.BaseResponse{
-		Message: "Reservation created successfully",
+		Message: "reservation created successfully",
 		Data: fiber.Map{
 			"reservationId": reservationID,
 		},
@@ -205,7 +206,7 @@ func (r *ReservationController) CreateAdminReservation(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(response.BaseResponse{
-		Message: "Reservation created successfully",
+		Message: "reservation created successfully",
 		Data: fiber.Map{
 			"reservationId": reservationID,
 		},
@@ -217,7 +218,7 @@ func (r *ReservationController) CancelReservation(c *fiber.Ctx) error {
 	claims := token.Claims.(jwt.MapClaims)
 	userID := claims["uid"].(string)
 
-	reservationID := c.Params("reservationID")
+	reservationID := c.Params("ReservationID")
 
 	err := r.service.CancelReservation(c.Context(), userID, reservationID)
 	if err != nil {
@@ -234,12 +235,12 @@ func (r *ReservationController) CancelReservation(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
-		Message: "Reservation canceled successfully",
+		Message: "reservation canceled successfully",
 	})
 }
 
 func (r *ReservationController) UpdateReservation(c *fiber.Ctx) error {
-	reservationID := c.Params("reservationID")
+	reservationID := c.Params("ReservationID")
 
 	reservation := new(dto.UpdateReservationRequest)
 	if err := c.BodyParser(reservation); err != nil {
@@ -251,6 +252,10 @@ func (r *ReservationController) UpdateReservation(c *fiber.Ctx) error {
 			Message: err2.ErrInvalidRequestBody.Error(),
 			Data:    errs,
 		})
+	}
+
+	if reflect.DeepEqual(*reservation, dto.UpdateReservationRequest{}) {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
 	err := r.service.UpdateReservation(c.Context(), reservationID, reservation)
@@ -272,12 +277,42 @@ func (r *ReservationController) UpdateReservation(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
-		Message: "Reservation updated successfully",
+		Message: "reservation updated successfully",
+	})
+}
+
+func (r *ReservationController) UpdateReservationStatus(c *fiber.Ctx) error {
+	reservationID := c.Params("ReservationID")
+
+	status := new(dto.UpdateReservationStatusRequest)
+	if err := c.BodyParser(status); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	if errs := r.validator.ValidateJSON(status); errs != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidRequestBody.Error(),
+			Data:    errs,
+		})
+	}
+
+	err := r.service.UpdateReservationStatus(c.Context(), reservationID, status)
+	if err != nil {
+		switch err {
+		case err2.ErrReservationNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "reservation status updated successfully",
 	})
 }
 
 func (r *ReservationController) DeleteReservation(c *fiber.Ctx) error {
-	reservationID := c.Params("reservationID")
+	reservationID := c.Params("ReservationID")
 
 	err := r.service.DeleteReservationByID(c.Context(), reservationID)
 	if err != nil {
@@ -290,6 +325,6 @@ func (r *ReservationController) DeleteReservation(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
-		Message: "Reservation deleted successfully",
+		Message: "reservation deleted successfully",
 	})
 }

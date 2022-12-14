@@ -46,7 +46,7 @@ func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, filter *dt
 	}
 
 	if !filter.StartDate.ToTime().IsZero() && !filter.EndDate.IsZero() {
-		query = query.Where("NOT EXISTS (SELECT * FROM `reservations` WHERE `reservations`.`building_id` = `buildings`.`id` AND `reservations`.`start_date` <= ? AND `reservations`.`end_date` >= ?)", filter.EndDate, filter.StartDate)
+		query = query.Where("NOT EXISTS (SELECT * FROM `reservations` WHERE `reservations`.`building_id` = `buildings`.`id` AND `reservations`.`start_date` <= ? AND `reservations`.`end_date` >= ?)", filter.EndDate, filter.StartDate.ToTime())
 	}
 
 	if filter.AnnualPriceMin != 0 {
@@ -194,6 +194,7 @@ func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, filter *dt
 func (b *BuildingRepositoryImpl) GetBuildingDetailByID(ctx context.Context, id string, isPublishedOnly bool) (*entity.Building, error) {
 	building := &entity.Building{}
 
+	// TODO: Optimize this query (maybe use raw query instead of gorm)
 	query := b.db.WithContext(ctx).
 		Preload("Pictures", func(db *gorm.DB) *gorm.DB {
 			return db.Order("`pictures`.`index` ASC")
@@ -201,6 +202,7 @@ func (b *BuildingRepositoryImpl) GetBuildingDetailByID(ctx context.Context, id s
 		Preload("Facilities", func(db *gorm.DB) *gorm.DB {
 			return db.Joins("Category")
 		}).
+		Preload("CreatedBy.Detail.Picture").
 		Joins("District").
 		Joins("City").
 		Model(&entity.Building{}).
@@ -256,6 +258,19 @@ func (b *BuildingRepositoryImpl) GetDistrictsByCityID(ctx context.Context, cityI
 	}
 
 	return districts, nil
+}
+
+func (b *BuildingRepositoryImpl) GetDistrictByID(ctx context.Context, districtID int) (*entity.District, error) {
+	district := new(entity.District)
+	err := b.db.WithContext(ctx).
+		Model(entity.District{}).
+		Where("id = ?", districtID).
+		First(district).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return district, nil
 }
 
 func (b *BuildingRepositoryImpl) CreateBuilding(ctx context.Context, building *entity.Building) error {
@@ -340,23 +355,6 @@ func (b *BuildingRepositoryImpl) IsBuildingExist(ctx context.Context, buildingId
 	}
 
 	return count > 0, nil
-}
-
-func (b *BuildingRepositoryImpl) IsBuildingPublished(ctx context.Context, buildingID string) (bool, error) {
-	var building entity.Building
-	err := b.db.WithContext(ctx).
-		Model(&entity.Building{}).
-		Where("id = ?", buildingID).
-		First(&building).Error
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return false, err2.ErrBuildingNotFound
-		}
-
-		return false, err
-	}
-
-	return *building.IsPublished, nil
 }
 
 func (b *BuildingRepositoryImpl) CountBuildingPicturesByID(ctx context.Context, buildingId string) (int64, error) {

@@ -1,6 +1,10 @@
 package config
 
-import "github.com/spf13/viper"
+import (
+	"time"
+
+	"github.com/spf13/viper"
+)
 
 // OTP config
 const (
@@ -17,6 +21,10 @@ const (
 
 const (
 	DATE_RESPONSE_FORMAT = "2006-01-02 15:04:05"
+)
+
+const (
+	PAYMENT_EXPIRATION_TIME = 2 * 24 * time.Hour
 )
 
 func LoadConfig() (*viper.Viper, error) {

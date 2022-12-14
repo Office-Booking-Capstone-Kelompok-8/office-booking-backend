@@ -31,10 +31,15 @@ func (d *Date) ToTime() time.Time {
 }
 
 var timeConverter = func(value string) reflect.Value {
-	if v, err := time.Parse("2006-01-02", value); err == nil {
-		return reflect.ValueOf(v)
+	if value == "" {
+		return reflect.ValueOf(Date{})
 	}
-	return reflect.Value{}
+
+	t, err := time.Parse("2006-01-02", value)
+	if err != nil {
+		return reflect.Value{}
+	}
+	return reflect.ValueOf(Date(t))
 }
 
 var CustomDate = fiber.ParserType{

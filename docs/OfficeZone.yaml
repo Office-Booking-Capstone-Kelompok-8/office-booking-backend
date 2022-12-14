@@ -3254,7 +3254,7 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  /admin/payments:
+  /admin/payments/methods:
     post:
       summary: Create payment detail
       operationId: createPayment
@@ -3313,7 +3313,7 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  /admin/payments/{paymentID}:
+  /admin/payments/methods/{paymentID}:
     put:
       summary: Update payment detail by ID
       operationId: updatePaymentByID
@@ -3412,7 +3412,99 @@ paths:
           $ref: '#/components/responses/PaymentNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
-
+  /admin/payments/{reservationID}:
+    get:
+      summary: Get payments detail for a reservation from admin
+      operationId: getPaymentsAdmin
+      security:
+        - access_token: []
+      tags:
+        - Admin.Payments
+      parameters:
+        - name: reservationID
+          in: path
+          description: ID of the reservation
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+      responses:
+        200:
+          description: Successfully retrieved payments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Payments retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+                        amount:
+                          type: number
+                          example: 1000
+                        startDate:
+                          type: string
+                          format: date-time
+                          description: Date and time of the payment start date  with format YYYY-MM-DD HH:MM:SS
+                          example: 2022-12-04 19:48:04
+                        duration:
+                          type: integer
+                          description: Duration of the reservation in months
+                          example: 1
+                        method:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+                            icon:
+                              type: string
+                              format: url
+                              example: https://example.com/payment-method-icon.png
+                            name:
+                              type: string
+                              example: Bank Transfer
+                            accountNumber:
+                              type: string
+                              example: 1234567890
+                            accountName:
+                              type: string
+                              example: John Doe
+                        proof:
+                          type: string
+                          format: url
+                          example: https://example.com/payment-proof.png
+                        paidAt:
+                          type: string
+                          format: date-time
+                          description: Date and time of the payment confirmation with format YYYY-MM-DD HH:MM:SS
+                          example: 2022-02-02 08:00:00
+                        expiresAt:
+                          type: string
+                          format: date-time
+                          description: Date and time of the payment expiration with format YYYY-MM-DD HH:MM:SS
+                          example: 2022-02-02 08:00:00
+                        createdAt:
+                          type: string
+                          format: date-time
+                          description: Date and time of the payment creation  with format YYYY-MM-DD HH:MM:SS
+                          example: 2022-12-04 19:48:04
+                        updatedAt:
+                          type: string
+                          format: date-time
+                          description: Date and time of the payment update  with format YYYY-MM-DD HH:MM:SS
+                          example: 2022-12-04 19:48:04
   /buildings:
     get:
       summary: Get all published buildings in the system

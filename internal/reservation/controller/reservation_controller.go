@@ -324,7 +324,7 @@ func (r *ReservationController) CreateReservationReviews(c *fiber.Ctx) error {
 	err = r.service.CreateReservationReviews(c.Context(), reviewRequest)
 	if err != nil {
 		switch err {
-		case err2.ErrInvalidBankID:
+		case err2.ErrReservationNotFound:
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		default:
 			return fiber.NewError(fiber.StatusInternalServerError, err.Error())

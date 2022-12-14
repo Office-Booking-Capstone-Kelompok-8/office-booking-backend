@@ -302,9 +302,9 @@ func (r *ReservationServiceImpl) UpdateReservation(ctx context.Context, reservat
 		return err2.ErrReservationNotFound
 	}
 
+
 	var building *entity.Building
 	newReservation := reservation.ToEntity(reservationID)
-
 	if reservation.BuildingID != "" || !reservation.StartDate.ToTime().IsZero() || reservation.Duration > 0 {
 		buildingID := savedReservation.BuildingID
 		if reservation.BuildingID != "" {

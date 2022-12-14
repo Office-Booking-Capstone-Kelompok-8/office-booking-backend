@@ -215,6 +215,7 @@ func (r *ReservationRepositoryImpl) GetReservations(ctx context.Context, filter 
 	rows, err := query.
 		Offset(uint64(filter.Offset)).
 		Limit(uint64(filter.Limit)).
+		OrderBy(fmt.Sprintf("%s %s", filter.SortBy, filter.SortOrder)).
 		RunWith(db).QueryContext(ctx)
 	if err != nil {
 		return nil, err

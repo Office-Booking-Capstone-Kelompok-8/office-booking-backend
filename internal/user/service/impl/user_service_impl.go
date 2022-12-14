@@ -2,6 +2,8 @@ package impl
 
 import (
 	"context"
+	"github.com/google/uuid"
+	"golang.org/x/sync/errgroup"
 	"io"
 	"log"
 	service2 "office-booking-backend/internal/reservation/service"
@@ -68,6 +70,7 @@ func (u *UserServiceImpl) UpdateUserByID(ctx context.Context, id string, user *d
 	userEntity := user.ToEntity()
 	userEntity.ID = id
 	userEntity.Detail.UserID = id
+
 
 	savedUser, err := u.userRepository.GetFullUserByID(ctx, id)
 	if err != nil {

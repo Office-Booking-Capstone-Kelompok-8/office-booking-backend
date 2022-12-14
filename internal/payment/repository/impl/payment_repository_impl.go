@@ -107,7 +107,7 @@ func (p *PaymentRepositoryImpl) GetReservationPaymentByID(ctx context.Context, r
 		Join("payment_proofs pp ON pp.id = t.proof_id").
 		Where("t.reservation_id = ?", reservationID).
 		RunWith(db).
-		Query()
+		QueryContext(ctx)
 
 	if err != nil {
 		return nil, err

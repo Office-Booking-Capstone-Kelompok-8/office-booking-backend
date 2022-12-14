@@ -801,7 +801,7 @@ paths:
                         id:
                           type: string
                           example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
-                        buildings:
+                        building:
                           type: object
                           properties:
                             id:
@@ -810,6 +810,12 @@ paths:
                             name:
                               type: string
                               example: Jakarta Convention Center
+                            picture:
+                              type: string
+                              example: https://storage.googleapis.com/alterra-asset/alterra/alterra-logo.png
+                            city:
+                              type: string
+                              example: Jakarta
                         companyName:
                           type: string
                           example: Alterra
@@ -823,15 +829,29 @@ paths:
                           format: date
                           description: End date of the reservation with format YYYY-MM-DD
                           example: 2020-01-01
+                        duration:
+                          type: integer
+                          example: 1
+                        amount:
+                          type: integer
+                          example: 1000000
                         status:
                           type: object
                           properties:
                             id:
                               type: integer
                               example: 1
-                            message:
+                            status:
                               type: string
                               example: Pending
+                        expiredAt:
+                          type: string
+                          format: date-time
+                          example: 0001-01-01 00:00:00
+                        createdAt:
+                          type: string
+                          format: date-time
+                          example: 0001-01-01 00:00:00
                   Mete:
                     $ref: '#/components/schemas/Meta'
         401:
@@ -992,25 +1012,41 @@ paths:
                         format: date
                         description: End date of the reservation with format YYYY-MM-DD
                         example: 2022-02-02 08:00:00
+                      duration:
+                        type: integer
+                        description: Duration of the reservation in months
+                        example: 1
+                      amount:
+                        type: integer
+                        description: Amount of the reservation in IDR
+                        example: 1000000
                       status:
                         type: object
                         properties:
                           id:
                             type: integer
                             example: 1
-                          message:
+                          status:
                             type: string
                             example: Pending
+                      message:
+                        type: string
+                        example: Please pay the reservation amount
+                      expiredAt:
+                        type: string
+                        format: date-time
+                        description: Date and time of the reservation expiration 
+                        example: 0001-01-01 00:00:00
                       createdAt:
                         type: string
                         format: date-time
-                        description: Date and time of the reservation creation  with format YYYY-MM-DDTHH:MM:SSZ
-                        example: 2022-12-04T19:48:04+08:00
+                        description: Date and time of the reservation creation
+                        example: 0001-01-01 00:00:00
                       updatedAt:
                         type: string
                         format: date-time
-                        description: Date and time of the reservation update with format YYYY-MM-DDTHH:MM:SSZ
-                        example: 2022-12-04T19:48:04+08:00
+                        description: Date and time of the reservation update 
+                        example: 0001-01-01 00:00:00
         404:
           $ref: '#/components/responses/ReservationNotFound'
         500:
@@ -2469,6 +2505,14 @@ paths:
                         format: date
                         description: End date of the reservation with format YYYY-MM-DD
                         example: 2022-02-02 08:00:00
+                      duration:
+                        type: integer
+                        description: Duration of the reservation in months
+                        example: 1
+                      amount:
+                        type: integer
+                        description: Amount of the reservation in IDR
+                        example: 1000000
                       status:
                         type: object
                         properties:
@@ -2478,16 +2522,21 @@ paths:
                           message:
                             type: string
                             example: Pending
+                      expiredAt:
+                        type: string
+                        format: date-time
+                        description: Date and time of the reservation expiration
+                        example: 0001-01-01 00:00:00
                       createdAt:
                         type: string
                         format: date-time
-                        description: Date and time of the reservation creation  with format YYYY-MM-DDTHH:MM:SSZ
-                        example: 2022-12-04T19:48:04+08:00
+                        description: Date and time of the reservation creation 
+                        example: 0001-01-01 00:00:00
                       updatedAt:
                         type: string
                         format: date-time
-                        description: Date and time of the reservation update with format YYYY-MM-DDTHH:MM:SSZ
-                        example: 2022-12-04T19:48:04+08:00
+                        description: Date and time of the reservation update
+                        example: 0001-01-01 00:00:00
         403:
           $ref: '#/components/responses/RolesNotSupported'
         404:
@@ -4265,6 +4314,12 @@ components:
           type: string
           format: date
           example: 2020-01-01
+        duration:
+          type: integer
+          example: 1
+        amount:
+          type: integer
+          example: 1000000
         status:
           type: object
           properties:
@@ -4274,10 +4329,14 @@ components:
             status:
               type: string
               example: Pending
+        expiredAt:
+          type: string
+          format: date-time
+          example: 0001-01-01 00:00:00
         createdAt:
           type: string
           format: date-time
-          example: 2020-01-01T00:00:00.000Z
+          example: 0001-01-01 00:00:00
     BriefUserDetails:
       type: object
       properties:

@@ -12,7 +12,7 @@ type PaymentService interface {
 	GetBanks(ctx context.Context) (*dto.BanksResponse, error)
 	CreatePaymentMethod(ctx context.Context, payment *dto.CreatePaymentRequest) error
 	AddPaymentProof(ctx context.Context, reservationID string, payment *dto.CreateReservationPaymentRequest, file io.Reader) error
-	GetReservationPaymentByID(ctx context.Context, reservationID string) (*dto.PaymentDetailResponse, error)
+	GetReservationPaymentByID(ctx context.Context, reservationID string, userID string) (*dto.PaymentDetailResponse, error)
 	UpdatePaymentMethod(ctx context.Context, paymentID int, payment *dto.UpdatePaymentRequest) error
 	DeletePaymentMethod(ctx context.Context, paymentID int) error
 }

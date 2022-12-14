@@ -58,8 +58,8 @@ func (p *PaymentServiceImpl) GetPaymentMethodByID(ctx context.Context, paymentID
 	return dto.NewPaymentMethodResponse(payment), nil
 }
 
-func (p *PaymentServiceImpl) GetReservationPaymentByID(ctx context.Context, reservationID string) (*dto.PaymentDetailResponse, error) {
-	payment, err := p.repo.GetReservationPaymentByID(ctx, reservationID)
+func (p *PaymentServiceImpl) GetReservationPaymentByID(ctx context.Context, reservationID string, userID string) (*dto.PaymentDetailResponse, error) {
+	payment, err := p.repo.GetReservationPaymentByID(ctx, reservationID, userID)
 	if err != nil {
 		log.Println("error when get reservation payment by id: ", err)
 		return nil, err

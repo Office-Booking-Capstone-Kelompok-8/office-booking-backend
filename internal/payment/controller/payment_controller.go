@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type PaymentController struct {
@@ -71,10 +72,33 @@ func (p *PaymentController) GetPaymentMethodByID(c *fiber.Ctx) error {
 	})
 }
 
+func (p *PaymentController) GetUserReservationPaymentByID(c *fiber.Ctx) error {
+	token := c.Locals("user").(*jwt.Token)
+	claims := token.Claims.(jwt.MapClaims)
+	uid := claims["uid"].(string)
+
+	reservationID := c.Params("reservationID")
+
+	payment, err := p.service.GetReservationPaymentByID(c.Context(), reservationID, uid)
+	if err != nil {
+		switch err {
+		case err2.ErrPaymentNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "payment method retrieved successfully",
+		Data:    payment,
+	})
+}
+
 func (p *PaymentController) GetReservationPaymentByID(c *fiber.Ctx) error {
 	reservationID := c.Params("reservationID")
 
-	payment, err := p.service.GetReservationPaymentByID(c.Context(), reservationID)
+	payment, err := p.service.GetReservationPaymentByID(c.Context(), reservationID, "")
 	if err != nil {
 		switch err {
 		case err2.ErrPaymentNotFound:
@@ -127,7 +151,7 @@ func (p *PaymentController) UpdatePaymentMethod(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	paymentID := c.Params("paymentID")
+	paymentID := c.Params("paymentMethodID")
 	paymentIDInt, err := strconv.Atoi(paymentID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidPaymentID.Error())
@@ -163,7 +187,7 @@ func (p *PaymentController) UpdatePaymentMethod(c *fiber.Ctx) error {
 }
 
 func (p *PaymentController) DeletePaymentMethod(c *fiber.Ctx) error {
-	paymentID := c.Params("paymentID")
+	paymentID := c.Params("paymentMethodID")
 	paymentIDInt, err := strconv.Atoi(paymentID)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidPaymentID.Error())

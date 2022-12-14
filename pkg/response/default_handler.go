@@ -2,6 +2,7 @@ package response
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -13,7 +14,7 @@ var DefaultErrorHandler = func(c *fiber.Ctx, err error) error {
 	var e *fiber.Error
 	message := err.Error()
 	if errors.As(err, &e) {
-		if e.Code == fiber.StatusNotFound {
+		if strings.Contains(message, "Cannot") && e.Code == fiber.StatusNotFound {
 			message = "Not Found"
 		}
 

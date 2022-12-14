@@ -69,11 +69,15 @@ func (r *Routes) Init(app *fiber.App) {
 	user.Put("/change-password", r.accessTokenMiddleware, r.auth.ChangePassword)
 
 	// Enduser.Reservation routes
-	reservation := v1.Group("/reservations")
-	reservation.Get("/", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.GetUserReservations)
-	reservation.Post("/", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.CreateReservation)
-	reservation.Get("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.GetUserReservationDetailByID)
-	reservation.Delete("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.CancelReservation)
+	uReservation := v1.Group("/reservations")
+	uReservation.Get("/", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.GetUserReservations)
+	uReservation.Post("/", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.CreateReservation)
+	uReservation.Get("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.GetUserReservationDetailByID)
+	uReservation.Delete("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.CancelReservation)
+
+	uPayment := v1.Group("/payments")
+	uPayment.Get("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.payment.GetReservationPaymentByID)
+	uPayment.Post("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.payment.UploadPaymentProof)
 
 	// Admin routes
 	admin := v1.Group("/admin")
@@ -109,12 +113,13 @@ func (r *Routes) Init(app *fiber.App) {
 	aReservation.Get("/:reservationID", r.adminAccessTokenMiddleware, r.reservation.GetReservationDetailByID)
 	aReservation.Put("/:reservationID", r.adminAccessTokenMiddleware, r.reservation.UpdateReservation)
 	aReservation.Delete("/:reservationID", r.adminAccessTokenMiddleware, r.reservation.DeleteReservation)
+	aReservation.Put("/:reservationID/status", r.adminAccessTokenMiddleware, r.reservation.UpdateReservationStatus)
 
 	// Admin.Payment routes
 	aPayment := admin.Group("/payments")
-	aPayment.Post("/", r.adminAccessTokenMiddleware, r.payment.CreatePayment)
-	aPayment.Put("/:paymentID", r.adminAccessTokenMiddleware, r.payment.UpdatePayment)
-	aPayment.Delete("/:paymentID", r.adminAccessTokenMiddleware, r.payment.DeletePayment)
+	aPayment.Post("/", r.adminAccessTokenMiddleware, r.payment.CreatePaymentMethod)
+	aPayment.Put("/:paymentID", r.adminAccessTokenMiddleware, r.payment.UpdatePaymentMethod)
+	aPayment.Delete("/:paymentID", r.adminAccessTokenMiddleware, r.payment.DeletePaymentMethod)
 
 	// Buildings routes
 	building := v1.Group("/buildings")
@@ -129,9 +134,9 @@ func (r *Routes) Init(app *fiber.App) {
 
 	// Payment routes
 	payment := v1.Group("/payments")
-	payment.Get("/", r.payment.GetAllPayment)
-	payment.Get("/banks", r.payment.GetBanks)
-	payment.Get("/:paymentID", r.payment.GetPaymentByID)
+	payment.Get("/methods", r.payment.GetAllPaymentMethod)
+	payment.Get("/methods/banks", r.payment.GetBanks)
+	payment.Get("/methods/:paymentMethodID", r.payment.GetPaymentMethodByID)
 }
 
 func ping(c *fiber.Ctx) error {

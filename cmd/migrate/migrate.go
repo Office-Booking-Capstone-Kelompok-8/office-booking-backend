@@ -59,6 +59,7 @@ func main() {
 		&entity.Bank{},
 		&entity.Status{},
 		&entity.Reservation{},
+		&entity.Transaction{},
 	)
 
 	if err != nil {

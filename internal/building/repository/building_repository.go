@@ -19,7 +19,6 @@ type BuildingRepository interface {
 	UpdateBuildingByID(ctx context.Context, building *entity.Building) error
 	CountBuildingPicturesByID(ctx context.Context, buildingID string) (int64, error)
 	IsBuildingExist(ctx context.Context, buildingID string) (bool, error)
-	IsBuildingPublished(ctx context.Context, buildingID string) (bool, error)
 	DeleteBuildingPicturesByID(ctx context.Context, buildingID string, pictureID string) error
 	DeleteBuildingFacilityByID(ctx context.Context, buildingID string, facilityID int) error
 	DeleteBuildingByID(ctx context.Context, buildingID string) error

@@ -7,6 +7,7 @@ import (
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
 	"office-booking-backend/pkg/utils/validator"
+	"reflect"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
@@ -119,6 +120,10 @@ func (u *UserController) UpdateUserByID(c *fiber.Ctx) error {
 		})
 	}
 
+	if reflect.DeepEqual(*user, dto.UserUpdateRequest{}) {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
 	if err := u.userService.UpdateUserByID(c.Context(), uid, user); err != nil {
 		switch err {
 		case err2.ErrUserNotFound:
@@ -150,6 +155,10 @@ func (u *UserController) UpdateLoggedUser(c *fiber.Ctx) error {
 			Message: err2.ErrInvalidRequestBody.Error(),
 			Data:    errs,
 		})
+	}
+
+	if reflect.DeepEqual(*user, dto.UserUpdateRequest{}) {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
 	if err := u.userService.UpdateUserByID(c.Context(), uid, user); err != nil {

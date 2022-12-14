@@ -357,23 +357,6 @@ func (b *BuildingRepositoryImpl) IsBuildingExist(ctx context.Context, buildingId
 	return count > 0, nil
 }
 
-func (b *BuildingRepositoryImpl) IsBuildingPublished(ctx context.Context, buildingID string) (bool, error) {
-	var building entity.Building
-	err := b.db.WithContext(ctx).
-		Model(&entity.Building{}).
-		Where("id = ?", buildingID).
-		First(&building).Error
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return false, err2.ErrBuildingNotFound
-		}
-
-		return false, err
-	}
-
-	return *building.IsPublished, nil
-}
-
 func (b *BuildingRepositoryImpl) CountBuildingPicturesByID(ctx context.Context, buildingId string) (int64, error) {
 	var count int64
 	err := b.db.WithContext(ctx).

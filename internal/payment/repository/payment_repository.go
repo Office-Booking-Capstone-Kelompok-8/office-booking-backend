@@ -6,10 +6,12 @@ import (
 )
 
 type PaymentRepository interface {
-	GetAllPayment(ctx context.Context) (*entity.Payments, error)
+	GetAllPaymentMethod(ctx context.Context) (*entity.Payments, error)
 	GetAllBank(ctx context.Context) (*entity.Banks, error)
-	GetPaymentByID(ctx context.Context, paymentID int) (*entity.Payment, error)
-	CreatePayment(ctx context.Context, payment *entity.Payment) error
-	UpdatePayment(ctx context.Context, payment *entity.Payment) error
-	DeletePayment(ctx context.Context, paymentID int) error
+	GetPaymentMethodByID(ctx context.Context, paymentID int) (*entity.Payment, error)
+	GetReservationPaymentByID(ctx context.Context, reservationID string) (*entity.Transaction, error)
+	CreatePaymentMethod(ctx context.Context, payment *entity.Payment) error
+	CreateNewReservationPayment(ctx context.Context, payment *entity.Transaction) error
+	UpdatePaymentMethod(ctx context.Context, payment *entity.Payment) error
+	DeletePaymentMethod(ctx context.Context, paymentID int) error
 }

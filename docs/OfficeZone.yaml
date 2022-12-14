@@ -801,7 +801,7 @@ paths:
                         id:
                           type: string
                           example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
-                        buildings:
+                        building:
                           type: object
                           properties:
                             id:
@@ -810,6 +810,12 @@ paths:
                             name:
                               type: string
                               example: Jakarta Convention Center
+                            picture:
+                              type: string
+                              example: https://storage.googleapis.com/alterra-asset/alterra/alterra-logo.png
+                            city:
+                              type: string
+                              example: Jakarta
                         companyName:
                           type: string
                           example: Alterra
@@ -823,15 +829,29 @@ paths:
                           format: date
                           description: End date of the reservation with format YYYY-MM-DD
                           example: 2020-01-01
+                        duration:
+                          type: integer
+                          example: 1
+                        amount:
+                          type: integer
+                          example: 1000000
                         status:
                           type: object
                           properties:
                             id:
                               type: integer
                               example: 1
-                            message:
+                            status:
                               type: string
                               example: Pending
+                        expiredAt:
+                          type: string
+                          format: date-time
+                          example: 0001-01-01 00:00:00
+                        createdAt:
+                          type: string
+                          format: date-time
+                          example: 0001-01-01 00:00:00
                   Mete:
                     $ref: '#/components/schemas/Meta'
         401:
@@ -992,25 +1012,41 @@ paths:
                         format: date
                         description: End date of the reservation with format YYYY-MM-DD
                         example: 2022-02-02 08:00:00
+                      duration:
+                        type: integer
+                        description: Duration of the reservation in months
+                        example: 1
+                      amount:
+                        type: integer
+                        description: Amount of the reservation in IDR
+                        example: 1000000
                       status:
                         type: object
                         properties:
                           id:
                             type: integer
                             example: 1
-                          message:
+                          status:
                             type: string
                             example: Pending
+                      message:
+                        type: string
+                        example: Please pay the reservation amount
+                      expiredAt:
+                        type: string
+                        format: date-time
+                        description: Date and time of the reservation expiration 
+                        example: 0001-01-01 00:00:00
                       createdAt:
                         type: string
                         format: date-time
-                        description: Date and time of the reservation creation  with format YYYY-MM-DDTHH:MM:SSZ
-                        example: 2022-12-04T19:48:04+08:00
+                        description: Date and time of the reservation creation
+                        example: 0001-01-01 00:00:00
                       updatedAt:
                         type: string
                         format: date-time
-                        description: Date and time of the reservation update with format YYYY-MM-DDTHH:MM:SSZ
-                        example: 2022-12-04T19:48:04+08:00
+                        description: Date and time of the reservation update 
+                        example: 0001-01-01 00:00:00
         404:
           $ref: '#/components/responses/ReservationNotFound'
         500:
@@ -1243,6 +1279,184 @@ paths:
           $ref: '#/components/responses/InvalidOrMissingToken'
         404:
           $ref: '#/components/responses/ReservationNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  
+  /payments/{reservationID}:
+    get:
+      summary: Get payments detail for a reservation
+      operationId: getPayments
+      security:
+        - access_token: []
+      tags:
+        - EndUser.Payments
+      parameters:
+        - name: reservationID
+          in: path
+          description: ID of the reservation
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+      responses:
+        200:
+          description: Successfully retrieved payments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Payments retrieved successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+                        amount:
+                          type: number
+                          example: 1000
+                        startDate:
+                          type: string
+                          format: date-time
+                          description: Date and time of the payment start date  with format YYYY-MM-DD HH:MM:SS
+                          example: 2022-12-04 19:48:04
+                        duration:
+                          type: integer
+                          description: Duration of the reservation in months
+                          example: 1
+                        method:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+                            icon:
+                              type: string
+                              format: url
+                              example: https://example.com/payment-method-icon.png
+                            name:
+                              type: string
+                              example: Bank Transfer
+                            accountNumber:
+                              type: string
+                              example: 1234567890
+                            accountName:
+                              type: string
+                              example: John Doe
+                        proof:
+                          type: string
+                          format: url
+                          example: https://example.com/payment-proof.png
+                        paidAt:
+                          type: string
+                          format: date-time
+                          description: Date and time of the payment confirmation with format YYYY-MM-DD HH:MM:SS
+                          example: 2022-02-02 08:00:00
+                        expiresAt:
+                          type: string
+                          format: date-time
+                          description: Date and time of the payment expiration with format YYYY-MM-DD HH:MM:SS
+                          example: 2022-02-02 08:00:00
+                        createdAt:
+                          type: string
+                          format: date-time
+                          description: Date and time of the payment creation  with format YYYY-MM-DD HH:MM:SS
+                          example: 2022-12-04 19:48:04
+                        updatedAt:
+                          type: string
+                          format: date-time
+                          description: Date and time of the payment update  with format YYYY-MM-DD HH:MM:SS
+                          example: 2022-12-04 19:48:04
+    post:
+      summary: Upload payment proof for a reservation
+      operationId: payReservation
+      security:
+        - access_token: []
+      tags:
+        - EndUser.Payments
+      parameters:
+        - name: reservationID
+          in: path
+          description: ID of the reservation
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+      requestBody:
+        description: Payment proof data
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                proof:
+                  type: string
+                  format: binary
+                  description: Payment proof image
+                methodId:
+                  type: integer
+                  description: Payment method id
+                  example: 1
+      responses:
+        200:
+          description: Successfully uploaded payment proof
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Payment proof uploaded successfully
+        400:
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidPaymentMethod:
+                  value:
+                    message: Invalid request body
+                    data:
+                      - field: method
+                        reason: Payment method is invalid
+                InvalidPaymentProof:
+                  value:
+                    message: Invalid request body
+                    data:
+                      - field: proof
+                        reason: Payment proof is invalid
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        404:
+          $ref: '#/components/responses/ReservationNotFound'
+        409:
+          description: The payment proof conflict with the reservation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                ReservationAlreadyPaid:
+                  value:
+                    message: reservation already paid
+                CannotPayReservation:
+                  description: Cannot pay reservation either because the reservation is not yet approved or the reservation status is not awaiting payment
+                  value:
+                    message: cannot pay reservation
         500:
           $ref: '#/components/responses/InternalServerError'
 
@@ -2291,6 +2505,14 @@ paths:
                         format: date
                         description: End date of the reservation with format YYYY-MM-DD
                         example: 2022-02-02 08:00:00
+                      duration:
+                        type: integer
+                        description: Duration of the reservation in months
+                        example: 1
+                      amount:
+                        type: integer
+                        description: Amount of the reservation in IDR
+                        example: 1000000
                       status:
                         type: object
                         properties:
@@ -2300,16 +2522,21 @@ paths:
                           message:
                             type: string
                             example: Pending
+                      expiredAt:
+                        type: string
+                        format: date-time
+                        description: Date and time of the reservation expiration
+                        example: 0001-01-01 00:00:00
                       createdAt:
                         type: string
                         format: date-time
-                        description: Date and time of the reservation creation  with format YYYY-MM-DDTHH:MM:SSZ
-                        example: 2022-12-04T19:48:04+08:00
+                        description: Date and time of the reservation creation 
+                        example: 0001-01-01 00:00:00
                       updatedAt:
                         type: string
                         format: date-time
-                        description: Date and time of the reservation update with format YYYY-MM-DDTHH:MM:SSZ
-                        example: 2022-12-04T19:48:04+08:00
+                        description: Date and time of the reservation update
+                        example: 0001-01-01 00:00:00
         403:
           $ref: '#/components/responses/RolesNotSupported'
         404:
@@ -3414,7 +3641,7 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  /payments:
+  /payments/methods:
     get:
       summary: Get all payments method in the system
       operationId: getPayments
@@ -3456,14 +3683,14 @@ paths:
                           example: Bank Transfer
         500:
           $ref: '#/components/responses/InternalServerError'
-  /payments/{paymentID}:
+  /payments/methods/{paymentMethodID}:
     get:
       summary: Get payments method by id
       operationId: getPaymentsById
       tags:
         - Payments
       parameters:
-        - name: paymentID
+        - name: paymentMethodID
           in: path
           description: ID of the payment
           required: true
@@ -3506,7 +3733,7 @@ paths:
           $ref: '#/components/responses/PaymentNotFound'                         
         500:
           $ref: '#/components/responses/InternalServerError'
-  /payments/banks:
+  /payments/methods/banks:
     get:
       summary: Get all banks in the system
       operationId: getBanks
@@ -4087,6 +4314,12 @@ components:
           type: string
           format: date
           example: 2020-01-01
+        duration:
+          type: integer
+          example: 1
+        amount:
+          type: integer
+          example: 1000000
         status:
           type: object
           properties:
@@ -4096,10 +4329,14 @@ components:
             status:
               type: string
               example: Pending
+        expiredAt:
+          type: string
+          format: date-time
+          example: 0001-01-01 00:00:00
         createdAt:
           type: string
           format: date-time
-          example: 2020-01-01T00:00:00.000Z
+          example: 0001-01-01 00:00:00
     BriefUserDetails:
       type: object
       properties:
@@ -4264,6 +4501,8 @@ tags:
     description: End user users related endpoints
   - name: EndUser.Reservations
     description: End user reservations related endpoints
+  - name: EndUser.Payments
+    description: End user payments related endpoints
   - name: Admin.Users
     description: Users related endpoints for admin only
   - name: Admin.Buildings

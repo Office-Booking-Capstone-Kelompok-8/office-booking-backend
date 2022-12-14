@@ -248,7 +248,7 @@ type BriefReviewResponse struct {
 
 func NewBriefReviewResponse(review *entity.Review) *BriefReviewResponse {
 	return &BriefReviewResponse{
-		ID:        review.Reservation.ID,
+		ID:        review.ID,
 		Rating:    review.Rating,
 		Message:   review.Message,
 		CreatedAt: review.CreatedAt,

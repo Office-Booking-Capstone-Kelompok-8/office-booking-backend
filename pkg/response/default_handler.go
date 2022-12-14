@@ -11,12 +11,17 @@ var DefaultErrorHandler = func(c *fiber.Ctx, err error) error {
 
 	// Status code from errors if they implement *fiber.Error
 	var e *fiber.Error
+	message := err.Error()
 	if errors.As(err, &e) {
+		if e.Code == fiber.StatusNotFound {
+			message = "Not Found"
+		}
+
 		code = e.Code
 	}
 
 	// Return status code with error JSON
 	return c.Status(code).JSON(BaseResponse{
-		Message: err.Error(),
+		Message: message,
 	})
 }

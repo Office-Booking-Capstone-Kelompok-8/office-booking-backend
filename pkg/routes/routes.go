@@ -135,7 +135,6 @@ func (r *Routes) Init(app *fiber.App) {
 	location := v1.Group("/locations")
 	location.Get("/cities", r.building.GetCities)
 	location.Get("/districts", r.building.GetDistricts)
-
 }
 
 func ping(c *fiber.Ctx) error {

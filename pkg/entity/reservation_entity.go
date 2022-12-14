@@ -18,8 +18,7 @@ type Reservation struct {
 	User        User      `gorm:"constraint:OnUpdate:NO ACTION,OnDelete:SET NULL;"`
 	StatusID    int       `gorm:"type:int; default:1"`
 	Status      Status
-	Message     string `gorm:"type:varchar(255); default:''"`
-	Review      Reviews
+	Message     string         `gorm:"type:varchar(255); default:''"`
 	CreatedAt   time.Time      `gorm:"autoCreateTime"`
 	UpdatedAt   time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
@@ -63,7 +62,6 @@ type Review struct {
 	Building      Building
 	Rating        int
 	Message       string
-	IsAnonymous   bool
 	CreatedAt     time.Time      `gorm:"autoCreateTime"`
 	UpdatedAt     time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt     gorm.DeletedAt `gorm:"index"`

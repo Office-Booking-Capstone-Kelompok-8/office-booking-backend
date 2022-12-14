@@ -365,7 +365,7 @@ func (r *ReservationServiceImpl) DeleteReservationByID(ctx context.Context, rese
 func (r *ReservationServiceImpl) GetReservationReviews(ctx context.Context) (*dto.BriefReviewsResponse, error) {
 	reviews, err := r.repo.GetReservationReviews(ctx)
 	if err != nil {
-		log.Println("error when getting all banks: ", err)
+		log.Println("error when getting reviews: ", err)
 		return nil, err
 	}
 

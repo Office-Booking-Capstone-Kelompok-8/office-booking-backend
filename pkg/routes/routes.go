@@ -75,9 +75,13 @@ func (r *Routes) Init(app *fiber.App) {
 	uReservation.Get("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.GetUserReservationDetailByID)
 	uReservation.Delete("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.CancelReservation)
 
-	uPayment := v1.Group("/payments")
-	uPayment.Get("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.payment.GetReservationPaymentByID)
-	uPayment.Post("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.payment.UploadPaymentProof)
+	payment := v1.Group("/payments")
+	payment.Get("/methods", r.payment.GetAllPaymentMethod)
+	payment.Get("/methods/banks", r.payment.GetBanks)
+	payment.Get("/methods/:paymentMethodID", r.payment.GetPaymentMethodByID)
+	// Enduser.Payment routes
+	payment.Get("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.payment.GetReservationPaymentByID)
+	payment.Post("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.payment.UploadPaymentProof)
 
 	// Admin routes
 	admin := v1.Group("/admin")
@@ -132,11 +136,6 @@ func (r *Routes) Init(app *fiber.App) {
 	location.Get("/cities", r.building.GetCities)
 	location.Get("/districts", r.building.GetDistricts)
 
-	// Payment routes
-	payment := v1.Group("/payments")
-	payment.Get("/methods", r.payment.GetAllPaymentMethod)
-	payment.Get("/methods/banks", r.payment.GetBanks)
-	payment.Get("/methods/:paymentMethodID", r.payment.GetPaymentMethodByID)
 }
 
 func ping(c *fiber.Ctx) error {

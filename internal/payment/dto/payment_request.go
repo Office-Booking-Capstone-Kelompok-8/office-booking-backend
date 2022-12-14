@@ -1,6 +1,10 @@
 package dto
 
-import "office-booking-backend/pkg/entity"
+import (
+	"office-booking-backend/pkg/entity"
+
+	"github.com/imagekit-developer/imagekit-go/api/uploader"
+)
 
 type CreatePaymentRequest struct {
 	BankID        int    `json:"bankId" validate:"required,gte=1"`
@@ -31,5 +35,20 @@ func (u *UpdatePaymentRequest) ToEntity() *entity.Payment {
 		AccountName:   u.AccountName,
 		AccountNumber: u.AccountNumber,
 		Description:   u.Description,
+	}
+}
+
+type CreateReservationPaymentRequest struct {
+	MethodID int `form:"methodId" validate:"required"`
+}
+
+func (c *CreateReservationPaymentRequest) ToEntity(proof *uploader.UploadResult) *entity.Transaction {
+	return &entity.Transaction{
+		PaymentID: uint(c.MethodID),
+		ProofID:   proof.FileId,
+		Proof: entity.PaymentProof{
+			ID:  proof.FileId,
+			URL: proof.Url,
+		},
 	}
 }

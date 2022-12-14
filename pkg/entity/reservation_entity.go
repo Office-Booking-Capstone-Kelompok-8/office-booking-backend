@@ -14,11 +14,14 @@ type Reservation struct {
 	Building    Building
 	StartDate   time.Time `gorm:"type:datetime"`
 	EndDate     time.Time `gorm:"type:datetime"`
+	Amount      int       `gorm:"type:int; not null"`
 	UserID      string    `gorm:"type:varchar(36);"`
 	User        User      `gorm:"constraint:OnUpdate:NO ACTION,OnDelete:SET NULL;"`
 	StatusID    int       `gorm:"type:int; default:1"`
 	Status      Status
 	Message     string         `gorm:"type:varchar(255); default:''"`
+	AcceptedAt  time.Time      `gorm:"type:datetime; default:NULL"`
+	ExpiredAt   time.Time      `gorm:"type:datetime; default:NULL"`
 	CreatedAt   time.Time      `gorm:"autoCreateTime"`
 	UpdatedAt   time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"`

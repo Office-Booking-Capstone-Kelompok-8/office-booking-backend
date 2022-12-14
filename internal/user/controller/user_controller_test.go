@@ -211,8 +211,10 @@ func (s *TestSuiteUserController) TestGetAllUsers() {
 		ExpectedBody   response.BaseResponse
 	}{
 		{
-			Name: "success",
-			Role: "1",
+			Name:  "success",
+			Role:  "1",
+			Page:  "1",
+			Limit: "20",
 			ServiceReturns: &dto.BriefUsersResponse{
 				{
 					ID: "some_uid",
@@ -240,6 +242,8 @@ func (s *TestSuiteUserController) TestGetAllUsers() {
 		{
 			Name:           "Success: No user",
 			Role:           "1",
+			Page:           "1",
+			Limit:          "20",
 			ServiceReturns: &dto.BriefUsersResponse{},
 			ExpectedStatus: fiber.StatusOK,
 			ExpectedBody: response.BaseResponse{
@@ -292,6 +296,7 @@ func (s *TestSuiteUserController) TestGetAllUsers() {
 		s.SetupTest()
 		s.Run(tc.Name, func() {
 			s.mockService.On("GetAllUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.ServiceReturns, int64(1), tc.ServiceErr)
+			s.mockValidator.On("ValidateQuery", mock.Anything).Return((*validator.ErrorsResponse)(nil))
 
 			s.fiberApp.Get("/", func(ctx *fiber.Ctx) error {
 				ctx.Context().QueryArgs().Set("q", tc.Q)

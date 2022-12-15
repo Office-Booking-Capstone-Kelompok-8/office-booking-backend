@@ -400,11 +400,12 @@ func (r *ReservationRepositoryImpl) GetReservationTotal(ctx context.Context) (*e
 func (r *ReservationRepositoryImpl) GetReservationCount(ctx context.Context) (*entity.TimeframeStat, error) {
 	rows, err := r.db.WithContext(ctx).
 		Table(
-			"(?) AS today, (?) AS thisWeek, (?) AS thisMonth, (?) AS thisYear",
+			"(?) AS today, (?) AS thisWeek, (?) AS thisMonth, (?) AS thisYear, (?) AS allTime",
 			r.db.Table("reservations").Select("count(*)").Where("DATE(created_at) = DATE(?)", time.Now().Format("2006-01-02")),
 			r.db.Table("reservations").Select("count(*)").Where("YEARWEEK(created_at) = YEARWEEK(?)", time.Now().Format("2006-01-02")),
 			r.db.Table("reservations").Select("count(*)").Where("MONTH(created_at) = MONTH(?)", time.Now().Format("2006-01-02")),
 			r.db.Table("reservations").Select("count(*)").Where("YEAR(created_at) = YEAR(?)", time.Now().Format("2006-01-02")),
+			r.db.Table("reservations").Select("count(*)"),
 		).Rows()
 	if err != nil {
 		return nil, err
@@ -415,7 +416,7 @@ func (r *ReservationRepositoryImpl) GetReservationCount(ctx context.Context) (*e
 
 	stat := new(entity.TimeframeStat)
 	for rows.Next() {
-		err = rows.Scan(&stat.Day, &stat.Week, &stat.Month, &stat.Year)
+		err = rows.Scan(&stat.Day, &stat.Week, &stat.Month, &stat.Year, &stat.All)
 		if err != nil {
 			return nil, err
 		}

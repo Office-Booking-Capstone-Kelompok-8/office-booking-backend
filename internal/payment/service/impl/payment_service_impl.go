@@ -68,15 +68,15 @@ func (p *PaymentServiceImpl) GetReservationPaymentByID(ctx context.Context, rese
 	return dto.NewPaymentDetailResponse(payment), nil
 }
 
-func (p *PaymentServiceImpl) CreatePaymentMethod(ctx context.Context, payment *dto.CreatePaymentRequest) error {
+func (p *PaymentServiceImpl) CreatePaymentMethod(ctx context.Context, payment *dto.CreatePaymentRequest) (uint, error) {
 	paymentEntity := payment.ToEntity()
 	err := p.repo.CreatePaymentMethod(ctx, paymentEntity)
 	if err != nil {
 		log.Println("error when create payment: ", err)
-		return err
+		return 0, err
 	}
 
-	return nil
+	return paymentEntity.ID, nil
 }
 
 func (p *PaymentServiceImpl) AddPaymentProof(ctx context.Context, reservationID string, payment *dto.CreateReservationPaymentRequest, file io.Reader) error {

@@ -369,7 +369,7 @@ func (r *ReservationRepositoryImpl) GetUserReservationByID(ctx context.Context, 
 	return &reservation, nil
 }
 
-func (r *ReservationRepositoryImpl) GetReservationTotal(ctx context.Context) (*entity.StatusesStat, error) {
+func (r *ReservationRepositoryImpl) GetReservationCountByStatus(ctx context.Context) (*entity.StatusesStat, error) {
 	rows, err := r.db.WithContext(ctx).
 		Table("statuses").
 		Select("statuses.id, statuses.message, COUNT(reservations.id) AS total").
@@ -397,7 +397,7 @@ func (r *ReservationRepositoryImpl) GetReservationTotal(ctx context.Context) (*e
 	return &stat, nil
 }
 
-func (r *ReservationRepositoryImpl) GetReservationCount(ctx context.Context) (*entity.TimeframeStat, error) {
+func (r *ReservationRepositoryImpl) GetReservationCountByTime(ctx context.Context) (*entity.TimeframeStat, error) {
 	rows, err := r.db.WithContext(ctx).
 		Table(
 			"(?) AS today, (?) AS thisWeek, (?) AS thisMonth, (?) AS thisYear, (?) AS allTime",

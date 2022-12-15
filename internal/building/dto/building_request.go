@@ -121,7 +121,7 @@ type PriceRequest struct {
 type LocationRequest struct {
 	Address    string `json:"address" validate:"omitempty,min=3"`
 	DistrictID int    `json:"districtId" validate:"required_with=CityID"`
-	CityID     int    `json:"cityId" validate:"required_with=DistrictID"`
+	CityID     int    `json:"cityId" validate:"required_with=CityID"`
 	Geo        Geo    `json:"geo" validate:"omitempty,dive"`
 }
 

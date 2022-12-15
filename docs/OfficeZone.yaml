@@ -1664,6 +1664,66 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
+  /admin/buildings/total:
+    get:
+      summary: Get total buildings in the system
+      description: Get total buildings in the system
+      operationId: getTotalBuildings
+      tags:
+        - Admin.Buildings
+      security:
+        - access_token: []
+      responses:
+        200:
+          description: Successfully retrieved total buildings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: tobuilding total fetched successfully
+                  data:
+                    type: object
+                    properties:
+                      byCity:
+                        type: array
+                        example:
+                          - cityId: 154
+                            cityName: "Kota Jakarta Selatan"
+                            total: 1
+                          - cityId: 155
+                            cityName: "Kota Jakarta Timur"
+                            total: 1
+                          - cityId: 156
+                            cityName: "Kota Jakarta Pusat"
+                            total: 1
+                      byTimeframe:
+                        type: object
+                        properties:
+                          today:
+                            type: integer
+                            example: 1
+                          thisWeek:
+                            type: integer
+                            example: 1
+                          thisMonth:
+                            type: integer
+                            example: 1
+                          thisYear:
+                            type: integer
+                            example: 1
+                          allTime:
+                            type: integer
+                            example: 1
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
   /admin/buildings/{buildingID}:
     get:
       summary: Get building detail by ID

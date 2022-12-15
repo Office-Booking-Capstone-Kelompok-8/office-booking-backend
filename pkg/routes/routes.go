@@ -101,6 +101,7 @@ func (r *Routes) Init(app *fiber.App) {
 	aBuilding := admin.Group("/buildings")
 	aBuilding.Get("/", r.adminAccessTokenMiddleware, r.building.GetAllBuildings)
 	aBuilding.Get("/id", r.adminAccessTokenMiddleware, r.building.RequestNewBuildingID)
+	aBuilding.Get("/total", r.adminAccessTokenMiddleware, r.building.GetBuildingTotal)
 	aBuilding.Get("/:buildingID", r.adminAccessTokenMiddleware, r.building.GetBuildingDetailByID)
 	aBuilding.Put("/:buildingID", r.adminAccessTokenMiddleware, r.building.UpdateBuilding)
 	aBuilding.Delete("/:buildingID", r.adminAccessTokenMiddleware, r.building.DeleteBuilding)

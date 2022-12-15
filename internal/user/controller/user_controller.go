@@ -105,6 +105,18 @@ func (u *UserController) GetRegisteredMemberStat(c *fiber.Ctx) error {
 	})
 }
 
+func (u *UserController) GetRegisteredMemberCount(c *fiber.Ctx) error {
+	count, err := u.userService.GetRegisteredMemberCount(c.Context())
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "user total fetched successfully",
+		Data:    count,
+	})
+}
+
 func (u *UserController) UpdateUserByID(c *fiber.Ctx) error {
 	uid := c.Params("userID")
 

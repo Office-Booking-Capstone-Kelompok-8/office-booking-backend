@@ -27,6 +27,11 @@ func (m *UserServiceMock) GetRegisteredMemberStat(ctx context.Context) (*dto.Reg
 	return args.Get(0).(*dto.RegisteredStatResponseList), args.Error(1)
 }
 
+func (m *UserServiceMock) GetRegisteredMemberCount(ctx context.Context) (*dto.TotalByTimeFrame, error) {
+	args := m.Called(ctx)
+	return args.Get(0).(*dto.TotalByTimeFrame), args.Error(1)
+}
+
 func (m *UserServiceMock) UpdateUserByID(ctx context.Context, id string, user *dto.UserUpdateRequest) error {
 	args := m.Called(ctx, id, user)
 	return args.Error(0)

@@ -86,3 +86,21 @@ func NewRegisteredStatResponseList(stats *entity.MonthlyRegisteredStatList) *Reg
 	}
 	return &statList
 }
+
+type TotalByTimeFrame struct {
+	Today     int64 `json:"today"`
+	ThisWeek  int64 `json:"thisWeek"`
+	ThisMonth int64 `json:"thisMonth"`
+	ThisYear  int64 `json:"thisYear"`
+	AllTime   int64 `json:"allTime"`
+}
+
+func NewTimeframeStat(stats *entity.TimeframeStat) *TotalByTimeFrame {
+	return &TotalByTimeFrame{
+		Today:     stats.Day,
+		ThisWeek:  stats.Week,
+		ThisMonth: stats.Month,
+		ThisYear:  stats.Year,
+		AllTime:   stats.All,
+	}
+}

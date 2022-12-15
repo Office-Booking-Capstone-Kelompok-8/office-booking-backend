@@ -263,10 +263,10 @@ type TimeframeStat struct {
 
 func NewTimeframeStat(stats *entity.TimeframeStat) *TimeframeStat {
 	return &TimeframeStat{
-		Today:     stats.Day,
-		ThisWeek:  stats.Week,
-		ThisMonth: stats.Month,
-		ThisYear:  stats.Year,
-		AllTime:   stats.All,
+		Today:     stats.Day.Int64,
+		ThisWeek:  stats.Week.Int64,
+		ThisMonth: stats.Month.Int64,
+		ThisYear:  stats.Year.Int64,
+		AllTime:   stats.All.Int64,
 	}
 }

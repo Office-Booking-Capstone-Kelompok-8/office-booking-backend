@@ -1,9 +1,11 @@
 package entity
 
+import "database/sql"
+
 type TimeframeStat struct {
-	Day   int64
-	Week  int64
-	Month int64
-	Year  int64
-	All   int64
+	Day   sql.NullInt64
+	Week  sql.NullInt64
+	Month sql.NullInt64
+	Year  sql.NullInt64
+	All   sql.NullInt64
 }

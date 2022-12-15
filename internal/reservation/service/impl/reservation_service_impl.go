@@ -158,6 +158,17 @@ func (r *ReservationServiceImpl) GetReservationStat(ctx context.Context) (*dto.R
 	return res, nil
 }
 
+func (r *ReservationServiceImpl) GetTotalRevenueByTime(ctx context.Context) (*dto.TimeframeStat, error) {
+	total, err := r.repo.GetTotalRevenue(ctx)
+	if err != nil {
+		log.Println("error while getting this year revenue: ", err)
+		return nil, err
+	}
+
+	res := dto.NewTimeframeStat(total)
+	return res, nil
+}
+
 func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, userID string, reservation *dto.AddReservartionRequest) (string, error) {
 	errGroup := errgroup.Group{}
 	var building *entity.Building

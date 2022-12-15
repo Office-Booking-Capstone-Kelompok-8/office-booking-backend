@@ -97,10 +97,10 @@ type TotalByTimeFrame struct {
 
 func NewTimeframeStat(stats *entity.TimeframeStat) *TotalByTimeFrame {
 	return &TotalByTimeFrame{
-		Today:     stats.Day,
-		ThisWeek:  stats.Week,
-		ThisMonth: stats.Month,
-		ThisYear:  stats.Year,
-		AllTime:   stats.All,
+		Today:     stats.Day.Int64,
+		ThisWeek:  stats.Week.Int64,
+		ThisMonth: stats.Month.Int64,
+		ThisYear:  stats.Year.Int64,
+		AllTime:   stats.All.Int64,
 	}
 }

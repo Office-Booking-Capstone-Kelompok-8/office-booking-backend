@@ -2754,7 +2754,7 @@ paths:
                           thisYear:
                             type: integer
                             example: 1
-                          total:
+                          allTime:
                             type: integer
                             example: 1
 

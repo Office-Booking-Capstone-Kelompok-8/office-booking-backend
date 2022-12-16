@@ -133,6 +133,33 @@ func (u *UserRepositoryImpl) GetRegisteredMemberStat(ctx context.Context) (*enti
 	return resStructs, nil
 }
 
+func (u *UserRepositoryImpl) GetRegisteredMemberCount(ctx context.Context) (*entity.TimeframeStat, error) {
+	rows, err := u.db.WithContext(ctx).
+		Table("(?) AS today, (?) AS thisWeek, (?) AS thisMonth, (?) AS thisYear, (?) AS allTime",
+			u.db.Table("users").Select("count(*)").Where("DATE(created_at) = DATE(?)", time.Now().Format("2006-01-02")),
+			u.db.Table("users").Select("count(*)").Where("YEARWEEK(created_at) = YEARWEEK(?)", time.Now().Format("2006-01-02")),
+			u.db.Table("users").Select("count(*)").Where("MONTH(created_at) = MONTH(?)", time.Now().Format("2006-01-02")),
+			u.db.Table("users").Select("count(*)").Where("YEAR(created_at) = YEAR(?)", time.Now().Format("2006-01-02")),
+			u.db.Table("users").Select("count(*)"),
+		).Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err = rows.Close()
+	}()
+
+	stat := new(entity.TimeframeStat)
+	for rows.Next() {
+		err = rows.Scan(&stat.Day, &stat.Week, &stat.Month, &stat.Year, &stat.All)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return stat, nil
+}
+
 func (u *UserRepositoryImpl) UpdateUserByID(ctx context.Context, user *entity.User) error {
 	res := u.db.WithContext(ctx).Where("id = ?", user.ID).Updates(user)
 	if res.Error != nil {

@@ -64,6 +64,16 @@ func (u *UserServiceImpl) GetRegisteredMemberStat(ctx context.Context) (*dto.Reg
 	return dto.NewRegisteredStatResponseList(stat), nil
 }
 
+func (u *UserServiceImpl) GetRegisteredMemberCount(ctx context.Context) (*dto.TotalByTimeFrame, error) {
+	total, err := u.userRepository.GetRegisteredMemberCount(ctx)
+	if err != nil {
+		log.Println("Error while getting registered member count: ", err)
+		return nil, err
+	}
+
+	return dto.NewTimeframeStat(total), nil
+}
+
 func (u *UserServiceImpl) UpdateUserByID(ctx context.Context, id string, user *dto.UserUpdateRequest) error {
 	userEntity := user.ToEntity()
 	userEntity.ID = id

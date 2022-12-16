@@ -125,7 +125,7 @@ func (r *ReservationServiceImpl) GetReservationStat(ctx context.Context) (*dto.R
 
 	errGroup := errgroup.Group{}
 	errGroup.Go(func() error {
-		total, err := r.repo.GetReservationCount(ctx)
+		total, err := r.repo.GetReservationCountByTime(ctx)
 		if err != nil {
 			log.Println("error while getting this year reservation count: ", err)
 			return err
@@ -136,7 +136,7 @@ func (r *ReservationServiceImpl) GetReservationStat(ctx context.Context) (*dto.R
 	})
 
 	errGroup.Go(func() error {
-		stat, err := r.repo.GetReservationTotal(ctx)
+		stat, err := r.repo.GetReservationCountByStatus(ctx)
 		if err != nil {
 			log.Println("error while getting total reservation count: ", err)
 			return err
@@ -155,6 +155,17 @@ func (r *ReservationServiceImpl) GetReservationStat(ctx context.Context) (*dto.R
 		ByStatus:    statByStatus,
 	}
 
+	return res, nil
+}
+
+func (r *ReservationServiceImpl) GetTotalRevenueByTime(ctx context.Context) (*dto.TimeframeStat, error) {
+	total, err := r.repo.GetTotalRevenue(ctx)
+	if err != nil {
+		log.Println("error while getting this year revenue: ", err)
+		return nil, err
+	}
+
+	res := dto.NewTimeframeStat(total)
 	return res, nil
 }
 

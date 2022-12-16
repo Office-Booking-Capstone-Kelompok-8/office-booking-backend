@@ -13,6 +13,8 @@ type BuildingRepository interface {
 	GetCities(ctx context.Context) (*entity.Cities, error)
 	GetDistrictsByCityID(ctx context.Context, cityID int) (*entity.Districts, error)
 	GetDistrictByID(ctx context.Context, districtID int) (*entity.District, error)
+	GetBuildingCountByCity(ctx context.Context) (*entity.CitiesStat, error)
+	GetBuildingCountByTime(ctx context.Context) (*entity.TimeframeStat, error)
 	AddPicture(ctx context.Context, picture *entity.Picture) error
 	AddFacility(ctx context.Context, facility *entity.Facilities) error
 	CreateBuilding(ctx context.Context, building *entity.Building) error

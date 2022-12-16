@@ -2,6 +2,7 @@ package impl
 
 import (
 	"context"
+	"golang.org/x/sync/errgroup"
 	"io"
 	"log"
 	"office-booking-backend/internal/building/dto"
@@ -128,6 +129,43 @@ func (b *BuildingServiceImpl) GetDistrictsByCityID(ctx context.Context, cityID i
 	}
 
 	return dto.NewDistrictsResponse(districts), nil
+}
+
+func (b *BuildingServiceImpl) GetBuildingStatistics(ctx context.Context) (*dto.BuildingStatResponse, error) {
+	statByCities := new(dto.TotalByCities)
+	statByTimeFrame := new(dto.TotalByTimeFrame)
+
+	errGroup := errgroup.Group{}
+	errGroup.Go(func() error {
+		total, err := b.repo.GetBuildingCountByCity(ctx)
+		if err != nil {
+			log.Println("error when getting building count by city: ", err)
+			return err
+		}
+
+		statByCities = dto.NewTotalByCities(total)
+		return nil
+	})
+
+	errGroup.Go(func() error {
+		total, err := b.repo.GetBuildingCountByTime(ctx)
+		if err != nil {
+			log.Println("error when getting building count by time: ", err)
+			return err
+		}
+
+		statByTimeFrame = dto.NewTimeframeStat(total)
+		return nil
+	})
+
+	if err := errGroup.Wait(); err != nil {
+		return nil, err
+	}
+
+	return &dto.BuildingStatResponse{
+		ByCity:      statByCities,
+		ByTimeFrame: statByTimeFrame,
+	}, nil
 }
 
 func (b *BuildingServiceImpl) UpdateBuilding(ctx context.Context, building *dto.UpdateBuildingRequest, buildingID string) error {

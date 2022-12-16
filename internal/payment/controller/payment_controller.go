@@ -105,7 +105,7 @@ func (p *PaymentController) CreatePaymentMethod(c *fiber.Ctx) error {
 		})
 	}
 
-	err = p.service.CreatePaymentMethod(c.Context(), paymentRequest)
+	id, err := p.service.CreatePaymentMethod(c.Context(), paymentRequest)
 	if err != nil {
 		switch err {
 		case err2.ErrInvalidBankID:
@@ -117,6 +117,9 @@ func (p *PaymentController) CreatePaymentMethod(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusCreated).JSON(response.BaseResponse{
 		Message: "payment method created successfully",
+		Data: fiber.Map{
+			"paymentId": id,
+		},
 	})
 }
 

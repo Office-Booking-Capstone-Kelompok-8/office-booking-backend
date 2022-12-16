@@ -349,3 +349,50 @@ func NewAgent(agent *entity.User) *Agent {
 		Picture: agent.Detail.Picture.Url,
 	}
 }
+
+type BuildingStatResponse struct {
+	ByCity      *TotalByCities    `json:"byCity"`
+	ByTimeFrame *TotalByTimeFrame `json:"byTimeFrame"`
+}
+
+type TotalByCity struct {
+	CityID   int64  `json:"cityId"`
+	CityName string `json:"cityName"`
+	Total    int64  `json:"total"`
+}
+
+func NewTotalByCity(stat *entity.CityStat) *TotalByCity {
+	return &TotalByCity{
+		CityID:   stat.CityID,
+		CityName: stat.CityName,
+		Total:    stat.Total,
+	}
+}
+
+type TotalByCities []TotalByCity
+
+func NewTotalByCities(stats *entity.CitiesStat) *TotalByCities {
+	var totalByCities TotalByCities
+	for _, stat := range *stats {
+		totalByCities = append(totalByCities, *NewTotalByCity(&stat))
+	}
+	return &totalByCities
+}
+
+type TotalByTimeFrame struct {
+	Today     int64 `json:"today"`
+	ThisWeek  int64 `json:"thisWeek"`
+	ThisMonth int64 `json:"thisMonth"`
+	ThisYear  int64 `json:"thisYear"`
+	AllTime   int64 `json:"allTime"`
+}
+
+func NewTimeframeStat(stats *entity.TimeframeStat) *TotalByTimeFrame {
+	return &TotalByTimeFrame{
+		Today:     stats.Day.Int64,
+		ThisWeek:  stats.Week.Int64,
+		ThisMonth: stats.Month.Int64,
+		ThisYear:  stats.Year.Int64,
+		AllTime:   stats.All.Int64,
+	}
+}

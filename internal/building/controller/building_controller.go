@@ -171,6 +171,18 @@ func (b *BuildingController) GetDistricts(c *fiber.Ctx) error {
 	})
 }
 
+func (b *BuildingController) GetBuildingTotal(c *fiber.Ctx) error {
+	total, err := b.buildingService.GetBuildingStatistics(c.Context())
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "building total fetched successfully",
+		Data:    total,
+	})
+}
+
 func (b *BuildingController) RequestNewBuildingID(c *fiber.Ctx) error {
 	token := c.Locals("user").(*jwt.Token)
 	claims := token.Claims.(jwt.MapClaims)

@@ -86,3 +86,12 @@ type Facility struct {
 }
 
 type Facilities []Facility
+
+// only used for returning stats
+type CityStat struct {
+	CityID   int64
+	CityName string
+	Total    int64
+}
+
+type CitiesStat []CityStat

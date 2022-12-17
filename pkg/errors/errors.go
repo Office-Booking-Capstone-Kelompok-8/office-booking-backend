@@ -131,4 +131,7 @@ var (
 
 	// ErrReservationNotCompleted is returned when the reservation is not completed yet but the user is trying to review it
 	ErrReservationNotCompleted = errors.New("reservation is not completed")
+
+	// ErrReviewNotEditable is returned when the review is not editable (e.g. the review is already passed max edit time)
+	ErrReviewNotEditable = errors.New("review is not editable")
 )

@@ -500,6 +500,10 @@ func (r *ReservationServiceImpl) UpdateReservationReview(ctx context.Context, re
 		return err2.ErrReviewNotFound
 	}
 
+	if savedReview.CreatedAt.Add(r.config.GetDuration("review.maxEditable")).After(time.Now()) {
+		return err2.ErrReviewNotEditable
+	}
+
 	reviewEntity := review.ToEntity(savedReview)
 	err = r.repo.UpdateReservationReviews(ctx, reviewEntity)
 	if err != nil {

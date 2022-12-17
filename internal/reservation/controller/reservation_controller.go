@@ -422,9 +422,11 @@ func (r *ReservationController) UpdateReservationReview(c *fiber.Ctx) error {
 	if err != nil {
 		switch err {
 		case err2.ErrReservationNotFound:
-			return fiber.NewError(fiber.StatusNotFound, err.Error())
+			fallthrough
 		case err2.ErrReviewNotFound:
 			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		case err2.ErrReviewNotEditable:
+			return fiber.NewError(fiber.StatusForbidden, err.Error())
 		default:
 			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 		}

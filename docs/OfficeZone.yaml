@@ -1316,6 +1316,16 @@ paths:
                           example: 2022-12-04T19:48:04+08:00
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          description: Review is not editable because it is more than 30 minutes old
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: review is not editable
         404:
           $ref: '#/components/responses/ReviewNotFound'
         500:

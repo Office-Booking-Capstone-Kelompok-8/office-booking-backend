@@ -3,7 +3,6 @@ package dto
 import (
 	"office-booking-backend/pkg/config"
 	"office-booking-backend/pkg/entity"
-	"time"
 )
 
 type BriefPublishedBuildingResponse struct {
@@ -428,10 +427,10 @@ func NewTimeframeStat(stats *entity.TimeframeStat) *TotalByTimeFrame {
 
 type BriefBuildingReviewResponse struct {
 	ID        string            `json:"id"`
-	Rating    int               `json:"rating"`
-	Message   string            `json:"comment"`
 	User      BriefUserResponse `json:"user"`
-	CreatedAt time.Time         `json:"createdAt"`
+	Rating    int               `json:"rating"`
+	Message   string            `json:"message"`
+	CreatedAt string            `json:"createdAt"`
 }
 
 func NewBriefBuildingReviewResponse(review *entity.Review) *BriefBuildingReviewResponse {
@@ -440,7 +439,7 @@ func NewBriefBuildingReviewResponse(review *entity.Review) *BriefBuildingReviewR
 		Rating:    review.Rating,
 		Message:   review.Message,
 		User:      *NewBriefUserResponse(&review.User),
-		CreatedAt: review.CreatedAt,
+		CreatedAt: review.CreatedAt.Format(config.DATE_RESPONSE_FORMAT),
 	}
 }
 

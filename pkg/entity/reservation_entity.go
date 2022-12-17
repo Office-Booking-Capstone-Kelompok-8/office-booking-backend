@@ -14,12 +14,14 @@ type Reservation struct {
 	Building    Building
 	StartDate   time.Time `gorm:"type:datetime"`
 	EndDate     time.Time `gorm:"type:datetime"`
+	Amount      int       `gorm:"type:int; not null"`
 	UserID      string    `gorm:"type:varchar(36);"`
 	User        User      `gorm:"constraint:OnUpdate:NO ACTION,OnDelete:SET NULL;"`
 	StatusID    int       `gorm:"type:int; default:1"`
 	Status      Status
-	Message     string `gorm:"type:varchar(255); default:''"`
-	Review      Reviews
+	Message     string         `gorm:"type:varchar(255); default:''"`
+	AcceptedAt  time.Time      `gorm:"type:datetime; default:NULL"`
+	ExpiredAt   time.Time      `gorm:"type:datetime; default:NULL"`
 	CreatedAt   time.Time      `gorm:"autoCreateTime"`
 	UpdatedAt   time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
@@ -46,13 +48,6 @@ type StatusStat struct {
 
 type StatusesStat []StatusStat
 
-type TimeframeStat struct {
-	Day   int64
-	Week  int64
-	Month int64
-	Year  int64
-}
-
 type Review struct {
 	ID            string `gorm:"primaryKey; type:varchar(36); not null"`
 	ReservationID string `gorm:"type:varchar(36); not null" `
@@ -63,7 +58,6 @@ type Review struct {
 	Building      Building
 	Rating        int
 	Message       string
-	IsAnonymous   bool
 	CreatedAt     time.Time      `gorm:"autoCreateTime"`
 	UpdatedAt     time.Time      `gorm:"autoUpdateTime"`
 	DeletedAt     gorm.DeletedAt `gorm:"index"`

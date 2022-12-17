@@ -7,6 +7,7 @@ import (
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
 	"office-booking-backend/pkg/utils/validator"
+	"reflect"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
@@ -104,6 +105,18 @@ func (u *UserController) GetRegisteredMemberStat(c *fiber.Ctx) error {
 	})
 }
 
+func (u *UserController) GetRegisteredMemberCount(c *fiber.Ctx) error {
+	count, err := u.userService.GetRegisteredMemberCount(c.Context())
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "user total fetched successfully",
+		Data:    count,
+	})
+}
+
 func (u *UserController) UpdateUserByID(c *fiber.Ctx) error {
 	uid := c.Params("userID")
 
@@ -117,6 +130,10 @@ func (u *UserController) UpdateUserByID(c *fiber.Ctx) error {
 			Message: err2.ErrInvalidRequestBody.Error(),
 			Data:    errs,
 		})
+	}
+
+	if reflect.DeepEqual(*user, dto.UserUpdateRequest{}) {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
 	if err := u.userService.UpdateUserByID(c.Context(), uid, user); err != nil {
@@ -150,6 +167,10 @@ func (u *UserController) UpdateLoggedUser(c *fiber.Ctx) error {
 			Message: err2.ErrInvalidRequestBody.Error(),
 			Data:    errs,
 		})
+	}
+
+	if reflect.DeepEqual(*user, dto.UserUpdateRequest{}) {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
 	if err := u.userService.UpdateUserByID(c.Context(), uid, user); err != nil {

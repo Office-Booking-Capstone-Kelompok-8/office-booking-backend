@@ -13,13 +13,14 @@ type BuildingRepository interface {
 	GetCities(ctx context.Context) (*entity.Cities, error)
 	GetDistrictsByCityID(ctx context.Context, cityID int) (*entity.Districts, error)
 	GetDistrictByID(ctx context.Context, districtID int) (*entity.District, error)
+	GetBuildingCountByCity(ctx context.Context) (*entity.CitiesStat, error)
+	GetBuildingCountByTime(ctx context.Context) (*entity.TimeframeStat, error)
 	AddPicture(ctx context.Context, picture *entity.Picture) error
 	AddFacility(ctx context.Context, facility *entity.Facilities) error
 	CreateBuilding(ctx context.Context, building *entity.Building) error
 	UpdateBuildingByID(ctx context.Context, building *entity.Building) error
 	CountBuildingPicturesByID(ctx context.Context, buildingID string) (int64, error)
 	IsBuildingExist(ctx context.Context, buildingID string) (bool, error)
-	IsBuildingPublished(ctx context.Context, buildingID string) (bool, error)
 	DeleteBuildingPicturesByID(ctx context.Context, buildingID string, pictureID string) error
 	DeleteBuildingFacilityByID(ctx context.Context, buildingID string, facilityID int) error
 	DeleteBuildingByID(ctx context.Context, buildingID string) error

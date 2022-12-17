@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"fmt"
 	"log"
 	repository2 "office-booking-backend/internal/building/repository"
 	"office-booking-backend/internal/reservation/dto"
@@ -11,20 +12,23 @@ import (
 	err2 "office-booking-backend/pkg/errors"
 	"time"
 
+	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 
 	"golang.org/x/net/context"
 )
 
 type ReservationServiceImpl struct {
+	config       *viper.Viper
 	repo         repository.ReservationRepository
 	buildingRepo repository2.BuildingRepository
 }
 
-func NewReservationServiceImpl(reservationRepository repository.ReservationRepository, buildingRepository repository2.BuildingRepository) service.ReservationService {
+func NewReservationServiceImpl(reservationRepository repository.ReservationRepository, buildingRepository repository2.BuildingRepository, config *viper.Viper) service.ReservationService {
 	return &ReservationServiceImpl{
 		repo:         reservationRepository,
 		buildingRepo: buildingRepository,
+		config:       config,
 	}
 }
 
@@ -119,10 +123,9 @@ func (r *ReservationServiceImpl) GetReservationStat(ctx context.Context) (*dto.R
 	statByStatus := new(dto.ReservationTotals)
 	statByTimeframe := new(dto.TimeframeStat)
 
-	errgroup := errgroup.Group{}
-
-	errgroup.Go(func() error {
-		total, err := r.repo.GetReservationCount(ctx)
+	errGroup := errgroup.Group{}
+	errGroup.Go(func() error {
+		total, err := r.repo.GetReservationCountByTime(ctx)
 		if err != nil {
 			log.Println("error while getting this year reservation count: ", err)
 			return err
@@ -132,8 +135,8 @@ func (r *ReservationServiceImpl) GetReservationStat(ctx context.Context) (*dto.R
 		return nil
 	})
 
-	errgroup.Go(func() error {
-		stat, err := r.repo.GetReservationTotal(ctx)
+	errGroup.Go(func() error {
+		stat, err := r.repo.GetReservationCountByStatus(ctx)
 		if err != nil {
 			log.Println("error while getting total reservation count: ", err)
 			return err
@@ -142,7 +145,7 @@ func (r *ReservationServiceImpl) GetReservationStat(ctx context.Context) (*dto.R
 		return nil
 	})
 
-	err := errgroup.Wait()
+	err := errGroup.Wait()
 	if err != nil {
 		return nil, err
 	}
@@ -155,19 +158,31 @@ func (r *ReservationServiceImpl) GetReservationStat(ctx context.Context) (*dto.R
 	return res, nil
 }
 
+func (r *ReservationServiceImpl) GetTotalRevenueByTime(ctx context.Context) (*dto.TimeframeStat, error) {
+	total, err := r.repo.GetTotalRevenue(ctx)
+	if err != nil {
+		log.Println("error while getting this year revenue: ", err)
+		return nil, err
+	}
+
+	res := dto.NewTimeframeStat(total)
+	return res, nil
+}
+
 func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, userID string, reservation *dto.AddReservartionRequest) (string, error) {
 	errGroup := errgroup.Group{}
+	var building *entity.Building
 	errGroup.Go(func() error {
-		isPublished, err := r.buildingRepo.IsBuildingPublished(ctx, reservation.BuildingID)
+		b, err := r.buildingRepo.GetBuildingDetailByID(ctx, reservation.BuildingID, true)
 		if err != nil {
+			if err == err2.ErrBuildingNotFound {
+				return err2.ErrBuildingNotAvailable
+			}
+
 			log.Println("error while checking building availability: ", err)
 			return err
 		}
-
-		if !isPublished {
-			return err2.ErrBuildingNotAvailable
-		}
-
+		building = b
 		return nil
 	})
 
@@ -186,33 +201,39 @@ func (r *ReservationServiceImpl) CreateReservation(ctx context.Context, userID s
 		return nil
 	})
 
-	if err := errGroup.Wait(); err != nil {
+	err := errGroup.Wait()
+	if err != nil {
 		return "", err
 	}
 
 	reservationEntity := reservation.ToEntity(userID)
-	err := r.repo.AddBuildingReservation(ctx, reservationEntity)
+	yearDuration := reservation.Duration / 12
+	monthDuration := reservation.Duration - (yearDuration * 12)
+	ammount := building.MonthlyPrice*monthDuration + building.AnnualPrice*yearDuration
+	reservationEntity.Amount = ammount
+	fmt.Printf("year: %d, month: %d, ammount: %d", yearDuration, monthDuration, ammount)
+	err = r.repo.AddBuildingReservation(ctx, reservationEntity)
 	if err != nil {
 		log.Println("error while creating reservation: ", err)
 		return "", err
 	}
-
 	return reservationEntity.ID, nil
 }
 
 func (r *ReservationServiceImpl) CreateAdminReservation(ctx context.Context, reservation *dto.AddAdminReservartionRequest) (string, error) {
+	var building *entity.Building
 	errGroup := errgroup.Group{}
 	errGroup.Go(func() error {
-		isPublished, err := r.buildingRepo.IsBuildingPublished(ctx, reservation.BuildingID)
+		b, err := r.buildingRepo.GetBuildingDetailByID(ctx, reservation.BuildingID, true)
 		if err != nil {
+			if err == err2.ErrBuildingNotFound {
+				return err2.ErrBuildingNotAvailable
+			}
+
 			log.Println("error while checking building availability: ", err)
 			return err
 		}
-
-		if !isPublished {
-			return err2.ErrBuildingNotAvailable
-		}
-
+		building = b
 		return nil
 	})
 
@@ -236,6 +257,10 @@ func (r *ReservationServiceImpl) CreateAdminReservation(ctx context.Context, res
 	}
 
 	reservationEntity := reservation.ToEntity()
+	yearDuration := reservation.Duration / 12
+	monthDuration := reservation.Duration - (yearDuration * 12)
+	ammount := building.MonthlyPrice*monthDuration + building.AnnualPrice*yearDuration
+	reservationEntity.Amount = ammount
 	err := r.repo.AddBuildingReservation(ctx, reservationEntity)
 	if err != nil {
 		log.Println("error while creating reservation: ", err)
@@ -288,6 +313,9 @@ func (r *ReservationServiceImpl) UpdateReservation(ctx context.Context, reservat
 		return err2.ErrReservationNotFound
 	}
 
+	var building *entity.Building
+	newReservation := reservation.ToEntity(reservationID)
+
 	if reservation.BuildingID != "" || !reservation.StartDate.ToTime().IsZero() || reservation.Duration > 0 {
 		buildingID := savedReservation.BuildingID
 		if reservation.BuildingID != "" {
@@ -309,16 +337,16 @@ func (r *ReservationServiceImpl) UpdateReservation(ctx context.Context, reservat
 
 		errGroup := errgroup.Group{}
 		errGroup.Go(func() error {
-			isPublished, err := r.buildingRepo.IsBuildingPublished(ctx, buildingID)
+			b, err := r.buildingRepo.GetBuildingDetailByID(ctx, reservation.BuildingID, true)
 			if err != nil {
+				if err == err2.ErrBuildingNotFound {
+					return err2.ErrBuildingNotAvailable
+				}
+
 				log.Println("error while checking building availability: ", err)
 				return err
 			}
-
-			if !isPublished {
-				return err2.ErrBuildingNotAvailable
-			}
-
+			building = b
 			return nil
 		})
 
@@ -339,12 +367,33 @@ func (r *ReservationServiceImpl) UpdateReservation(ctx context.Context, reservat
 		if err := errGroup.Wait(); err != nil {
 			return err
 		}
+
+		yearDuration := reservation.Duration / 12
+		monthDuration := reservation.Duration - (yearDuration * 12)
+		ammount := building.MonthlyPrice*monthDuration + building.AnnualPrice*yearDuration
+		newReservation.Amount = ammount
 	}
 
-	newReservation := reservation.ToEntity(reservationID)
 	err = r.repo.UpdateReservation(ctx, newReservation)
 	if err != nil {
 		log.Println("error while updating reservation: ", err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *ReservationServiceImpl) UpdateReservationStatus(ctx context.Context, reservationID string, statusRequest *dto.UpdateReservationStatusRequest) error {
+	// 1 = pending, 2 = rejected, 3 = cancelled, 4 = awaiting payment, 5 = active, 6 = completed
+	reservationEntity := statusRequest.ToEntity(reservationID)
+	if statusRequest.StatusID == 4 {
+		reservationEntity.AcceptedAt = time.Now()
+		reservationEntity.ExpiredAt = time.Now().Add(r.config.GetDuration("reservation.expiredAt"))
+	}
+
+	err := r.repo.UpdateReservation(ctx, reservationEntity)
+	if err != nil {
+		log.Println("error while updating reservation status: ", err)
 		return err
 	}
 
@@ -362,14 +411,18 @@ func (r *ReservationServiceImpl) DeleteReservationByID(ctx context.Context, rese
 }
 
 // get review for reservation
-func (r *ReservationServiceImpl) GetReservationReviews(ctx context.Context) (*dto.BriefReviewsResponse, error) {
-	reviews, err := r.repo.GetReservationReviews(ctx)
+func (r *ReservationServiceImpl) GetReservationReview(ctx context.Context, reservationID string, userID string) (*dto.BriefReviewResponse, error) {
+	reservation := &entity.Reservation{
+		ID:     reservationID,
+		UserID: userID,
+	}
+	review, err := r.repo.GetReservationReview(ctx, reservation)
 	if err != nil {
-		log.Println("error when getting all banks: ", err)
+		log.Println("error when getting reviews: ", err)
 		return nil, err
 	}
 
-	return dto.NewBriefReviewsResponse(reviews), nil
+	return dto.NewBriefReviewResponse(review), nil
 }
 
 // add review after reservation status is completed

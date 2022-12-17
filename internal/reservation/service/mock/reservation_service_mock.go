@@ -72,9 +72,19 @@ func (r *ReservationServiceMock) GetReservationStat(ctx context.Context) (*dto.R
 	return args.Get(0).(*dto.ReservationStatResponse), args.Error(1)
 }
 
-func (r *ReservationServiceMock) GetReservationReviews(ctx context.Context) (*dto.BriefReviewsResponse, error) {
+func (r *ReservationServiceMock) GetTotalRevenueByTime(ctx context.Context) (*dto.TimeframeStat, error) {
 	args := r.Called(ctx)
-	return args.Get(0).(*dto.BriefReviewsResponse), args.Error(1)
+	return args.Get(0).(*dto.TimeframeStat), args.Error(1)
+}
+
+func (r *ReservationServiceMock) UpdateReservationStatus(ctx context.Context, reservationID string, statusRequest *dto.UpdateReservationStatusRequest) error {
+	args := r.Called(ctx, reservationID, statusRequest)
+	return args.Error(0)
+}
+
+func (r *ReservationServiceMock) GetReservationReview(ctx context.Context, reservationID string, userID string) (*dto.BriefReviewResponse, error) {
+	args := r.Called(ctx, reservationID, userID)
+	return args.Get(0).(*dto.BriefReviewResponse), args.Error(1)
 }
 
 func (r *ReservationServiceMock) CreateReservationReviews(ctx context.Context, review *dto.AddReviewRequest) error {

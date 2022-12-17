@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"context"
+	"net/http"
 	"office-booking-backend/pkg/config"
 	err2 "office-booking-backend/pkg/errors"
 
@@ -16,6 +17,10 @@ func NewJWTMiddleware(tokenSecret string, validator fiber.Handler) fiber.Handler
 		ContextKey:     "user",
 		SuccessHandler: validator,
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			if err.Error() == "Missing or malformed JWT" {
+				return fiber.NewError(fiber.StatusUnauthorized, http.StatusText(fiber.StatusUnauthorized))
+			}
+
 			return fiber.NewError(fiber.StatusUnauthorized, err2.ErrInvalidToken.Error())
 		},
 	})

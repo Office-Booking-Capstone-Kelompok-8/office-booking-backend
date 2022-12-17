@@ -110,4 +110,19 @@ var (
 
 	// ErrEmailAlreadyVerified is returned when the user email is already verified
 	ErrEmailAlreadyVerified = errors.New("email already verified")
+
+	// ErrInvalidPaymentMethodID is returned when the payment method id is invalid
+	ErrInvalidPaymentMethodID = errors.New("payment method id is invalid")
+
+	// ErrPaymentMethodNotFound is returned when the payment method is not found
+	ErrPaymentMethodNotFound = errors.New("payment method not found")
+
+	// ErrReservationAlreadyPaid is returned when the reservation is already paid
+	ErrReservationAlreadyPaid = errors.New("reservation already paid")
+
+	// ErrReservationNotAwaitingPayment is returned when the reservation is not awaiting payment
+	ErrReservationNotAwaitingPayment = errors.New("reservation is not awaiting payment")
+
+	// ErrInvalidReviewID is returned when the review is not found
+	ErrReviewNotFound = errors.New("review not found")
 )

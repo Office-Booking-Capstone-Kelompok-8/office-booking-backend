@@ -52,11 +52,11 @@ func Init(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf *viper.Vi
 	buildingRepository := buildingRepositoryPkg.NewBuildingRepositoryImpl(db)
 	paymentRepository := paymentRepositoryPkg.NewPaymentRepositoryImpl(db)
 
-	reservationService := reservationServicePkg.NewReservationServiceImpl(reservationRepository, buildingRepository)
+	paymentService := paymentServicePkg.NewPaymentServiceImpl(paymentRepository, reservationRepository, imagekitService)
+	reservationService := reservationServicePkg.NewReservationServiceImpl(reservationRepository, buildingRepository, conf)
 	userService := userServicePkg.NewUserServiceImpl(userRepository, reservationService, imagekitService)
 	buildingService := buildingServicePkg.NewBuildingServiceImpl(buildingRepository, reservationRepository, imagekitService, validation)
 	authService := authServicePkg.NewAuthServiceImpl(authRepository, tokenService, redisRepo, mailService, passwordService, generator, conf)
-	paymentService := paymentServicePkg.NewPaymentServiceImpl(paymentRepository)
 
 	reservationController := reservationControllerPkg.NewReservationController(reservationService, validation)
 	userController := userControllerPkg.NewUserController(userService, validation)

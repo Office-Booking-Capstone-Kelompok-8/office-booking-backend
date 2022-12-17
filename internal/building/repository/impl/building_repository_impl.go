@@ -9,6 +9,7 @@ import (
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -125,8 +126,8 @@ func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, filter *dt
 	// 	query = query.Where("b.city_id = ?", filter.CityID)
 	// }
 
-	// if filter.DistrictID != 0 {
-	// 	query = query.Where("b.district_id = ?", filter.DistrictID)
+	// if filter.CityID != 0 {
+	// 	query = query.Where("b.district_id = ?", filter.CityID)
 	// }
 
 	// if !filter.StartDate.IsZero() && !filter.EndDate.IsZero() {
@@ -273,6 +274,62 @@ func (b *BuildingRepositoryImpl) GetDistrictByID(ctx context.Context, districtID
 	return district, nil
 }
 
+func (b *BuildingRepositoryImpl) GetBuildingCountByCity(ctx context.Context) (*entity.CitiesStat, error) {
+	rows, err := b.db.WithContext(ctx).
+		Model(&entity.City{}).
+		Select("cities.id, cities.name, COUNT(buildings.id) as count").
+		Joins("LEFT JOIN buildings ON buildings.city_id = cities.id").
+		Group("cities.id").Rows()
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = rows.Close()
+	}()
+
+	citiesStat := entity.CitiesStat{}
+	for rows.Next() {
+		cityStat := entity.CityStat{}
+		err = rows.Scan(&cityStat.CityID, &cityStat.CityName, &cityStat.Total)
+		if err != nil {
+			return nil, err
+		}
+
+		citiesStat = append(citiesStat, cityStat)
+	}
+
+	return &citiesStat, nil
+}
+
+func (b *BuildingRepositoryImpl) GetBuildingCountByTime(ctx context.Context) (*entity.TimeframeStat, error) {
+	rows, err := b.db.WithContext(ctx).
+		Table(
+			"(?) AS today, (?) AS thisWeek, (?) AS thisMonth, (?) AS thisYear, (?) AS allTime",
+			b.db.Table("buildings").Select("count(*)").Where("DATE(created_at) = DATE(?)", time.Now().Format("2006-01-02")),
+			b.db.Table("buildings").Select("count(*)").Where("YEARWEEK(created_at) = YEARWEEK(?)", time.Now().Format("2006-01-02")),
+			b.db.Table("buildings").Select("count(*)").Where("MONTH(created_at) = MONTH(?)", time.Now().Format("2006-01-02")),
+			b.db.Table("buildings").Select("count(*)").Where("YEAR(created_at) = YEAR(?)", time.Now().Format("2006-01-02")),
+			b.db.Table("buildings").Select("count(*)"),
+		).Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err = rows.Close()
+	}()
+
+	stat := new(entity.TimeframeStat)
+	for rows.Next() {
+		err = rows.Scan(&stat.Day, &stat.Week, &stat.Month, &stat.Year, &stat.All)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return stat, nil
+}
+
 func (b *BuildingRepositoryImpl) CreateBuilding(ctx context.Context, building *entity.Building) error {
 	err := b.db.WithContext(ctx).
 		Model(&entity.Building{}).
@@ -355,23 +412,6 @@ func (b *BuildingRepositoryImpl) IsBuildingExist(ctx context.Context, buildingId
 	}
 
 	return count > 0, nil
-}
-
-func (b *BuildingRepositoryImpl) IsBuildingPublished(ctx context.Context, buildingID string) (bool, error) {
-	var building entity.Building
-	err := b.db.WithContext(ctx).
-		Model(&entity.Building{}).
-		Where("id = ?", buildingID).
-		First(&building).Error
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return false, err2.ErrBuildingNotFound
-		}
-
-		return false, err
-	}
-
-	return *building.IsPublished, nil
 }
 
 func (b *BuildingRepositoryImpl) CountBuildingPicturesByID(ctx context.Context, buildingId string) (int64, error) {

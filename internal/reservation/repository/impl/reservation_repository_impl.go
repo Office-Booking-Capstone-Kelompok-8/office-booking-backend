@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"errors"
 	"fmt"
 	"office-booking-backend/internal/reservation/dto"
 	"office-booking-backend/internal/reservation/repository"
@@ -148,7 +149,7 @@ func (r *ReservationRepositoryImpl) GetReservations(ctx context.Context, filter 
 		return nil, err
 	}
 
-	query := sq.Select("r.id, r.company_name, r.building_id, r.start_date, r.end_date,  r.status_id, r.created_at, r.updated_at, s.id, s.message, b.id, b.name, p.thumbnail_url, c.name, u.id, u.email, ud.name, pp.url").
+	query := sq.Select("r.id, r.company_name, r.building_id, r.start_date, r.end_date, r.amount,  r.status_id, r.created_at, r.updated_at, s.id, s.message, b.id, b.name, p.thumbnail_url, c.name, u.id, u.email, ud.name, pp.url").
 		From("reservations r").
 		Join("statuses s ON r.status_id = s.id").
 		Join("buildings b ON r.building_id = b.id").
@@ -204,10 +205,17 @@ func (r *ReservationRepositoryImpl) GetReservations(ctx context.Context, filter 
 		filter.SortBy = ""
 	}
 
+	if filter.SortBy != "" {
+		if filter.SortOrder == "desc" {
+			query = query.OrderBy(filter.SortBy + " DESC")
+		} else {
+			query = query.OrderBy(filter.SortBy + " ASC")
+		}
+	}
+
 	rows, err := query.
 		Offset(uint64(filter.Offset)).
 		Limit(uint64(filter.Limit)).
-		OrderBy(fmt.Sprintf("%s %s", filter.SortBy, filter.SortOrder)).
 		RunWith(db).QueryContext(ctx)
 	if err != nil {
 		return nil, err
@@ -221,7 +229,7 @@ func (r *ReservationRepositoryImpl) GetReservations(ctx context.Context, filter 
 		var reservation entity.Reservation
 		NullAbleProfilePicture := &entity.NullAbleProfilePicture{}
 		reservation.Building.Pictures = append(reservation.Building.Pictures, entity.Picture{})
-		err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate, &reservation.StatusID, &reservation.CreatedAt, &reservation.UpdatedAt,
+		err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate, &reservation.Amount, &reservation.StatusID, &reservation.CreatedAt, &reservation.UpdatedAt,
 			&reservation.Status.ID, &reservation.Status.Message,
 			&reservation.Building.ID, &reservation.Building.Name, &reservation.Building.Pictures[0].ThumbnailUrl, &reservation.Building.City.Name,
 			&reservation.User.ID, &reservation.User.Email, &reservation.User.Detail.Name, &NullAbleProfilePicture.Url)
@@ -243,7 +251,7 @@ func (r *ReservationRepositoryImpl) GetUserReservations(ctx context.Context, use
 		return nil, err
 	}
 
-	rows, err := sq.Select("r.id, r.company_name, r.building_id, r.start_date, r.end_date,  r.status_id, r.created_at, r.updated_at, s.id, s.message, b.id, b.name, p.thumbnail_url, c.name").
+	rows, err := sq.Select("r.id, r.company_name, r.building_id, r.start_date, r.end_date, r.amount,  r.status_id, r.created_at, r.updated_at, s.id, s.message, b.id, b.name, p.thumbnail_url, c.name").
 		From("reservations r").
 		Join("statuses s ON r.status_id = s.id").
 		Join("buildings b ON r.building_id = b.id").
@@ -265,7 +273,7 @@ func (r *ReservationRepositoryImpl) GetUserReservations(ctx context.Context, use
 	for rows.Next() {
 		var reservation entity.Reservation
 		reservation.Building.Pictures = append(reservation.Building.Pictures, entity.Picture{})
-		err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate, &reservation.StatusID, &reservation.CreatedAt, &reservation.UpdatedAt,
+		err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate, &reservation.Amount, &reservation.StatusID, &reservation.CreatedAt, &reservation.UpdatedAt,
 			&reservation.Status.ID, &reservation.Status.Message,
 			&reservation.Building.ID, &reservation.Building.Name, &reservation.Building.Pictures[0].ThumbnailUrl, &reservation.Building.City.Name)
 		if err != nil {
@@ -283,7 +291,7 @@ func (r *ReservationRepositoryImpl) GetReservationByID(ctx context.Context, rese
 	if err != nil {
 		return nil, err
 	}
-	rows, err := sq.Select("r.id, r.company_name, r.building_id, r.start_date, r.end_date, r.user_id, r.status_id, r.message, r.created_at, r.updated_at, s.id, s.message, b.id, b.name, b.address, p.thumbnail_url, c.name, d.name, u.id, u.email, ud.name, pp.url").
+	rows, err := sq.Select("r.id, r.company_name, r.building_id, r.start_date, r.end_date, r.amount, r.user_id, r.status_id, r.message, r.created_at, r.updated_at, s.id, s.message, b.id, b.name, b.address, p.thumbnail_url, c.name, d.name, u.id, u.email, ud.name, pp.url").
 		From("reservations r").
 		Join("statuses s ON s.id = r.status_id").
 		Join("buildings b ON b.id = r.building_id").
@@ -308,7 +316,7 @@ func (r *ReservationRepositoryImpl) GetReservationByID(ctx context.Context, rese
 	var reservation entity.Reservation
 	NullAbleProfilePicture := &entity.NullAbleProfilePicture{}
 	reservation.Building.Pictures = append(reservation.Building.Pictures, entity.Picture{})
-	err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate,
+	err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate, &reservation.Amount,
 		&reservation.UserID, &reservation.StatusID, &reservation.Message, &reservation.CreatedAt, &reservation.UpdatedAt, &reservation.Status.ID, &reservation.Status.Message,
 		&reservation.Building.ID, &reservation.Building.Name, &reservation.Building.Address, &reservation.Building.Pictures[0].ThumbnailUrl,
 		&reservation.Building.City.Name, &reservation.Building.District.Name, &reservation.User.ID, &reservation.User.Email, &reservation.User.Detail.Name,
@@ -327,7 +335,7 @@ func (r *ReservationRepositoryImpl) GetUserReservationByID(ctx context.Context, 
 	if err != nil {
 		return nil, err
 	}
-	rows, err := sq.Select("r.id, r.company_name, r.building_id, r.start_date, r.end_date, r.user_id, r.status_id, r.message, r.created_at, r.updated_at, s.id, s.message, b.id, b.name, b.address, p.thumbnail_url, c.name, d.name").
+	rows, err := sq.Select("r.id, r.company_name, r.building_id, r.start_date, r.end_date, r.amount, r.user_id, r.status_id, r.message, r.created_at, r.updated_at, s.id, s.message, b.id, b.name, b.address, p.thumbnail_url, c.name, d.name").
 		From("reservations r").
 		Join("statuses s ON s.id = r.status_id").
 		Join("buildings b ON b.id = r.building_id").
@@ -351,7 +359,7 @@ func (r *ReservationRepositoryImpl) GetUserReservationByID(ctx context.Context, 
 
 	var reservation entity.Reservation
 	reservation.Building.Pictures = append(reservation.Building.Pictures, entity.Picture{})
-	err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate,
+	err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate, &reservation.Amount,
 		&reservation.UserID, &reservation.StatusID, &reservation.Message, &reservation.CreatedAt, &reservation.UpdatedAt, &reservation.Status.ID, &reservation.Status.Message,
 		&reservation.Building.ID, &reservation.Building.Name, &reservation.Building.Address, &reservation.Building.Pictures[0].ThumbnailUrl,
 		&reservation.Building.City.Name, &reservation.Building.District.Name)
@@ -362,7 +370,7 @@ func (r *ReservationRepositoryImpl) GetUserReservationByID(ctx context.Context, 
 	return &reservation, nil
 }
 
-func (r *ReservationRepositoryImpl) GetReservationTotal(ctx context.Context) (*entity.StatusesStat, error) {
+func (r *ReservationRepositoryImpl) GetReservationCountByStatus(ctx context.Context) (*entity.StatusesStat, error) {
 	rows, err := r.db.WithContext(ctx).
 		Table("statuses").
 		Select("statuses.id, statuses.message, COUNT(reservations.id) AS total").
@@ -390,14 +398,15 @@ func (r *ReservationRepositoryImpl) GetReservationTotal(ctx context.Context) (*e
 	return &stat, nil
 }
 
-func (r *ReservationRepositoryImpl) GetReservationCount(ctx context.Context) (*entity.TimeframeStat, error) {
+func (r *ReservationRepositoryImpl) GetReservationCountByTime(ctx context.Context) (*entity.TimeframeStat, error) {
 	rows, err := r.db.WithContext(ctx).
 		Table(
-			"(?) AS today, (?) AS thisWeek, (?) AS thisMonth, (?) AS thisYear",
+			"(?) AS today, (?) AS thisWeek, (?) AS thisMonth, (?) AS thisYear, (?) AS allTime",
 			r.db.Table("reservations").Select("count(*)").Where("DATE(created_at) = DATE(?)", time.Now().Format("2006-01-02")),
 			r.db.Table("reservations").Select("count(*)").Where("YEARWEEK(created_at) = YEARWEEK(?)", time.Now().Format("2006-01-02")),
 			r.db.Table("reservations").Select("count(*)").Where("MONTH(created_at) = MONTH(?)", time.Now().Format("2006-01-02")),
 			r.db.Table("reservations").Select("count(*)").Where("YEAR(created_at) = YEAR(?)", time.Now().Format("2006-01-02")),
+			r.db.Table("reservations").Select("count(*)"),
 		).Rows()
 	if err != nil {
 		return nil, err
@@ -408,7 +417,35 @@ func (r *ReservationRepositoryImpl) GetReservationCount(ctx context.Context) (*e
 
 	stat := new(entity.TimeframeStat)
 	for rows.Next() {
-		err = rows.Scan(&stat.Day, &stat.Week, &stat.Month, &stat.Year)
+		err = rows.Scan(&stat.Day, &stat.Week, &stat.Month, &stat.Year, &stat.All)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return stat, nil
+}
+
+func (r *ReservationRepositoryImpl) GetTotalRevenue(ctx context.Context) (*entity.TimeframeStat, error) {
+	rows, err := r.db.WithContext(ctx).
+		Table(
+			"(?) AS today, (?) AS thisWeek, (?) AS thisMonth, (?) AS thisYear, (?) AS allTime",
+			r.db.Table("reservations").Select("SUM(amount)").Where("status_id >= 5").Where("DATE(created_at) = DATE(?)", time.Now().Format("2006-01-02")),
+			r.db.Table("reservations").Select("SUM(amount)").Where("status_id >= 5").Where("YEARWEEK(created_at) = YEARWEEK(?)", time.Now().Format("2006-01-02")),
+			r.db.Table("reservations").Select("SUM(amount)").Where("status_id >= 5").Where("MONTH(created_at) = MONTH(?)", time.Now().Format("2006-01-02")),
+			r.db.Table("reservations").Select("SUM(amount)").Where("status_id >= 5").Where("YEAR(created_at) = YEAR(?)", time.Now().Format("2006-01-02")),
+			r.db.Table("reservations").Select("SUM(amount)").Where("status_id >= 5"),
+		).Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err = rows.Close()
+	}()
+
+	stat := new(entity.TimeframeStat)
+	for rows.Next() {
+		err = rows.Scan(&stat.Day, &stat.Week, &stat.Month, &stat.Year, &stat.All)
 		if err != nil {
 			return nil, err
 		}
@@ -474,14 +511,18 @@ func (r *ReservationRepositoryImpl) DeleteReservationByID(ctx context.Context, r
 	return nil
 }
 
-// get review for reservation
-func (r *ReservationRepositoryImpl) GetReservationReviews(ctx context.Context) (*entity.Reviews, error) {
-	review := new(entity.Reviews)
+func (r *ReservationRepositoryImpl) GetReservationReview(ctx context.Context, reservations *entity.Reservation) (*entity.Review, error) {
+	review := new(entity.Review)
 	err := r.db.WithContext(ctx).
 		Model(&entity.Review{}).
-		Joins("Reservation").
-		Find(review).Error
+		Where("reservation_id = ?", reservations.ID).
+		Where("user_id = ?", reservations.UserID).
+		First(review).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err2.ErrReviewNotFound
+		}
+
 		return nil, err
 	}
 

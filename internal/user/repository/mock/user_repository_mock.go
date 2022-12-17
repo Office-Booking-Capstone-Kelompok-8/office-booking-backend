@@ -32,6 +32,11 @@ func (u *UserRepositoryMock) GetRegisteredMemberStat(ctx context.Context) (*enti
 	return args.Get(0).(*entity.MonthlyRegisteredStatList), args.Error(1)
 }
 
+func (u *UserRepositoryMock) GetRegisteredMemberCount(ctx context.Context) (*entity.TimeframeStat, error) {
+	args := u.Called(ctx)
+	return args.Get(0).(*entity.TimeframeStat), args.Error(1)
+}
+
 func (u *UserRepositoryMock) UpdateUserByID(ctx context.Context, user *entity.User) error {
 	args := u.Called(ctx, user)
 	return args.Error(0)

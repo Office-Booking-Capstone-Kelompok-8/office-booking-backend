@@ -8,6 +8,7 @@ import (
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/response"
 	"office-booking-backend/pkg/utils/validator"
+	"reflect"
 	"strconv"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -170,6 +171,18 @@ func (b *BuildingController) GetDistricts(c *fiber.Ctx) error {
 	})
 }
 
+func (b *BuildingController) GetBuildingTotal(c *fiber.Ctx) error {
+	total, err := b.buildingService.GetBuildingStatistics(c.Context())
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "building total fetched successfully",
+		Data:    total,
+	})
+}
+
 func (b *BuildingController) RequestNewBuildingID(c *fiber.Ctx) error {
 	token := c.Locals("user").(*jwt.Token)
 	claims := token.Claims.(jwt.MapClaims)
@@ -225,6 +238,7 @@ func (b *BuildingController) AddBuildingPicture(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
+	defer file.Close()
 
 	result, err := b.buildingService.AddBuildingPicture(c.Context(), buildingID, indexInt, altText, file)
 	if err != nil {
@@ -287,6 +301,10 @@ func (b *BuildingController) UpdateBuilding(c *fiber.Ctx) error {
 			Message: err2.ErrInvalidRequestBody.Error(),
 			Data:    errs,
 		})
+	}
+
+	if reflect.DeepEqual(*building, dto.UpdateBuildingRequest{}) {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
 	if building.IsPublished {

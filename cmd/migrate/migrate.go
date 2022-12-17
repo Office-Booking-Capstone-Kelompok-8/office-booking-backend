@@ -3,14 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/spf13/viper"
-	"gorm.io/gorm"
 	"log"
 	"office-booking-backend/pkg/custom"
 	"office-booking-backend/pkg/database/mysql"
 	"office-booking-backend/pkg/entity"
 	"office-booking-backend/pkg/utils/password"
+
+	"github.com/google/uuid"
+	"github.com/spf13/viper"
+	"gorm.io/gorm"
 )
 
 func main() {
@@ -60,6 +61,7 @@ func main() {
 		&entity.Status{},
 		&entity.Reservation{},
 		&entity.Transaction{},
+		&entity.Review{},
 	)
 
 	if err != nil {

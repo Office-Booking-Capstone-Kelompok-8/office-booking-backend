@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"errors"
 	"fmt"
 	"office-booking-backend/internal/reservation/dto"
 	"office-booking-backend/internal/reservation/repository"
@@ -510,14 +511,18 @@ func (r *ReservationRepositoryImpl) DeleteReservationByID(ctx context.Context, r
 	return nil
 }
 
-// get review for reservation
-func (r *ReservationRepositoryImpl) GetReservationReviews(ctx context.Context) (*entity.Reviews, error) {
-	review := new(entity.Reviews)
+func (r *ReservationRepositoryImpl) GetReservationReview(ctx context.Context, reservations *entity.Reservation) (*entity.Review, error) {
+	review := new(entity.Review)
 	err := r.db.WithContext(ctx).
 		Model(&entity.Review{}).
-		Joins("Reservation").
-		Find(review).Error
+		Where("reservation_id = ?", reservations.ID).
+		Where("user_id = ?", reservations.UserID).
+		First(review).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err2.ErrReviewNotFound
+		}
+
 		return nil, err
 	}
 

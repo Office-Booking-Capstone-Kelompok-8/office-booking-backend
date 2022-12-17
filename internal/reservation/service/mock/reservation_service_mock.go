@@ -82,7 +82,7 @@ func (r *ReservationServiceMock) UpdateReservationStatus(ctx context.Context, re
 	return args.Error(0)
 }
 
-func (r *ReservationServiceMock) GetReservationReviews(ctx context.Context) (*dto.BriefReviewsResponse, error) {
-	args := r.Called(ctx)
-	return args.Get(0).(*dto.BriefReviewsResponse), args.Error(1)
- }
+func (r *ReservationServiceMock) GetReservationReview(ctx context.Context, reservationID string, userID string) (*dto.BriefReviewResponse, error) {
+	args := r.Called(ctx, reservationID, userID)
+	return args.Get(0).(*dto.BriefReviewResponse), args.Error(1)
+}

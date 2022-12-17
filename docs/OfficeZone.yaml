@@ -1245,7 +1245,7 @@ paths:
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         404:
-          $ref: '#/components/responses/ReservationNotFound'
+          $ref: '#/components/responses/ReviewNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
     delete:
@@ -4012,6 +4012,16 @@ components:
               message:
                 type: string
                 example: reservation not found
+    ReviewNotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: review not found
     UserNotFound:
       description: Not found
       content:

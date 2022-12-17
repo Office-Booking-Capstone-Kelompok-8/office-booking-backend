@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Masterminds/squirrel"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -565,4 +566,64 @@ func (b *BuildingRepositoryImpl) DeleteBuildingByID(ctx context.Context, buildin
 	}
 
 	return nil
+}
+
+func (b *BuildingRepositoryImpl) GetBuildingReviewsByID(ctx context.Context, buildingID string, filter *dto.GetBuildingReviewsQueryParam) (*entity.Reviews, error) {
+
+	db, err := b.db.DB()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := squirrel.Select("r.id", "r.building_id", "r.user_id", "r.rating", "r.message", "r.created_at", "r.updated_at", "u.id", "ud.name", "p.url").
+		From("reviews r").
+		Join("users u ON u.id = r.user_id").
+		Join("user_details ud ON ud.user_id = u.id").
+		Join("profile_pictures p ON p.id = ud.picture_id").
+		Where("r.building_id = ?", buildingID).
+		Where("r.deleted_at IS NULL").
+		OrderBy("r.created_at DESC").
+		Limit(uint64(filter.Limit)).
+		Offset(uint64(filter.Offset)).
+		RunWith(db).
+		QueryContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		err = rows.Close()
+	}()
+
+	var reviews entity.Reviews
+	for rows.Next() {
+		var review entity.Review
+		var user entity.User
+		var userDetail entity.UserDetail
+		var picture entity.ProfilePicture
+		err := rows.Scan(&review.ID, &review.BuildingID, &review.UserID, &review.Rating, &review.Message, &review.CreatedAt, &review.UpdatedAt, &user.ID, &user.Detail.Name, &picture.Url)
+		if err != nil {
+			return nil, err
+		}
+
+		user.Detail = userDetail
+		user.Detail.Picture = picture
+		review.User = user
+		reviews = append(reviews, review)
+	}
+
+	return &reviews, nil
+}
+
+func (b *BuildingRepositoryImpl) CountBuildingReviewsByID(ctx context.Context, buildingID string) (int64, error) {
+	var count int64
+	err := b.db.WithContext(ctx).
+		Model(&entity.Review{}).
+		Where("building_id = ?", buildingID).
+		Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }

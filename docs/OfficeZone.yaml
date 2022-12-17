@@ -3754,6 +3754,69 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
+  /buildings/{buildingID}/reviews:
+    get:
+      summary: Get all reviews of a building
+      operationId: getBuildingReviews
+      tags:
+        - Buildings
+      parameters:
+        - name: buildingID
+          in: path
+          description: ID of the building
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 123e4567-e89b-12d3-a456-426655440000
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/page'
+      responses:
+        200:
+          description: Successfully retrieved building reviews
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building reviews fetched successfully
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        user:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            name:
+                              type: string
+                              example: John Doe
+                            picture:
+                              type: string
+                              example: https://example.com/avatar.png
+                        rating:
+                          type: integer
+                          example: 5
+                        message:
+                          type: string
+                          example: This is a comment
+                        createdAt:
+                          type: string
+                          format: date-time
+                          example: 0001-01-01 00:00:00
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
   /buildings/facilities/category:
     get:
       summary: Get all building facilities categories
@@ -4099,7 +4162,7 @@ components:
       name: page
       in: query
       description: Page number
-      required: false
+      required: true
       schema:
         type: integer
         minimum: 1
@@ -4108,7 +4171,7 @@ components:
       name: limit
       in: query
       description: Number of items to return
-      required: false
+      required: true
       schema:
         type: integer
         minimum: 1

@@ -1,11 +1,15 @@
 package dto
 
-import "office-booking-backend/pkg/entity"
+import (
+	"office-booking-backend/pkg/config"
+	"office-booking-backend/pkg/entity"
+)
 
 type BriefPublishedBuildingResponse struct {
 	ID       string    `json:"id"`
 	Name     string    `json:"name"`
 	Pictures string    `json:"pictures"`
+	Review   *Review   `json:"review"`
 	Prices   *Price    `json:"price"`
 	Owner    string    `json:"owner"`
 	Location *Location `json:"location"`
@@ -21,6 +25,10 @@ func NewBriefPublishedBuildingResponse(building *entity.Building) *BriefPublishe
 		ID:       building.ID,
 		Name:     building.Name,
 		Pictures: pictureUrl,
+		Review: &Review{
+			Rating: building.Rating,
+			Count:  building.ReviewCount,
+		},
 		Prices: &Price{
 			AnnualPrice:  building.AnnualPrice,
 			MonthlyPrice: building.MonthlyPrice,
@@ -47,6 +55,7 @@ type BriefBuildingResponse struct {
 	ID          string    `json:"id"`
 	Name        string    `json:"name"`
 	Pictures    string    `json:"pictures"`
+	Review      *Review   `json:"review"`
 	Prices      *Price    `json:"price"`
 	Owner       string    `json:"owner"`
 	Location    *Location `json:"location"`
@@ -63,6 +72,10 @@ func NewBriefBuildingResponse(building *entity.Building) *BriefBuildingResponse 
 		ID:       building.ID,
 		Name:     building.Name,
 		Pictures: pictureUrl,
+		Review: &Review{
+			Rating: building.Rating,
+			Count:  building.ReviewCount,
+		},
 		Prices: &Price{
 			AnnualPrice:  building.AnnualPrice,
 			MonthlyPrice: building.MonthlyPrice,
@@ -145,6 +158,11 @@ func NewPictures(pictures *entity.Pictures) *Pictures {
 	return &pics
 }
 
+type Review struct {
+	Rating float64 `json:"rating"`
+	Count  int     `json:"count"`
+}
+
 type Location struct {
 	Address  string `json:"address,omitempty"`
 	City     string `json:"city"`
@@ -172,6 +190,7 @@ type FullPublishedBuildingResponse struct {
 	Facilities  *Facilities   `json:"facilities"`
 	Capacity    int           `json:"capacity"`
 	Size        int           `json:"size"`
+	Review      *Review       `json:"review"`
 	Prices      *Price        `json:"price"`
 	Owner       string        `json:"owner"`
 	Locations   *FullLocation `json:"location"`
@@ -187,6 +206,10 @@ func NewFullPublishedBuildingResponse(building *entity.Building) *FullPublishedB
 		Facilities:  NewFacilities(&building.Facilities),
 		Capacity:    building.Capacity,
 		Size:        building.Size,
+		Review: &Review{
+			Rating: building.Rating,
+			Count:  building.ReviewCount,
+		},
 		Prices: &Price{
 			AnnualPrice:  building.AnnualPrice,
 			MonthlyPrice: building.MonthlyPrice,
@@ -213,6 +236,7 @@ type FullBuildingResponse struct {
 	Facilities  *Facilities   `json:"facilities" validate:"required,min=1,dive"`
 	Capacity    int           `json:"capacity" validate:"required,min=1"`
 	Size        int           `json:"size" validate:"required,gte=1"`
+	Review      *Review       `json:"review"`
 	Prices      *Price        `json:"price" validate:"required,dive"`
 	Owner       string        `json:"owner" validate:"required"`
 	Locations   *FullLocation `json:"location" validate:"required,dive"`
@@ -229,6 +253,10 @@ func NewFullBuildingResponse(building *entity.Building) *FullBuildingResponse {
 		Facilities:  NewFacilities(&building.Facilities),
 		Capacity:    building.Capacity,
 		Size:        building.Size,
+		Review: &Review{
+			Rating: building.Rating,
+			Count:  building.ReviewCount,
+		},
 		Prices: &Price{
 			AnnualPrice:  building.AnnualPrice,
 			MonthlyPrice: building.MonthlyPrice,
@@ -394,5 +422,51 @@ func NewTimeframeStat(stats *entity.TimeframeStat) *TotalByTimeFrame {
 		ThisMonth: stats.Month.Int64,
 		ThisYear:  stats.Year.Int64,
 		AllTime:   stats.All.Int64,
+	}
+}
+
+type BriefBuildingReviewResponse struct {
+	ID        string            `json:"id"`
+	User      BriefUserResponse `json:"user"`
+	Rating    int               `json:"rating"`
+	Message   string            `json:"message"`
+	CreatedAt string            `json:"createdAt"`
+}
+
+func NewBriefBuildingReviewResponse(review *entity.Review) *BriefBuildingReviewResponse {
+	return &BriefBuildingReviewResponse{
+		ID:        review.ID,
+		Rating:    review.Rating,
+		Message:   review.Message,
+		User:      *NewBriefUserResponse(&review.User),
+		CreatedAt: review.CreatedAt.Format(config.DATE_RESPONSE_FORMAT),
+	}
+}
+
+type BriefBuildingReviewsResponse []BriefBuildingReviewResponse
+
+func NewBriefBuildingReviewsResponse(reviews *entity.Reviews) *BriefBuildingReviewsResponse {
+	response := new(BriefBuildingReviewsResponse)
+	for _, review := range *reviews {
+		*response = append(*response, *NewBriefBuildingReviewResponse(&review))
+	}
+	return response
+}
+
+type BriefUserResponse struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Picture string `json:"picture"`
+}
+
+func NewBriefUserResponse(user *entity.User) *BriefUserResponse {
+	url := user.Detail.Picture.Url
+	if url == "" {
+		url = config.DEFAULT_USER_AVATAR
+	}
+	return &BriefUserResponse{
+		ID:      user.ID,
+		Name:    user.Detail.Name,
+		Picture: url,
 	}
 }

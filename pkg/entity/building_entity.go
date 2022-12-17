@@ -18,7 +18,9 @@ type Building struct {
 	Facilities   Facilities `gorm:"foreignKey:BuildingID"`
 	Owner        string
 	Size         int
-	CityID       int `gorm:"default:null"`
+	ReviewCount  int     `gorm:"default:0"`
+	Rating       float64 `gorm:"default:0"`
+	CityID       int     `gorm:"default:null"`
 	City         City
 	DistrictID   int `gorm:"default:null"`
 	District     District

@@ -183,6 +183,37 @@ func (b *BuildingController) GetBuildingTotal(c *fiber.Ctx) error {
 	})
 }
 
+func (b *BuildingController) GetBuildingReviews(c *fiber.Ctx) error {
+	buildingID := c.Params("buildingID")
+
+	filter := new(dto.GetBuildingReviewsQueryParam)
+	if err := c.QueryParser(filter); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidQueryParams.Error())
+	}
+
+	if errs := b.validator.ValidateQuery(filter); errs != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidQueryParams.Error(),
+			Data:    errs,
+		})
+	}
+
+	reviews, total, err := b.buildingService.GetBuildingReviews(c.Context(), buildingID, filter)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "building reviews fetched successfully",
+		Data:    reviews,
+		Meta: fiber.Map{
+			"limit": filter.Limit,
+			"page":  filter.Page,
+			"total": total,
+		},
+	})
+}
+
 func (b *BuildingController) RequestNewBuildingID(c *fiber.Ctx) error {
 	token := c.Locals("user").(*jwt.Token)
 	claims := token.Claims.(jwt.MapClaims)

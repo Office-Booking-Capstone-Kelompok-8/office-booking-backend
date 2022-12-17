@@ -1,6 +1,10 @@
 package dto
 
-import "office-booking-backend/pkg/entity"
+import (
+	"office-booking-backend/pkg/config"
+	"office-booking-backend/pkg/entity"
+	"time"
+)
 
 type BriefPublishedBuildingResponse struct {
 	ID       string    `json:"id"`
@@ -419,5 +423,51 @@ func NewTimeframeStat(stats *entity.TimeframeStat) *TotalByTimeFrame {
 		ThisMonth: stats.Month.Int64,
 		ThisYear:  stats.Year.Int64,
 		AllTime:   stats.All.Int64,
+	}
+}
+
+type BriefBuildingReviewResponse struct {
+	ID        string            `json:"id"`
+	Rating    int               `json:"rating"`
+	Message   string            `json:"comment"`
+	User      BriefUserResponse `json:"user"`
+	CreatedAt time.Time         `json:"createdAt"`
+}
+
+func NewBriefBuildingReviewResponse(review *entity.Review) *BriefBuildingReviewResponse {
+	return &BriefBuildingReviewResponse{
+		ID:        review.ID,
+		Rating:    review.Rating,
+		Message:   review.Message,
+		User:      *NewBriefUserResponse(&review.User),
+		CreatedAt: review.CreatedAt,
+	}
+}
+
+type BriefBuildingReviewsResponse []BriefBuildingReviewResponse
+
+func NewBriefBuildingReviewsResponse(reviews *entity.Reviews) *BriefBuildingReviewsResponse {
+	response := new(BriefBuildingReviewsResponse)
+	for _, review := range *reviews {
+		*response = append(*response, *NewBriefBuildingReviewResponse(&review))
+	}
+	return response
+}
+
+type BriefUserResponse struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Picture string `json:"picture"`
+}
+
+func NewBriefUserResponse(user *entity.User) *BriefUserResponse {
+	url := user.Detail.Picture.Url
+	if url == "" {
+		url = config.DEFAULT_USER_AVATAR
+	}
+	return &BriefUserResponse{
+		ID:      user.ID,
+		Name:    user.Detail.Name,
+		Picture: url,
 	}
 }

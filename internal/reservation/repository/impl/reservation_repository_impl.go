@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"errors"
 	"fmt"
 	"office-booking-backend/internal/reservation/dto"
 	"office-booking-backend/internal/reservation/repository"
@@ -505,6 +506,117 @@ func (r *ReservationRepositoryImpl) DeleteReservationByID(ctx context.Context, r
 
 	if res.RowsAffected == 0 {
 		return err2.ErrReservationNotFound
+	}
+
+	return nil
+}
+
+func (r *ReservationRepositoryImpl) GetReservationReview(ctx context.Context, reservations *entity.Reservation) (*entity.Review, error) {
+	review := new(entity.Review)
+	err := r.db.WithContext(ctx).
+		Model(&entity.Review{}).
+		Where("reservation_id = ?", reservations.ID).
+		Where("user_id = ?", reservations.UserID).
+		First(review).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err2.ErrReviewNotFound
+		}
+
+		return nil, err
+	}
+
+	return review, nil
+}
+
+func (r *ReservationRepositoryImpl) AddReservationReviews(ctx context.Context, review *entity.Review) error {
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		err := tx.Create(review).Error
+		if err != nil {
+			switch {
+			case strings.Contains(err.Error(), "CONSTRAINT `fk_reviews_reservation`"):
+				return err2.ErrReservationNotFound
+			default:
+				return err
+			}
+		}
+
+		// get current count and average rating of the building
+		stat := struct {
+			Count int     `gorm:"column:count"`
+			Avg   float64 `gorm:"column:avg"`
+		}{}
+		err = tx.Table("reviews").
+			Where("building_id = ?", review.BuildingID).
+			Where("deleted_at IS NULL").
+			Select("COUNT(id) AS count, AVG(rating) AS avg").
+			Scan(&stat).Error
+		if err != nil {
+			return err
+		}
+
+		// update building rating
+		err = tx.Model(&entity.Building{}).
+			Where("id = ?", review.BuildingID).
+			Updates(&entity.Building{
+				Rating:      stat.Avg,
+				ReviewCount: stat.Count,
+			}).Error
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *ReservationRepositoryImpl) UpdateReservationReviews(ctx context.Context, review *entity.Review) error {
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		res := tx.Model(&entity.Review{}).
+			Where("id = ?", review.ID).
+			Updates(review)
+		if res.Error != nil {
+			switch {
+			case strings.Contains(res.Error.Error(), "CONSTRAINT `fk_reviews_reservation`"):
+				return err2.ErrReservationNotFound
+			default:
+				return res.Error
+			}
+		}
+
+		if res.RowsAffected == 0 {
+			return err2.ErrReviewNotFound
+		}
+
+		// get current average rating of the building
+		var avg float64
+		err := tx.Table("reviews").
+			Where("building_id = ?", review.BuildingID).
+			Where("deleted_at IS NULL").
+			Select("AVG(rating) AS avg").
+			Scan(&avg).Error
+		if err != nil {
+			return err
+		}
+
+		err = tx.Model(&entity.Building{}).
+			Where("id = ?", review.BuildingID).
+			Update("rating", avg).Error
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
 	}
 
 	return nil

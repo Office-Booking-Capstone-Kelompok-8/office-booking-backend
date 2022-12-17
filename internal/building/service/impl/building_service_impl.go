@@ -2,7 +2,6 @@ package impl
 
 import (
 	"context"
-	"golang.org/x/sync/errgroup"
 	"io"
 	"log"
 	"office-booking-backend/internal/building/dto"
@@ -13,6 +12,8 @@ import (
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/utils/imagekit"
 	"office-booking-backend/pkg/utils/validator"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/google/uuid"
 )
@@ -330,4 +331,39 @@ func (b *BuildingServiceImpl) DeleteBuilding(ctx context.Context, buildingID str
 	}
 
 	return nil
+}
+
+func (b *BuildingServiceImpl) GetBuildingReviews(ctx context.Context, buildingID string, filter *dto.GetBuildingReviewsQueryParam) (*dto.BriefBuildingReviewsResponse, int64, error) {
+	var reviews *entity.Reviews
+	var total int64
+
+	errGroup := errgroup.Group{}
+	errGroup.Go(func() error {
+		filter.Offset = (filter.Page - 1) * filter.Limit
+		savedReviews, err := b.repo.GetBuildingReviewsByID(ctx, buildingID, filter)
+		if err != nil {
+			log.Println("error when getting reviews: ", err)
+			return err
+		}
+
+		reviews = savedReviews
+		return nil
+	})
+
+	errGroup.Go(func() error {
+		count, err := b.repo.CountBuildingReviewsByID(ctx, buildingID)
+		if err != nil {
+			log.Println("error when counting reviews: ", err)
+			return err
+		}
+
+		total = count
+		return nil
+	})
+
+	if err := errGroup.Wait(); err != nil {
+		return nil, 0, err
+	}
+
+	return dto.NewBriefBuildingReviewsResponse(reviews), total, nil
 }

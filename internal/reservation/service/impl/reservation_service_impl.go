@@ -409,3 +409,107 @@ func (r *ReservationServiceImpl) DeleteReservationByID(ctx context.Context, rese
 
 	return nil
 }
+
+func (r *ReservationServiceImpl) GetReservationReview(ctx context.Context, reservationID string, userID string) (*dto.BriefReviewResponse, error) {
+	reservation := &entity.Reservation{
+		ID:     reservationID,
+		UserID: userID,
+	}
+	review, err := r.repo.GetReservationReview(ctx, reservation)
+	if err != nil {
+		log.Println("error when getting reviews: ", err)
+		return nil, err
+	}
+
+	return dto.NewBriefReviewResponse(review), nil
+}
+
+func (r *ReservationServiceImpl) CreateReservationReview(ctx context.Context, review *dto.AddReviewRequest, reservationID string, userID string) error {
+	reservation := new(entity.Reservation)
+	errGroup := errgroup.Group{}
+	errGroup.Go(func() error {
+		savedReservation, err := r.repo.GetReservationByID(ctx, reservationID)
+		if err != nil {
+			log.Println("error when getting reservation: ", err)
+			return err
+		}
+
+		if savedReservation == nil {
+			return err2.ErrReservationNotFound
+		}
+
+		if savedReservation.UserID != userID {
+			return err2.ErrNoPermission
+		}
+
+		if savedReservation.StatusID != 6 {
+			return err2.ErrReservationNotCompleted
+		}
+
+		reservation = savedReservation
+		return nil
+	})
+
+	errGroup.Go(func() error {
+		searchReservation := &entity.Reservation{
+			ID:     reservationID,
+			UserID: userID,
+		}
+		savedReview, err := r.repo.GetReservationReview(ctx, searchReservation)
+		if err != nil {
+			if err == err2.ErrReviewNotFound {
+				return nil
+			}
+
+			log.Println("error when getting reviews: ", err)
+			return err
+		}
+
+		if savedReview != nil {
+			return err2.ErrReviewAlreadyExist
+		}
+
+		return nil
+	})
+
+	if err := errGroup.Wait(); err != nil {
+		return err
+	}
+
+	reviewEntity := review.ToEntity(reservation)
+	err := r.repo.AddReservationReviews(ctx, reviewEntity)
+	if err != nil {
+		log.Println("error when create review: ", err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *ReservationServiceImpl) UpdateReservationReview(ctx context.Context, review *dto.UpdateReviewRequest, reservationID string, userID string) error {
+	savedReview, err := r.repo.GetReservationReview(ctx, &entity.Reservation{
+		ID:     reservationID,
+		UserID: userID,
+	})
+	if err != nil {
+		log.Println("error when getting reviews: ", err)
+		return err
+	}
+
+	if savedReview == nil {
+		return err2.ErrReviewNotFound
+	}
+
+	if savedReview.CreatedAt.Add(r.config.GetDuration("review.maxEditable")).After(time.Now()) {
+		return err2.ErrReviewNotEditable
+	}
+
+	reviewEntity := review.ToEntity(savedReview)
+	err = r.repo.UpdateReservationReviews(ctx, reviewEntity)
+	if err != nil {
+		log.Println("error when update review: ", err)
+		return err
+	}
+
+	return nil
+}

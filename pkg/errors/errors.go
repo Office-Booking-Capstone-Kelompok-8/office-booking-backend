@@ -122,4 +122,16 @@ var (
 
 	// ErrReservationNotAwaitingPayment is returned when the reservation is not awaiting payment
 	ErrReservationNotAwaitingPayment = errors.New("reservation is not awaiting payment")
+
+	// ErrInvalidReviewID is returned when the review is not found
+	ErrReviewNotFound = errors.New("review not found")
+
+	// ErrReviewAlreadyExist is returned when the review is already exist
+	ErrReviewAlreadyExist = errors.New("review already exist")
+
+	// ErrReservationNotCompleted is returned when the reservation is not completed yet but the user is trying to review it
+	ErrReservationNotCompleted = errors.New("reservation is not completed")
+
+	// ErrReviewNotEditable is returned when the review is not editable (e.g. the review is already passed max edit time)
+	ErrReviewNotEditable = errors.New("review is not editable")
 )

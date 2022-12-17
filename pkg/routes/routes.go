@@ -74,6 +74,9 @@ func (r *Routes) Init(app *fiber.App) {
 	uReservation.Post("/", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.CreateReservation)
 	uReservation.Get("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.GetUserReservationDetailByID)
 	uReservation.Delete("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.CancelReservation)
+	uReservation.Post("/:reservationID/reviews", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.CreateReservationReview)
+	uReservation.Put("/:reservationID/reviews", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.UpdateReservationReview)
+	uReservation.Get("/:reservationID/reviews", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.GetUserReservationReview)
 
 	payment := v1.Group("/payments")
 	payment.Get("/methods", r.payment.GetAllPaymentMethod)
@@ -106,10 +109,10 @@ func (r *Routes) Init(app *fiber.App) {
 	aBuilding.Get("/:buildingID", r.adminAccessTokenMiddleware, r.building.GetBuildingDetailByID)
 	aBuilding.Put("/:buildingID", r.adminAccessTokenMiddleware, r.building.UpdateBuilding)
 	aBuilding.Delete("/:buildingID", r.adminAccessTokenMiddleware, r.building.DeleteBuilding)
-	aBuilding.Post("/:buildingID/pictures", r.adminAccessTokenMiddleware, r.building.AddBuildingPicture)
-	aBuilding.Delete("/:buildingID/pictures/:pictureID", r.adminAccessTokenMiddleware, r.building.DeleteBuildingPicture)
 	aBuilding.Post("/:buildingID/facilities", r.adminAccessTokenMiddleware, r.building.AddBuildingFacilities)
 	aBuilding.Delete("/:buildingID/facilities/:facilityID", r.adminAccessTokenMiddleware, r.building.DeleteBuildingFacility)
+	aBuilding.Post("/:buildingID/pictures", r.adminAccessTokenMiddleware, r.building.AddBuildingPicture)
+	aBuilding.Delete("/:buildingID/pictures/:pictureID", r.adminAccessTokenMiddleware, r.building.DeleteBuildingPicture)
 
 	// Admin.Reservation routes
 	aReservation := admin.Group("/reservations")
@@ -133,6 +136,7 @@ func (r *Routes) Init(app *fiber.App) {
 	building.Get("/", r.building.GetAllPublishedBuildings)
 	building.Get("/facilities/category", r.building.GetFacilityCategories)
 	building.Get("/:buildingID", r.building.GetPublishedBuildingDetailByID)
+	building.Get("/:buildingID/reviews", r.building.GetBuildingReviews)
 
 	// Location routes
 	location := v1.Group("/locations")

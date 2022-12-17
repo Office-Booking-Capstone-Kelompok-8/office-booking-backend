@@ -258,14 +258,16 @@ type TimeframeStat struct {
 	ThisWeek  int64 `json:"thisWeek"`
 	ThisMonth int64 `json:"thisMonth"`
 	ThisYear  int64 `json:"thisYear"`
+	AllTime   int64 `json:"allTime"`
 }
 
 func NewTimeframeStat(stats *entity.TimeframeStat) *TimeframeStat {
 	return &TimeframeStat{
-		Today:     stats.Day,
-		ThisWeek:  stats.Week,
-		ThisMonth: stats.Month,
-		ThisYear:  stats.Year,
+		Today:     stats.Day.Int64,
+		ThisWeek:  stats.Week.Int64,
+		ThisMonth: stats.Month.Int64,
+		ThisYear:  stats.Year.Int64,
+		AllTime:   stats.All.Int64,
 	}
 }
 

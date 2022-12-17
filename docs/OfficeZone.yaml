@@ -1664,6 +1664,66 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
+  /admin/buildings/total:
+    get:
+      summary: Get total buildings in the system
+      description: Get total buildings in the system
+      operationId: getTotalBuildings
+      tags:
+        - Admin.Buildings
+      security:
+        - access_token: []
+      responses:
+        200:
+          description: Successfully retrieved total buildings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: tobuilding total fetched successfully
+                  data:
+                    type: object
+                    properties:
+                      byCity:
+                        type: array
+                        example:
+                          - cityId: 154
+                            cityName: "Kota Jakarta Selatan"
+                            total: 1
+                          - cityId: 155
+                            cityName: "Kota Jakarta Timur"
+                            total: 1
+                          - cityId: 156
+                            cityName: "Kota Jakarta Pusat"
+                            total: 1
+                      byTimeframe:
+                        type: object
+                        properties:
+                          today:
+                            type: integer
+                            example: 1
+                          thisWeek:
+                            type: integer
+                            example: 1
+                          thisMonth:
+                            type: integer
+                            example: 1
+                          thisYear:
+                            type: integer
+                            example: 1
+                          allTime:
+                            type: integer
+                            example: 1
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
   /admin/buildings/{buildingID}:
     get:
       summary: Get building detail by ID
@@ -2696,6 +2756,7 @@ paths:
           $ref: '#/components/responses/ReservationNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
+
   /admin/reservations/total:
     get:
       summary: Get total number of reservations
@@ -2754,7 +2815,7 @@ paths:
                           thisYear:
                             type: integer
                             example: 1
-                          total:
+                          allTime:
                             type: integer
                             example: 1
 
@@ -2765,6 +2826,49 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
+  /admin/reservations/revenue:
+    get:
+      summary: Get total revenue of reservations
+      operationId: getTotalRevenue
+      security:
+        - access_token: [ ]
+      tags:
+        - Admin.Reservations
+      responses:
+        200:
+          description: Successfully retrieved total revenue
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: reservation revenue fetched successfully
+                  data:
+                    type: object
+                    properties:
+                      today:
+                        type: integer
+                        example: 1
+                      thisWeek:
+                        type: integer
+                        example: 1
+                      thisMonth:
+                        type: integer
+                        example: 1
+                      thisYear:
+                        type: integer
+                        example: 1
+                      allTime:
+                        type: integer
+                        example: 1
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        500:
+          $ref: '#/components/responses/InternalServerError'
   # /admin/reservations/statistic:
   #   get:
   #     summary: Get weekly statistic of reservations 
@@ -3247,6 +3351,50 @@ paths:
                         total: 1
                       - month: December
                         total: 1
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/users/total:
+    get:
+      summary: Get total number of users
+      operationId: getTotalUsers
+      security:
+        - access_token: [ ]
+      tags:
+        - Admin.Users
+      responses:
+        200:
+          description: Successfully retrieved total users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: user total fetched successfully
+                  data:
+                    type: object
+                    properties:
+                      today:
+                        type: integer
+                        example: 1
+                      thisWeek:
+                        type: integer
+                        example: 1
+                      thisMonth:
+                        type: integer
+                        example: 1
+                      thisYear:
+                        type: integer
+                        example: 1
+                      allTime:
+                        type: integer
+                        example: 1
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         403:

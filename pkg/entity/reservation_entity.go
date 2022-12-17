@@ -48,13 +48,6 @@ type StatusStat struct {
 
 type StatusesStat []StatusStat
 
-type TimeframeStat struct {
-	Day   int64
-	Week  int64
-	Month int64
-	Year  int64
-}
-
 type Review struct {
 	ID            string `gorm:"primaryKey; type:varchar(36); not null"`
 	ReservationID string `gorm:"type:varchar(36); not null" `

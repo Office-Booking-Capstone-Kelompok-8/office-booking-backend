@@ -69,12 +69,12 @@ func (r *Routes) Init(app *fiber.App) {
 	user.Put("/change-password", r.accessTokenMiddleware, r.auth.ChangePassword)
 
 	// Enduser.Reservation routes
-  uReservation := v1.Group("/reservations")
+	uReservation := v1.Group("/reservations")
 	uReservation.Get("/", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.GetUserReservations)
 	uReservation.Post("/", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.CreateReservation)
 	uReservation.Get("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.GetUserReservationDetailByID)
 	uReservation.Delete("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.CancelReservation)
-  ureservation.Get("/:reservationID/reviews", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.GetReservationReviews)
+	uReservation.Get("/:reservationID/reviews", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.GetReservationReviews)
 
 	payment := v1.Group("/payments")
 	payment.Get("/methods", r.payment.GetAllPaymentMethod)
@@ -92,6 +92,7 @@ func (r *Routes) Init(app *fiber.App) {
 	aUser.Get("/", r.adminAccessTokenMiddleware, r.user.GetAllUsers)
 	aUser.Post("/", r.adminAccessTokenMiddleware, r.auth.RegisterUser)
 	aUser.Post("/admin", r.adminAccessTokenMiddleware, r.auth.RegisterAdmin)
+	aUser.Get("/total", r.adminAccessTokenMiddleware, r.user.GetRegisteredMemberCount)
 	aUser.Get("/statistic", r.adminAccessTokenMiddleware, r.user.GetRegisteredMemberStat)
 	aUser.Get("/:userID", r.adminAccessTokenMiddleware, r.user.GetFullUserByID)
 	aUser.Put("/:userID", r.adminAccessTokenMiddleware, r.user.UpdateUserByID)
@@ -102,6 +103,7 @@ func (r *Routes) Init(app *fiber.App) {
 	aBuilding := admin.Group("/buildings")
 	aBuilding.Get("/", r.adminAccessTokenMiddleware, r.building.GetAllBuildings)
 	aBuilding.Get("/id", r.adminAccessTokenMiddleware, r.building.RequestNewBuildingID)
+	aBuilding.Get("/total", r.adminAccessTokenMiddleware, r.building.GetBuildingTotal)
 	aBuilding.Get("/:buildingID", r.adminAccessTokenMiddleware, r.building.GetBuildingDetailByID)
 	aBuilding.Put("/:buildingID", r.adminAccessTokenMiddleware, r.building.UpdateBuilding)
 	aBuilding.Delete("/:buildingID", r.adminAccessTokenMiddleware, r.building.DeleteBuilding)
@@ -115,6 +117,7 @@ func (r *Routes) Init(app *fiber.App) {
 	aReservation.Get("/", r.adminAccessTokenMiddleware, r.reservation.GetReservations)
 	aReservation.Post("/", r.adminAccessTokenMiddleware, r.reservation.CreateAdminReservation)
 	aReservation.Get("/total", r.adminAccessTokenMiddleware, r.reservation.GetReservationTotal)
+	aReservation.Get("/revenue", r.adminAccessTokenMiddleware, r.reservation.GetTotalRevenueByTime)
 	aReservation.Get("/:reservationID", r.adminAccessTokenMiddleware, r.reservation.GetReservationDetailByID)
 	aReservation.Put("/:reservationID", r.adminAccessTokenMiddleware, r.reservation.UpdateReservation)
 	aReservation.Delete("/:reservationID", r.adminAccessTokenMiddleware, r.reservation.DeleteReservation)

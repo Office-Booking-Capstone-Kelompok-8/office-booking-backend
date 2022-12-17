@@ -1192,7 +1192,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: reservation is not yet finished
+                    example: reservation is not completed
         500:
           $ref: '#/components/responses/InternalServerError'
     get:

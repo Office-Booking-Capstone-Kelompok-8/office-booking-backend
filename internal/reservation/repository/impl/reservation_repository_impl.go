@@ -575,3 +575,49 @@ func (r *ReservationRepositoryImpl) AddReservationReviews(ctx context.Context, r
 
 	return nil
 }
+
+func (r *ReservationRepositoryImpl) UpdateReservationReviews(ctx context.Context, review *entity.Review) error {
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		res := tx.Model(&entity.Review{}).
+			Where("id = ?", review.ID).
+			Updates(review)
+		if res.Error != nil {
+			switch {
+			case strings.Contains(res.Error.Error(), "CONSTRAINT `fk_reviews_reservation`"):
+				return err2.ErrReservationNotFound
+			default:
+				return res.Error
+			}
+		}
+
+		if res.RowsAffected == 0 {
+			return err2.ErrReviewNotFound
+		}
+
+		// get current average rating of the building
+		var avg float64
+		err := tx.Table("reviews").
+			Where("building_id = ?", review.BuildingID).
+			Where("deleted_at IS NULL").
+			Select("AVG(rating) AS avg").
+			Scan(&avg).Error
+		if err != nil {
+			return err
+		}
+
+		err = tx.Model(&entity.Building{}).
+			Where("id = ?", review.BuildingID).
+			Update("rating", avg).Error
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

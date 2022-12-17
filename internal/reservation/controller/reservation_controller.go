@@ -354,7 +354,7 @@ func (r *ReservationController) GetUserReservationReview(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
-		Message: "Reviews retrieved successfully",
+		Message: "reviews retrieved successfully",
 		Data:    review,
 	})
 }
@@ -395,6 +395,42 @@ func (r *ReservationController) CreateReservationReview(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(response.BaseResponse{
-		Message: "Review created successfully",
+		Message: "review created successfully",
+	})
+}
+
+func (r *ReservationController) UpdateReservationReview(c *fiber.Ctx) error {
+	token := c.Locals("user").(*jwt.Token)
+	claims := token.Claims.(jwt.MapClaims)
+	userID := claims["uid"].(string)
+
+	reservationID := c.Params("reservationID")
+
+	reviewRequest := new(dto.UpdateReviewRequest)
+	if err := c.BodyParser(reviewRequest); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	if errs := r.validator.ValidateJSON(*reviewRequest); errs != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidRequestBody.Error(),
+			Data:    errs,
+		})
+	}
+
+	err := r.service.UpdateReservationReview(c.Context(), reviewRequest, reservationID, userID)
+	if err != nil {
+		switch err {
+		case err2.ErrReservationNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		case err2.ErrReviewNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "review updated successfully",
 	})
 }

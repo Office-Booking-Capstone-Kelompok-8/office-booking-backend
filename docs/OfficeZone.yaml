@@ -1129,11 +1129,13 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - rating
               properties:
                 rating:
                   type: integer
                   example: 5
-                comment:
+                message:
                   type: string
                   example: Great place to work
       responses:
@@ -1195,6 +1197,76 @@ paths:
                     example: reservation is not completed
         500:
           $ref: '#/components/responses/InternalServerError'
+    put:
+      summary: Update a review for a reservation
+      operationId: updateReview
+      security:
+        - access_token: []
+      tags:
+        - EndUser.Reservations
+      parameters:
+        - name: reservationID
+          in: path
+          description: ID of the reservation
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+      requestBody:
+        description: Review data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - rating
+              properties:
+                rating:
+                  type: integer
+                  example: 5
+                message:
+                  type: string
+                  example: Great place to work
+      responses:
+        200:
+          description: Successfully updated review
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Review updated successfully
+        400:
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidRating:
+                  value:
+                    message: Invalid request body
+                    data:
+                      - field: rating
+                        reason: rating must be 5 or less
+                InvalidComment:
+                  value:
+                    message: Invalid request body
+                    data:
+                      - field: message
+                        reason: message must be at least 3 characters in length
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        404:
+          $ref: '#/components/responses/ReviewNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
     get:
       summary: Get reviews for a reservation
       operationId: getReviews
@@ -1244,29 +1316,8 @@ paths:
                           example: 2022-12-04T19:48:04+08:00
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
-        404:
-          $ref: '#/components/responses/ReviewNotFound'
-        500:
-          $ref: '#/components/responses/InternalServerError'
-    delete:
-      summary: Delete review for a reservation
-      operationId: deleteReview
-      security:
-        - access_token: []
-      tags:
-        - EndUser.Reservations
-      parameters:
-        - name: reservationID
-          in: path
-          description: ID of the reservation
-          required: true
-          schema:
-            type: string
-            format: uuid
-            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
-      responses:
-        200:
-          description: Successfully deleted review
+        403:
+          description: Review is not editable because it is more than 30 minutes old
           content:
             application/json:
               schema:
@@ -1274,13 +1325,44 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: Review deleted successfully
-        401:
-          $ref: '#/components/responses/InvalidOrMissingToken'
+                    example: review is not editable
         404:
-          $ref: '#/components/responses/ReservationNotFound'
+          $ref: '#/components/responses/ReviewNotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
+    # delete:
+    #   summary: Delete review for a reservation
+    #   operationId: deleteReview
+    #   security:
+    #     - access_token: []
+    #   tags:
+    #     - EndUser.Reservations
+    #   parameters:
+    #     - name: reservationID
+    #       in: path
+    #       description: ID of the reservation
+    #       required: true
+    #       schema:
+    #         type: string
+    #         format: uuid
+    #         example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+    #   responses:
+    #     200:
+    #       description: Successfully deleted review
+    #       content:
+    #         application/json:
+    #           schema:
+    #             type: object
+    #             properties:
+    #               message:
+    #                 type: string
+    #                 example: Review deleted successfully
+    #     401:
+    #       $ref: '#/components/responses/InvalidOrMissingToken'
+    #     404:
+    #       $ref: '#/components/responses/ReservationNotFound'
+    #     500:
+    #       $ref: '#/components/responses/InternalServerError'
   
   /payments/{reservationID}:
     get:

@@ -75,6 +75,7 @@ func (r *Routes) Init(app *fiber.App) {
 	uReservation.Get("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.GetUserReservationDetailByID)
 	uReservation.Delete("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.CancelReservation)
 	uReservation.Post("/:reservationID/reviews", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.CreateReservationReview)
+	uReservation.Put("/:reservationID/reviews", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.UpdateReservationReview)
 	uReservation.Get("/:reservationID/reviews", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.GetUserReservationReview)
 
 	payment := v1.Group("/payments")

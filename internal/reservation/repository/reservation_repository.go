@@ -25,5 +25,6 @@ type ReservationRepository interface {
 	AddBuildingReservation(ctx context.Context, reservation *entity.Reservation) error
 	AddReservationReviews(ctx context.Context, review *entity.Review) error
 	UpdateReservation(ctx context.Context, reservation *entity.Reservation) error
+	UpdateReservationReviews(ctx context.Context, review *entity.Review) error
 	DeleteReservationByID(ctx context.Context, reservationID string) error
 }

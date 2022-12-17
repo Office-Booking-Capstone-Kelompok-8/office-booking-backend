@@ -485,3 +485,31 @@ func (r *ReservationServiceImpl) CreateReservationReview(ctx context.Context, re
 
 	return nil
 }
+
+func (r *ReservationServiceImpl) UpdateReservationReview(ctx context.Context, review *dto.UpdateReviewRequest, reservationID string, userID string) error {
+	savedReview, err := r.repo.GetReservationReview(ctx, &entity.Reservation{
+		ID:     reservationID,
+		UserID: userID,
+	})
+	if err != nil {
+		log.Println("error when getting reviews: ", err)
+		return err
+	}
+
+	if savedReview == nil {
+		return err2.ErrReviewNotFound
+	}
+
+	if savedReview.CreatedAt.Add(r.config.GetDuration("review.maxEditable")).After(time.Now()) {
+		return err2.ErrReviewNotEditable
+	}
+
+	reviewEntity := review.ToEntity(savedReview)
+	err = r.repo.UpdateReservationReviews(ctx, reviewEntity)
+	if err != nil {
+		log.Println("error when update review: ", err)
+		return err
+	}
+
+	return nil
+}

@@ -125,4 +125,10 @@ var (
 
 	// ErrInvalidReviewID is returned when the review is not found
 	ErrReviewNotFound = errors.New("review not found")
+
+	// ErrReviewAlreadyExist is returned when the review is already exist
+	ErrReviewAlreadyExist = errors.New("review already exist")
+
+	// ErrReservationNotCompleted is returned when the reservation is not completed yet but the user is trying to review it
+	ErrReservationNotCompleted = errors.New("reservation is not completed")
 )

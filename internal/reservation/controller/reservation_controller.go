@@ -340,3 +340,21 @@ func (r *ReservationController) DeleteReservation(c *fiber.Ctx) error {
 		Message: "reservation deleted successfully",
 	})
 }
+
+func (r *ReservationController) GetUserReservationReviews(c *fiber.Ctx) error {
+	token := c.Locals("user").(*jwt.Token)
+	claims := token.Claims.(jwt.MapClaims)
+	userID := claims["uid"].(string)
+
+	reservationID := c.Params("reservationID")
+
+	review, err := r.service.GetReservationReview(c.Context(), reservationID, userID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "Reviews retrieved successfully",
+		Data:    review,
+	})
+}

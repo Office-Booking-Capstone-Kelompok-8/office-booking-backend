@@ -409,3 +409,18 @@ func (r *ReservationServiceImpl) DeleteReservationByID(ctx context.Context, rese
 
 	return nil
 }
+
+// get review for reservation
+func (r *ReservationServiceImpl) GetReservationReview(ctx context.Context, reservationID string, userID string) (*dto.BriefReviewResponse, error) {
+	reservation := &entity.Reservation{
+		ID:     reservationID,
+		UserID: userID,
+	}
+	review, err := r.repo.GetReservationReview(ctx, reservation)
+	if err != nil {
+		log.Println("error when getting reviews: ", err)
+		return nil, err
+	}
+
+	return dto.NewBriefReviewResponse(review), nil
+}

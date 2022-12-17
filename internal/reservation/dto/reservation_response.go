@@ -270,3 +270,29 @@ func NewTimeframeStat(stats *entity.TimeframeStat) *TimeframeStat {
 		AllTime:   stats.All.Int64,
 	}
 }
+
+type BriefReviewResponse struct {
+	ID        string    `json:"id"`
+	Rating    int       `json:"rating"`
+	Message   string    `json:"comment"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+func NewBriefReviewResponse(review *entity.Review) *BriefReviewResponse {
+	return &BriefReviewResponse{
+		ID:        review.ID,
+		Rating:    review.Rating,
+		Message:   review.Message,
+		CreatedAt: review.CreatedAt,
+	}
+}
+
+type BriefReviewsResponse []BriefReviewResponse
+
+func NewBriefReviewsResponse(reviews *entity.Reviews) *BriefReviewsResponse {
+	var reviewsResponse BriefReviewsResponse
+	for _, review := range *reviews {
+		reviewsResponse = append(reviewsResponse, *NewBriefReviewResponse(&review))
+	}
+	return &reviewsResponse
+}

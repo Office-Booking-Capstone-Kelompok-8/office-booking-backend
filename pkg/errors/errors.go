@@ -122,4 +122,7 @@ var (
 
 	// ErrReservationNotAwaitingPayment is returned when the reservation is not awaiting payment
 	ErrReservationNotAwaitingPayment = errors.New("reservation is not awaiting payment")
+
+	// ErrInvalidReviewID is returned when the review is not found
+	ErrReviewNotFound = errors.New("review not found")
 )

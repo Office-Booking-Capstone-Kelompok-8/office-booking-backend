@@ -15,6 +15,7 @@ type ReservationService interface {
 	GetUserReservations(ctx context.Context, userID string, page int, limit int) (*dto.BriefReservationsResponse, int64, error)
 	GetReservationStat(ctx context.Context) (*dto.ReservationStatResponse, error)
 	GetTotalRevenueByTime(ctx context.Context) (*dto.TimeframeStat, error)
+	GetReservationReview(ctx context.Context, reservationID string, userID string) (*dto.BriefReviewResponse, error)
 	IsBuildingAvailable(ctx context.Context, buildingID string, startDate time.Time, duration int) (bool, error)
 	CreateReservation(ctx context.Context, userID string, reservation *dto.AddReservartionRequest) (string, error)
 	CreateAdminReservation(ctx context.Context, reservation *dto.AddAdminReservartionRequest) (string, error)

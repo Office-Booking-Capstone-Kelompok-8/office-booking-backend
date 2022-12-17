@@ -528,3 +528,17 @@ func (r *ReservationRepositoryImpl) GetReservationReview(ctx context.Context, re
 
 	return review, nil
 }
+
+func (r *ReservationRepositoryImpl) AddReservationReviews(ctx context.Context, review *entity.Review) error {
+	err := r.db.WithContext(ctx).Create(review).Error
+	if err != nil {
+		switch {
+		case strings.Contains(err.Error(), "CONSTRAINT `fk_reviews_reservation`"):
+			return err2.ErrReservationNotFound
+		default:
+			return err
+		}
+	}
+
+	return nil
+}

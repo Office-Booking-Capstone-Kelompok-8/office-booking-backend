@@ -86,3 +86,8 @@ func (r *ReservationServiceMock) GetReservationReview(ctx context.Context, reser
 	args := r.Called(ctx, reservationID, userID)
 	return args.Get(0).(*dto.BriefReviewResponse), args.Error(1)
 }
+
+func (r *ReservationServiceMock) CreateReservationReview(ctx context.Context, review *dto.AddReviewRequest, reservationID string, userID string) error {
+	args := r.Called(ctx, review, reservationID, userID)
+	return args.Error(0)
+}

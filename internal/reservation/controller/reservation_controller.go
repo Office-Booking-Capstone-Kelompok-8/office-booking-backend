@@ -277,8 +277,6 @@ func (r *ReservationController) UpdateReservation(c *fiber.Ctx) error {
 			return fiber.NewError(fiber.StatusNotFound, err.Error())
 		case err2.ErrBuildingNotAvailable:
 			return fiber.NewError(fiber.StatusConflict, err.Error())
-		case err2.ErrInvalidStatus:
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		case err2.ErrBuildingNotFound:
 			return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidBuildingID.Error())
 		case err2.ErrUserNotFound:
@@ -313,6 +311,8 @@ func (r *ReservationController) UpdateReservationStatus(c *fiber.Ctx) error {
 		switch err {
 		case err2.ErrReservationNotFound:
 			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		case err2.ErrInvalidStatus:
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		default:
 			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 		}

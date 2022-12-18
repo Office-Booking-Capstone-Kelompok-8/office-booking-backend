@@ -2731,24 +2731,6 @@ paths:
                   description: Duration of the reservation in months
                   minimum: 1
                   example: 1
-                statusId:
-                  type: string
-                  enum:
-                   - 1
-                   - 2
-                   - 3
-                   - 4
-                   - 5
-                   - 6
-                   - null
-                  description: >
-                    status of the reservation
-                    * `1` - reservation is waiting for manual approval from admin
-                    * `2` - reservation is rejected
-                    * `3` - reservation is cancelled
-                    * `3` - reservation is waiting for payment
-                    * `5` - reservation is active
-                    * `6` - reservation is finished
                 message:
                   type: string
                   minLength: 3
@@ -2783,8 +2765,6 @@ paths:
                   $ref: '#/components/examples/InvalidBuildingID'
                 InvalidUserID:
                   $ref: '#/components/examples/InvalidUserID'
-                InvalidStatus:
-                  $ref: '#/components/examples/InvalidStatusID'
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         403:
@@ -2830,6 +2810,80 @@ paths:
                   message:
                     type: string
                     example: Reservation deleted successfully
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        404:
+          $ref: '#/components/responses/ReservationNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/reservations/{reservationID}/status:
+    put:
+      summary: Update a reservation status
+      operationId: updateReservationStatus
+      security:
+        - access_token: []
+      tags:
+        - Admin.Reservations
+      parameters:
+        - name: reservationID
+          in: path
+          description: ID of the reservation
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                statusId:
+                  type: string
+                  enum:
+                   - 1
+                   - 2
+                   - 3
+                   - 4
+                   - 5
+                   - 6
+                   - null
+                  description: >
+                    status of the reservation
+                    * `1` - reservation is waiting for manual approval from admin
+                    * `2` - reservation is rejected
+                    * `3` - reservation is cancelled
+                    * `3` - reservation is waiting for payment
+                    * `5` - reservation is active
+                    * `6` - reservation is finished
+        required: true
+      responses:
+        200:
+          description: Successfully updated reservation status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: reservation status updated successfully
+        400:
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidRequestBody:
+                  $ref: '#/components/examples/InvalidRequestBody'
+                InvalidStatusID:
+                  $ref: '#/components/examples/InvalidStatusID'
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         403:

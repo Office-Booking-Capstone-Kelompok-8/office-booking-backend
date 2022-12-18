@@ -2,6 +2,8 @@ package impl
 
 import (
 	"context"
+	"github.com/google/uuid"
+	"golang.org/x/sync/errgroup"
 	"io"
 	"log"
 	service2 "office-booking-backend/internal/reservation/service"
@@ -11,10 +13,7 @@ import (
 	"office-booking-backend/pkg/custom"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
-	"office-booking-backend/pkg/utils/imagekit"
-
-	"github.com/google/uuid"
-	"golang.org/x/sync/errgroup"
+	"office-booking-backend/pkg/service/imagekit"
 )
 
 type UserServiceImpl struct {

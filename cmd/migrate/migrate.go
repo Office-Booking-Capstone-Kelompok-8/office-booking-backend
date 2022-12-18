@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"office-booking-backend/pkg/custom"
-	"office-booking-backend/pkg/database/mysql"
 	"office-booking-backend/pkg/entity"
+	"office-booking-backend/pkg/service/mysql"
 	"office-booking-backend/pkg/utils/password"
 
 	"github.com/google/uuid"

@@ -2,6 +2,7 @@ package impl
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"io"
 	"log"
 	"office-booking-backend/internal/payment/dto"
@@ -9,9 +10,7 @@ import (
 	"office-booking-backend/internal/payment/service"
 	reservationRepo "office-booking-backend/internal/reservation/repository"
 	err2 "office-booking-backend/pkg/errors"
-	"office-booking-backend/pkg/utils/imagekit"
-
-	"github.com/google/uuid"
+	"office-booking-backend/pkg/service/imagekit"
 )
 
 type PaymentServiceImpl struct {

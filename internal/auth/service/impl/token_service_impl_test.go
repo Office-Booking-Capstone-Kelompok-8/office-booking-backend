@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"office-booking-backend/pkg/custom"
-	"office-booking-backend/pkg/database/redis"
 	"office-booking-backend/pkg/entity"
+	"office-booking-backend/pkg/service/redis"
 	"testing"
 	"time"
 

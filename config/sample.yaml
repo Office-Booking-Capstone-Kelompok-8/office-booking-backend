@@ -39,7 +39,16 @@ service:
     port: 6379
     pass: pass
     db: 0
+  firebase:
+    keyPath: config/firebase.json
   imgkit:
     publicKey: someKey
     privateKey: someKey
     endpoint: imgkitEndpoint
+
+# Individual feature configs
+payment:
+  expiredAt: 48h
+
+review:
+  maxEditable: 30m

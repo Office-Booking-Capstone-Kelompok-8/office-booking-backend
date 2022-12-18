@@ -10,7 +10,7 @@ import (
 	repository2 "office-booking-backend/internal/reservation/repository"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
-	"office-booking-backend/pkg/utils/imagekit"
+	"office-booking-backend/pkg/service/imagekit"
 	"office-booking-backend/pkg/utils/validator"
 
 	"golang.org/x/sync/errgroup"

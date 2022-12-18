@@ -6,8 +6,8 @@ import (
 	"log"
 	"office-booking-backend/internal/auth/dto"
 	"office-booking-backend/internal/auth/service"
-	"office-booking-backend/pkg/database/redis"
 	"office-booking-backend/pkg/entity"
+	"office-booking-backend/pkg/service/redis"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"

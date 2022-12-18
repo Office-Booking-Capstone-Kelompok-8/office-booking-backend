@@ -9,7 +9,7 @@ import (
 	"office-booking-backend/pkg/custom"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
-	mockImageKitSrv "office-booking-backend/pkg/utils/imagekit"
+	mockImageKitSrv "office-booking-backend/pkg/service/imagekit"
 	"testing"
 
 	"github.com/stretchr/testify/mock"

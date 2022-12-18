@@ -12,10 +12,10 @@ import (
 	"office-booking-backend/internal/auth/repository"
 	"office-booking-backend/internal/auth/service"
 	"office-booking-backend/pkg/config"
-	"office-booking-backend/pkg/database/redis"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
-	"office-booking-backend/pkg/utils/mail"
+	"office-booking-backend/pkg/service/mail"
+	"office-booking-backend/pkg/service/redis"
 	"office-booking-backend/pkg/utils/password"
 	"office-booking-backend/pkg/utils/random"
 

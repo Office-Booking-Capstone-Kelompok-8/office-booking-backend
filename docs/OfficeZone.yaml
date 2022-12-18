@@ -3697,6 +3697,89 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
+  /admin/payments/reservations/{reservationsID}:
+    get:
+      summary: Get payment detail by reservation ID
+      operationId: getPaymentByReservationID
+      security:
+        - access_token: []
+      tags:
+        - Admin.Payments
+      parameters:
+        - name: reservationsID
+          in: path
+          description: ID of the reservation
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 34b1a1c0-5b5e-4b4b-9d5f-6f9c9c9c9c9c
+      responses:
+        200:
+          description: Successfully retrieved payment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: payment fetched successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      amount:
+                        type: integer
+                        example: 100000
+                      startDate:
+                        type: string
+                        format: date-time
+                        example: 2022-02-02 08:00:00
+                      endDate: 
+                        type: string
+                        format: date-time
+                        example: 2022-02-02 08:00:00
+                      method:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          bankIcon:
+                            type: string
+                            example: https://www.bank.com/icon.png
+                          bankName:
+                            type: string
+                            example: Bank
+                          accountNumber:
+                            type: string
+                            example: 1234567890
+                          accountName:
+                            type: string
+                            example: Fortyfour
+                      proof:
+                        type: string
+                        example: https://www.bank.com/proof.png
+                      createdAt:
+                        type: string
+                        format: date-time
+                        example: 2022-02-02 08:00:00
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        example: 2022-02-02 08:00:00
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        404:
+          $ref: '#/components/responses/PaymentNotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+          
   /buildings:
     get:
       summary: Get all published buildings in the system

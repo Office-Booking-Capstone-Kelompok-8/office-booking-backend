@@ -1538,7 +1538,17 @@ paths:
                 CannotPayReservation:
                   description: Cannot pay reservation either because the reservation is not yet approved or the reservation status is not awaiting payment
                   value:
-                    message: cannot pay reservation
+                    message: reservation is not awaiting payment
+        410:
+          description: The reservation has been expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                ReservationExpired:
+                  value:
+                    message: reservation payment has been expired
         500:
           $ref: '#/components/responses/InternalServerError'
 
@@ -2651,10 +2661,7 @@ paths:
                         type: integer
                         description: Duration of the reservation in months
                         example: 1
-                      amount:
-                        type: integer
-                        description: Amount of the reservation in IDR
-                        example: 1000000
+                        
                       status:
                         type: object
                         properties:
@@ -2664,6 +2671,13 @@ paths:
                           message:
                             type: string
                             example: Pending
+                      amount:
+                        type: integer
+                        description: Amount of the reservation in IDR
+                        example: 1000000
+                      message:
+                        type: string
+                        example: This is a message
                       expiredAt:
                         type: string
                         format: date-time

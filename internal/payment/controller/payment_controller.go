@@ -239,8 +239,12 @@ func (p *PaymentController) UploadPaymentProof(c *fiber.Ctx) error {
 			return fiber.NewError(fiber.StatusNotFound, err.Error())
 		case err2.ErrPaymentMethodNotFound:
 			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		case err2.ErrReservationNotAwaitingPayment:
+			fallthrough
 		case err2.ErrReservationAlreadyPaid:
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+			return fiber.NewError(fiber.StatusConflict, err.Error())
+		case err2.ErrPaymentAlreadyExpired:
+			return fiber.NewError(fiber.StatusGone, err.Error())
 		default:
 			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 		}

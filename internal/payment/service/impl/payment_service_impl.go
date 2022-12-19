@@ -2,7 +2,6 @@ package impl
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"io"
 	"log"
 	"office-booking-backend/internal/payment/dto"
@@ -11,6 +10,9 @@ import (
 	reservationRepo "office-booking-backend/internal/reservation/repository"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/service/imagekit"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 type PaymentServiceImpl struct {
@@ -89,17 +91,21 @@ func (p *PaymentServiceImpl) CreatePaymentMethod(ctx context.Context, payment *d
 }
 
 func (p *PaymentServiceImpl) AddPaymentProof(ctx context.Context, reservationID string, payment *dto.CreateReservationPaymentRequest, file io.Reader) error {
-	reservatrion, err := p.reservationRepo.GetReservationByID(ctx, reservationID)
+	reservation, err := p.reservationRepo.GetReservationByID(ctx, reservationID)
 	if err != nil {
 		log.Println("error when get reservation by id: ", err)
 		return err
 	}
 
-	if reservatrion.StatusID == 5 {
+	if reservation.StatusID == 5 {
 		return err2.ErrReservationAlreadyPaid
 	}
 
-	if reservatrion.StatusID != 4 {
+	if reservation.StatusID == 3 || reservation.ExpiredAt.Before(time.Now()) {
+		return err2.ErrPaymentAlreadyExpired
+	}
+
+	if reservation.StatusID != 4 {
 		return err2.ErrReservationNotAwaitingPayment
 	}
 

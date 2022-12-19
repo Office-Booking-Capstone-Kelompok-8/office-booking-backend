@@ -5,12 +5,48 @@ on:
     branches: [main]
 
 jobs:
-  deploy:
-    name: Deploy Staging Server
+  update-doc:
+    name: Update Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: SCP documentation to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          source: ./docs
+          target: ./office-zone
+  build:
+    name: Deploy Development Server
     runs-on: ubuntu-latest
     environment: Production
     steps:
-      - name: Deploy to Server by using SSH
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build docker image
+        run: |
+          docker build -t suryawarior44/office-zone:staging .
+          docker save -o dev.tar suryawarior44/office-zone:staging
+      - name: SCP docker image to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          source: staging.tar
+          target: ./office-zone
+  deploy:
+      needs: [build]
+      name: Deploy Staging Server
+      runs-on: ubuntu-latest
+      environment: Production
+      steps:
+      - name: Run docker image on server
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -18,10 +54,9 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
-            cd office-zone/office-booking-backend
-            git fetch origin main
-            git checkout main
-            git pull origin main
-            cd ..
+            cd ./office-zone
+            docker load -i staging.tar
+            rm staging.tar
             sudo docker compose kill staging
-            sudo docker compose up --build -d staging
+            sudo docker compose up -d staging
+            docker system prune -f

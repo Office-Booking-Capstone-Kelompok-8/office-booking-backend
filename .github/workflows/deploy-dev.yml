@@ -19,7 +19,7 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           source: ./docs
-          target: /home/ubuntu/office-zone/docs
+          target: ./office-zone
   deploy:
     name: Deploy Development Server
     runs-on: ubuntu-latest
@@ -39,7 +39,7 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           source: dev.tar
-          target: /home/ubuntu/office-zone/
+          target: ./office-zone
       - name: Execute commands on server
         uses: appleboy/ssh-action@master
         with:
@@ -48,7 +48,7 @@ jobs:
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
-            cd office-zone
+            cd ./office-zone
             docker load -i dev.tar
             rm dev.tar
             sudo docker compose kill dev

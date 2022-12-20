@@ -187,7 +187,19 @@ func (b *BuildingServiceImpl) UpdateBuilding(ctx context.Context, building *dto.
 
 	err := b.repo.UpdateBuildingByID(ctx, buildingEntity)
 	if err != nil {
-		log.Println("error when creating building: ", err)
+		log.Println("error when updating building: ", err)
+		return err
+	}
+
+	return nil
+}
+
+func (b *BuildingServiceImpl) UpdateBuildingPublishState(ctx context.Context, building *dto.PublishRequest, buildingID string) error {
+	buildingEntity := building.ToEntity(buildingID)
+
+	err := b.repo.UpdateBuildingByID(ctx, buildingEntity)
+	if err != nil {
+		log.Println("error when updating building publish state: ", err)
 		return err
 	}
 

@@ -338,15 +338,6 @@ func (b *BuildingController) UpdateBuilding(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
 	}
 
-	if building.IsPublished {
-		if errs, err := b.buildingService.ValidateBuilding(c.Context(), buildingID); err != nil {
-			return c.Status(fiber.StatusConflict).JSON(response.BaseResponse{
-				Message: err.Error(),
-				Data:    errs,
-			})
-		}
-	}
-
 	if err := b.buildingService.UpdateBuilding(c.Context(), building, buildingID); err != nil {
 		switch err {
 		case err2.ErrBuildingNotFound:
@@ -362,6 +353,44 @@ func (b *BuildingController) UpdateBuilding(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
 		Message: "building updated successfully",
+	})
+}
+
+func (b *BuildingController) UpdateBuildingPublishState(c *fiber.Ctx) error {
+	buildingID := c.Params("buildingID")
+
+	publishState := new(dto.PublishRequest)
+	if err := c.BodyParser(publishState); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err2.ErrInvalidRequestBody.Error())
+	}
+
+	if errs := b.validator.ValidateJSON(publishState); errs != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(response.BaseResponse{
+			Message: err2.ErrInvalidRequestBody.Error(),
+			Data:    errs,
+		})
+	}
+
+	if *publishState.IsPublished {
+		if errs, err := b.buildingService.ValidateBuilding(c.Context(), buildingID); err != nil {
+			return c.Status(fiber.StatusConflict).JSON(response.BaseResponse{
+				Message: err.Error(),
+				Data:    errs,
+			})
+		}
+	}
+
+	if err := b.buildingService.UpdateBuildingPublishState(c.Context(), publishState, buildingID); err != nil {
+		switch err {
+		case err2.ErrBuildingNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "building publish state updated successfully",
 	})
 }
 

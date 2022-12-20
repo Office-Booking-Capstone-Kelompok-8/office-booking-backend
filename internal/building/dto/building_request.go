@@ -39,7 +39,6 @@ type UpdateBuildingRequest struct {
 	Prices      PriceRequest            `json:"price" validate:"omitempty,dive"`
 	Owner       string                  `json:"owner" validate:"omitempty"`
 	Locations   LocationRequest         `json:"location" validate:"omitempty,dive"`
-	IsPublished bool                    `json:"isPublished" validate:"omitempty"`
 }
 
 func (c *UpdateBuildingRequest) ToEntity(buildingID string) *entity.Building {
@@ -59,7 +58,6 @@ func (c *UpdateBuildingRequest) ToEntity(buildingID string) *entity.Building {
 		Address:      c.Locations.Address,
 		Longitude:    c.Locations.Geo.Longitude,
 		Latitude:     c.Locations.Geo.Latitude,
-		IsPublished:  &c.IsPublished,
 	}
 }
 
@@ -128,4 +126,15 @@ type LocationRequest struct {
 type GeoRequest struct {
 	Longitude float64 `json:"long" validate:"omitempty,latitude"`
 	Latitude  float64 `json:"lat" validate:"omitempty,longitude"`
+}
+
+type PublishRequest struct {
+	IsPublished *bool `json:"isPublished" validate:"required"`
+}
+
+func (p *PublishRequest) ToEntity(buildingID string) *entity.Building {
+	return &entity.Building{
+		ID:          buildingID,
+		IsPublished: p.IsPublished,
+	}
 }

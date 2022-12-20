@@ -51,7 +51,7 @@ func (p *PaymentRepositoryImpl) GetPaymentMethodByID(ctx context.Context, paymen
 		First(payment, paymentID).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, err2.ErrPaymentNotFound
+			return nil, err2.ErrPaymentMethodNotFound
 		}
 		return nil, err
 	}
@@ -143,7 +143,7 @@ func (p *PaymentRepositoryImpl) UpdatePaymentMethod(ctx context.Context, payment
 	}
 
 	if res.RowsAffected == 0 {
-		return err2.ErrPaymentNotFound
+		return err2.ErrPaymentMethodNotFound
 	}
 
 	return nil
@@ -156,7 +156,7 @@ func (p *PaymentRepositoryImpl) DeletePaymentMethod(ctx context.Context, payment
 	}
 
 	if res.RowsAffected == 0 {
-		return err2.ErrPaymentNotFound
+		return err2.ErrPaymentMethodNotFound
 	}
 
 	return nil

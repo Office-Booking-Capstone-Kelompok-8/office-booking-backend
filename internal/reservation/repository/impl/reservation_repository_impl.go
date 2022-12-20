@@ -520,11 +520,11 @@ func (r *ReservationRepositoryImpl) GetReservationTaskUntilToday(ctx context.Con
 	status := []int{constant.ACTIVE_STATUS, constant.AWAITING_PAYMENT_STATUS}
 	err := r.db.WithContext(ctx).
 		Model(&entity.Reservation{}).
-		Select("id, end_date, expired_at").
+		Select("id, end_date, expired_at, status_id").
 		Where("status_id IN (?)", status).
 		Where(
-			r.db.Where("DATE(expired_at) <= DATE(?)", time.Now().Format("2006-01-02")).
-				Or("DATE(end_date) <= DATE(?)", time.Now().Format("2006-01-02")),
+			r.db.Where("DATE(expired_at) <= DATE(?)", time.Now()).
+				Or("DATE(end_date) <= DATE(?)", time.Now()),
 		).
 		Find(reservations).Error
 	if err != nil {

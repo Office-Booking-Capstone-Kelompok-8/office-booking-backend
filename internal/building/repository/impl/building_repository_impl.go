@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"office-booking-backend/internal/building/dto"
 	"office-booking-backend/internal/building/repository"
+	"office-booking-backend/pkg/constant"
 	"office-booking-backend/pkg/custom"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
@@ -48,7 +49,9 @@ func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, filter *dt
 	}
 
 	if !filter.StartDate.ToTime().IsZero() && !filter.EndDate.IsZero() {
-		query = query.Where("NOT EXISTS (SELECT * FROM `reservations` WHERE `reservations`.`building_id` = `buildings`.`id` AND `reservations`.`start_date` <= ? AND `reservations`.`end_date` >= ?)", filter.EndDate, filter.StartDate.ToTime())
+		// Check if there is any reservation that has the same time range with the filter time range and has awaiting payment or active status
+		status := []int{constant.AWAITING_PAYMENT_STATUS, constant.ACTIVE_STATUS}
+		query = query.Where("NOT EXISTS (SELECT * FROM `reservations` WHERE `reservations`.`building_id` = `buildings`.`id` AND `reservations`.`start_date` <= ? AND `reservations`.`end_date` >= ? AND `reservations`.'status_id' IN (?))", filter.EndDate, filter.StartDate.ToTime(), status)
 	}
 
 	if filter.AnnualPriceMin != 0 {
@@ -105,92 +108,6 @@ func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, filter *dt
 	}
 
 	return buildings, count, nil
-
-	// db, err := b.db.DB()
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// query := sq.Select("b.id, b.name, b.annual_price, b.monthly_price, b.owner, b.is_published, c.name, d.name").
-	// 	From("buildings b").
-	// 	LeftJoin("cities c ON b.city_id = c.id").
-	// 	LeftJoin("districts d ON b.district_id = d.id").
-	// 	LeftJoin("pictures p ON p.id = (SELECT p1.id FROM pictures p1 WHERE b.id = p1.building_id AND p1.index = 0 LIMIT 1)").
-	// 	Where("b.deleted_at IS NULL").
-	// 	Where("b.is_published = ?", isPublishedOnly)
-
-	// if filter.BuildingName != "" {
-	// 	query = query.Where("b.name LIKE ?", "%"+filter.BuildingName+"%")
-	// }
-
-	// if filter.CityID != 0 {
-	// 	query = query.Where("b.city_id = ?", filter.CityID)
-	// }
-
-	// if filter.CityID != 0 {
-	// 	query = query.Where("b.district_id = ?", filter.CityID)
-	// }
-
-	// if !filter.StartDate.IsZero() && !filter.EndDate.IsZero() {
-	// 	query = query.Where("NOT EXISTS (SELECT * FROM reservations r WHERE r.building_id = b.id AND r.start_date <= ? AND r.end_date >= ?)", filter.EndDate, filter.StartDate)
-	// }
-
-	// if filter.AnnualPriceMin != 0 {
-	// 	query = query.Where("b.annual_price >= ?", filter.AnnualPriceMin)
-	// }
-
-	// if filter.AnnualPriceMax != 0 {
-	// 	query = query.Where("b.annual_price <= ?", filter.AnnualPriceMax)
-	// }
-
-	// if filter.MonthlyPriceMin != 0 {
-	// 	query = query.Where("b.monthly_price >= ?", filter.MonthlyPriceMin)
-	// }
-
-	// if filter.MonthlyPriceMax != 0 {
-	// 	query = query.Where("b.monthly_price <= ?", filter.MonthlyPriceMax)
-	// }
-
-	// if filter.CapacityMin != 0 {
-	// 	query = query.Where("b.capacity >= ?", filter.CapacityMin)
-	// }
-
-	// if filter.CapacityMax != 0 {
-	// 	query = query.Where("b.capacity <= ?", filter.CapacityMax)
-	// }
-
-	// if filter.SortBy != "" {
-	// 	// POW(69.1 * (latitude - [startlat]), 2) +
-	// 	// POW(69.1 * ([startlng] - longitude) * COS(latitude / 57.3), 2))
-	// 	if filter.SortBy == "pinpoint" {
-	// 		query = query.OrderByClause("POW(69.1 * (b.latitude - ?), 2) + POW(69.1 * (? - b.longitude) * COS(b.latitude / 57.3), 2) "+filter.Order, filter.Latitude, filter.Longitude, filter.Order)
-	// 	} else {
-	// 		query = query.OrderBy(filter.SortBy + " " + filter.Order)
-	// 	}
-	// }
-
-	// rows, err := query.
-	// 	Offset(uint64(filter.Offset)).
-	// 	Limit(uint64(filter.Limit)).
-	// 	RunWith(db).QueryContext(ctx)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// defer func() {
-	// 	err = rows.Close()
-	// }()
-
-	// var buildings entity.Buildings
-	// for rows.Next() {
-	// 	var building entity.Building
-	// 	err = rows.Scan(&building.ID, &building.Name, &building.AnnualPrice, &building.MonthlyPrice, &building.Owner, &building.IsPublished, &building.City, &building.District)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	buildings = append(buildings, building)
-	// }
-
-	// return &buildings, nil
 }
 
 func (b *BuildingRepositoryImpl) GetBuildingDetailByID(ctx context.Context, id string, isPublishedOnly bool) (*entity.Building, error) {

@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"office-booking-backend/pkg/config"
+	"office-booking-backend/pkg/constant"
 	"office-booking-backend/pkg/entity"
 )
 
@@ -439,7 +439,7 @@ func NewBriefBuildingReviewResponse(review *entity.Review) *BriefBuildingReviewR
 		Rating:    review.Rating,
 		Message:   review.Message,
 		User:      *NewBriefUserResponse(&review.User),
-		CreatedAt: review.CreatedAt.Format(config.DATE_RESPONSE_FORMAT),
+		CreatedAt: review.CreatedAt.Format(constant.DATE_RESPONSE_FORMAT),
 	}
 }
 
@@ -462,7 +462,7 @@ type BriefUserResponse struct {
 func NewBriefUserResponse(user *entity.User) *BriefUserResponse {
 	url := user.Detail.Picture.Url
 	if url == "" {
-		url = config.DEFAULT_USER_AVATAR
+		url = constant.DEFAULT_USER_AVATAR
 	}
 	return &BriefUserResponse{
 		ID:      user.ID,

@@ -1970,10 +1970,6 @@ paths:
                         long:
                           type: number
                           example: 106.827153
-                isPublished:
-                  type: boolean
-                  description: Set to true to publish the building, only published building will be shown in the app. And to publish the building, the building must have at least 1 picture and all required fields must be filled, e.g. name, size, price, etc.
-                  example: true
         required: true
       responses:
         200:
@@ -2013,28 +2009,6 @@ paths:
           $ref: '#/components/responses/RolesNotSupported'
         404:
           $ref: '#/components/responses/BuildingNotFound'
-        409:
-          description: Conflict resource, for trying to publish non valid building
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: building is not valid, please check the required fields
-                  data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          example: name
-                        reason:
-                          type: string
-                          example: name is required
-
         500:
           $ref: '#/components/responses/InternalServerError'
     delete:
@@ -2082,6 +2056,90 @@ paths:
                     example: building has active reservation
         500:
           $ref: '#/components/responses/InternalServerError'
+  /admin/buildings/{buildingID}/publish:
+    put:
+      summary: Update the publish status of a building
+      operationId: updateBuildingPublishStatus
+      security:
+        - access_token: []
+      tags:
+        - Admin.Buildings
+      parameters:
+        - name: buildingID
+          in: path
+          description: ID of the building to be updated
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: 5f9f1b9c-1b5a-4b9f-8c1a-8c1a8c1a8c1a
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - isPublished
+              properties:
+                isPublished:
+                  type: boolean
+                  description: Set to true to publish the building, only published building will be shown in the app. And to publish the building, the building must have at least 1 picture and all required fields must be filled, e.g. name, size, price, etc.
+                  example: true
+        required: true
+      responses:
+        200:
+          description: Successfully updated building publish status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building publish state updated successfully
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponse'
+              examples:
+                InvalidPublishState:
+                 value:
+                    message: invalid request body
+                    data:
+                      - field: isPublished
+                        reason: isPublished must be a boolean
+        401:
+          $ref: '#/components/responses/InvalidOrMissingToken'
+        403:
+          $ref: '#/components/responses/RolesNotSupported'
+        404:
+          $ref: '#/components/responses/BuildingNotFound'
+        409:
+          description: Conflict resource, for trying to publish non valid building
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: building is not valid, please check the required fields
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                          example: name
+                        reason:
+                          type: string
+                          example: name is required\
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
   /admin/buildings/{buildingID}/pictures:
     post:
       summary: Upload a picture for a building
@@ -4442,6 +4500,15 @@ components:
         picture:
           type: string
           example: https://ik.imagekit.io/fortyfour/default-image.jpg
+        review:
+          type: object
+          properties:
+            rating:
+              type: number
+              example: 4.5
+            count:
+              type: integer
+              example: 10
         price:
           type: object
           properties:
@@ -4476,6 +4543,15 @@ components:
         picture:
           type: string
           example: https://ik.imagekit.io/fortyfour/default-image.jpg
+        review:
+          type: object
+          properties:
+            rating:
+              type: number
+              example: 4.5
+            count:
+              type: integer
+              example: 10
         price:
           type: object
           properties:
@@ -4500,6 +4576,7 @@ components:
         isPublished:
           type: boolean
           example: true
+          
     PublishedBuildingDetails:
       type: object
       properties:
@@ -4551,6 +4628,18 @@ components:
         capacity:
           type: integer
           example: 1000
+        size:
+          type: integer
+          example: 1000
+        review:
+          type: object
+          properties:
+            rating:
+              type: number
+              example: 4.5
+            count:
+              type: integer
+              example: 10
         price:
           type: object
           properties:
@@ -4655,6 +4744,18 @@ components:
         capacity:
           type: integer
           example: 1000
+        size:
+          type: integer
+          example: 1000
+        review:
+          type: object
+          properties:
+            rating:
+              type: number
+              example: 4.5
+            count:
+              type: integer
+              example: 10
         price:
           type: object
           properties:

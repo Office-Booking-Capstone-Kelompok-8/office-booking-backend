@@ -21,7 +21,7 @@ jobs:
           source: ./docs
           target: ./office-zone
   build:
-    name: Deploy Development Server
+    name: Build Development Binary
     runs-on: ubuntu-latest
     environment: Production
     steps:

@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"office-booking-backend/pkg/config"
+	"office-booking-backend/pkg/constant"
 	"office-booking-backend/pkg/entity"
 	"time"
 )
@@ -30,13 +30,13 @@ func NewBriefReservationResponse(reservation *entity.Reservation) *BriefReservat
 		ID:          reservation.ID,
 		Building:    *NewBriefBuildingResponse(reservation.Building),
 		CompanyName: reservation.CompanyName,
-		StartDate:   reservation.StartDate.Format(config.DATE_RESPONSE_FORMAT),
-		EndDate:     reservation.EndDate.Format(config.DATE_RESPONSE_FORMAT),
+		StartDate:   reservation.StartDate.Format(constant.DATE_RESPONSE_FORMAT),
+		EndDate:     reservation.EndDate.Format(constant.DATE_RESPONSE_FORMAT),
 		Duration:    newDuration(reservation.StartDate, reservation.EndDate),
 		Amount:      reservation.Amount,
 		Status:      *NewStatusResponse(reservation.Status),
-		ExpiredAt:   reservation.ExpiredAt.Format(config.DATE_RESPONSE_FORMAT),
-		CreatedAt:   reservation.CreatedAt.Format(config.DATE_RESPONSE_FORMAT),
+		ExpiredAt:   reservation.ExpiredAt.Format(constant.DATE_RESPONSE_FORMAT),
+		CreatedAt:   reservation.CreatedAt.Format(constant.DATE_RESPONSE_FORMAT),
 	}
 }
 
@@ -70,13 +70,13 @@ func NewBriefAdminReservationResponse(reservation *entity.Reservation) *BriefAdm
 		Building:    *NewBriefBuildingResponse(reservation.Building),
 		Tenant:      *NewTenantResponse(reservation.User),
 		CompanyName: reservation.CompanyName,
-		StartDate:   reservation.StartDate.Format(config.DATE_RESPONSE_FORMAT),
-		EndDate:     reservation.EndDate.Format(config.DATE_RESPONSE_FORMAT),
+		StartDate:   reservation.StartDate.Format(constant.DATE_RESPONSE_FORMAT),
+		EndDate:     reservation.EndDate.Format(constant.DATE_RESPONSE_FORMAT),
 		Duration:    newDuration(reservation.StartDate, reservation.EndDate),
 		Amount:      reservation.Amount,
 		Status:      *NewStatusResponse(reservation.Status),
-		ExpiredAt:   reservation.ExpiredAt.Format(config.DATE_RESPONSE_FORMAT),
-		CreatedAt:   reservation.CreatedAt.Format(config.DATE_RESPONSE_FORMAT),
+		ExpiredAt:   reservation.ExpiredAt.Format(constant.DATE_RESPONSE_FORMAT),
+		CreatedAt:   reservation.CreatedAt.Format(constant.DATE_RESPONSE_FORMAT),
 	}
 }
 
@@ -160,15 +160,15 @@ func NewFullAdminReservationResponse(reservation *entity.Reservation) *FullAdmin
 		Building:    *NewBuildingResponse(reservation.Building),
 		Tenant:      *NewTenantResponse(reservation.User),
 		CompanyName: reservation.CompanyName,
-		StartDate:   reservation.StartDate.Format(config.DATE_RESPONSE_FORMAT),
-		EndDate:     reservation.EndDate.Format(config.DATE_RESPONSE_FORMAT),
+		StartDate:   reservation.StartDate.Format(constant.DATE_RESPONSE_FORMAT),
+		EndDate:     reservation.EndDate.Format(constant.DATE_RESPONSE_FORMAT),
 		Duration:    newDuration(reservation.StartDate, reservation.EndDate),
 		Amount:      reservation.Amount,
 		Status:      *NewStatusResponse(reservation.Status),
 		Message:     reservation.Message,
-		ExpiredAt:   reservation.ExpiredAt.Format(config.DATE_RESPONSE_FORMAT),
-		CreatedAt:   reservation.CreatedAt.Format(config.DATE_RESPONSE_FORMAT),
-		UpdatedAt:   reservation.UpdatedAt.Format(config.DATE_RESPONSE_FORMAT),
+		ExpiredAt:   reservation.ExpiredAt.Format(constant.DATE_RESPONSE_FORMAT),
+		CreatedAt:   reservation.CreatedAt.Format(constant.DATE_RESPONSE_FORMAT),
+		UpdatedAt:   reservation.UpdatedAt.Format(constant.DATE_RESPONSE_FORMAT),
 	}
 }
 
@@ -182,7 +182,7 @@ type TenantResponse struct {
 func NewTenantResponse(user entity.User) *TenantResponse {
 	url := user.Detail.Picture.Url
 	if url == "" {
-		url = config.DEFAULT_USER_AVATAR
+		url = constant.DEFAULT_USER_AVATAR
 	}
 	return &TenantResponse{
 		ID:      user.ID,
@@ -212,15 +212,15 @@ func NewFullReservationResponse(reservation *entity.Reservation) *FullReservatio
 		ID:          reservation.ID,
 		Building:    *NewBuildingResponse(reservation.Building),
 		CompanyName: reservation.CompanyName,
-		StartDate:   reservation.StartDate.Format(config.DATE_RESPONSE_FORMAT),
-		EndDate:     reservation.EndDate.Format(config.DATE_RESPONSE_FORMAT),
+		StartDate:   reservation.StartDate.Format(constant.DATE_RESPONSE_FORMAT),
+		EndDate:     reservation.EndDate.Format(constant.DATE_RESPONSE_FORMAT),
 		Duration:    newDuration(reservation.StartDate, reservation.EndDate),
 		Amount:      reservation.Amount,
 		Status:      *NewStatusResponse(reservation.Status),
 		Message:     reservation.Message,
-		ExpiredAt:   reservation.ExpiredAt.Format(config.DATE_RESPONSE_FORMAT),
-		CreatedAt:   reservation.CreatedAt.Format(config.DATE_RESPONSE_FORMAT),
-		UpdatedAt:   reservation.UpdatedAt.Format(config.DATE_RESPONSE_FORMAT),
+		ExpiredAt:   reservation.ExpiredAt.Format(constant.DATE_RESPONSE_FORMAT),
+		CreatedAt:   reservation.CreatedAt.Format(constant.DATE_RESPONSE_FORMAT),
+		UpdatedAt:   reservation.UpdatedAt.Format(constant.DATE_RESPONSE_FORMAT),
 	}
 }
 

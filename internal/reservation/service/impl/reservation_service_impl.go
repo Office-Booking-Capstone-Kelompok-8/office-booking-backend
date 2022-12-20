@@ -7,6 +7,7 @@ import (
 	"office-booking-backend/internal/reservation/dto"
 	"office-booking-backend/internal/reservation/repository"
 	"office-booking-backend/internal/reservation/service"
+	"office-booking-backend/pkg/constant"
 	"office-booking-backend/pkg/custom"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
@@ -386,7 +387,7 @@ func (r *ReservationServiceImpl) UpdateReservation(ctx context.Context, reservat
 func (r *ReservationServiceImpl) UpdateReservationStatus(ctx context.Context, reservationID string, statusRequest *dto.UpdateReservationStatusRequest) error {
 	// 1 = pending, 2 = rejected, 3 = cancelled, 4 = awaiting payment, 5 = active, 6 = completed
 	reservationEntity := statusRequest.ToEntity(reservationID)
-	if statusRequest.StatusID == 4 {
+	if statusRequest.StatusID == constant.AWAITING_PAYMENT_STATUS {
 		reservationEntity.AcceptedAt = time.Now()
 		reservationEntity.ExpiredAt = time.Now().Add(r.config.GetDuration("reservation.expiredAt"))
 	}
@@ -442,7 +443,7 @@ func (r *ReservationServiceImpl) CreateReservationReview(ctx context.Context, re
 			return err2.ErrNoPermission
 		}
 
-		if savedReservation.StatusID != 6 {
+		if savedReservation.StatusID != constant.COMPLETED_STATUS {
 			return err2.ErrReservationNotCompleted
 		}
 

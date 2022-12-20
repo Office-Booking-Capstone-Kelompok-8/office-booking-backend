@@ -11,7 +11,7 @@ import (
 	"office-booking-backend/internal/auth/dto"
 	"office-booking-backend/internal/auth/repository"
 	"office-booking-backend/internal/auth/service"
-	"office-booking-backend/pkg/config"
+	"office-booking-backend/pkg/constant"
 	"office-booking-backend/pkg/database/redis"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
@@ -54,7 +54,6 @@ func (a *AuthServiceImpl) RegisterUser(ctx context.Context, user *dto.SignupRequ
 	if err != nil {
 		return "", err
 	}
-
 	user.Password = string(hashedPassword)
 	userEntity := user.ToEntity()
 
@@ -75,7 +74,7 @@ func (a *AuthServiceImpl) RegisterAdmin(ctx context.Context, user *dto.SignupReq
 
 	user.Password = string(hashedPassword)
 	userEntity := user.ToEntity()
-	userEntity.Role = config.ADMIN_ROLE
+	userEntity.Role = constant.ADMIN_ROLE
 
 	err = a.repository.RegisterUser(ctx, userEntity)
 	if err != nil {
@@ -173,7 +172,7 @@ func (a *AuthServiceImpl) createResetOTP(ctx context.Context, email string) (*st
 		log.Println("Error while marshalling otp token pair: ", err)
 		return nil, err
 	}
-	key := createKey(email, config.RESET_PASSWORD_SUBJECT)
+	key := createKey(email, constant.RESET_PASSWORD_SUBJECT)
 
 	err = a.redisRepo.Set(ctx, key, string(otpTokenPair), a.config.GetDuration("otp.exp"))
 	if err != nil {
@@ -210,7 +209,7 @@ func (a *AuthServiceImpl) RequestPasswordResetOTP(ctx context.Context, email str
 }
 
 func (a *AuthServiceImpl) VerifyPasswordResetOTP(ctx context.Context, otp *dto.ResetPasswordOTPVerifyRequest) (*string, error) {
-	key := createKey(otp.Email, config.RESET_PASSWORD_SUBJECT)
+	key := createKey(otp.Email, constant.RESET_PASSWORD_SUBJECT)
 	jsonToken, err := a.redisRepo.Get(ctx, key)
 	if err != nil {
 		if errors.Is(err, redis2.Nil) {
@@ -250,7 +249,7 @@ func (a *AuthServiceImpl) createVerifyOTP(ctx context.Context, userID string, em
 		log.Println("Error while marshalling otp token pair: ", err)
 		return nil, err
 	}
-	key := createKey(email, config.VERIFY_EMAIL_SUBJECT)
+	key := createKey(email, constant.VERIFY_EMAIL_SUBJECT)
 
 	err = a.redisRepo.Set(ctx, key, string(otpTokenPair), a.config.GetDuration("otp.exp"))
 	if err != nil {
@@ -302,7 +301,7 @@ func (a *AuthServiceImpl) VerifyEmailOTP(ctx context.Context, userID string, otp
 		return err
 	}
 
-	key := createKey(user.Email, config.VERIFY_EMAIL_SUBJECT)
+	key := createKey(user.Email, constant.VERIFY_EMAIL_SUBJECT)
 	jsonToken, err := a.redisRepo.Get(ctx, key)
 	if err != nil {
 		if errors.Is(err, redis2.Nil) {
@@ -334,7 +333,7 @@ func (a *AuthServiceImpl) VerifyEmailOTP(ctx context.Context, userID string, otp
 }
 
 func (a *AuthServiceImpl) ResetPassword(ctx context.Context, password *dto.PasswordResetRequest) error {
-	key := createKey(password.Email, config.RESET_PASSWORD_SUBJECT)
+	key := createKey(password.Email, constant.RESET_PASSWORD_SUBJECT)
 	jsonOTP, err := a.redisRepo.Get(ctx, key)
 	if err != nil {
 		if errors.Is(err, redis2.Nil) {

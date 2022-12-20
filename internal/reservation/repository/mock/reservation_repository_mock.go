@@ -73,6 +73,11 @@ func (r *ReservationRepositoryMock) GetTotalRevenue(ctx context.Context) (*entit
 	return args.Get(0).(*entity.TimeframeStat), args.Error(1)
 }
 
+func (r *ReservationRepositoryMock) GetReservationTaskUntilToday(ctx context.Context) (*entity.Reservations, error) {
+	args := r.Called(ctx)
+	return args.Get(0).(*entity.Reservations), args.Error(1)
+}
+
 func (r *ReservationRepositoryMock) DeleteReservationByID(ctx context.Context, reservationID string) error {
 	args := r.Called(ctx, reservationID)
 	return args.Error(0)

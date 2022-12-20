@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"office-booking-backend/pkg/config"
+	"office-booking-backend/pkg/constant"
 	"office-booking-backend/pkg/entity"
 )
 
@@ -74,8 +74,8 @@ func NewPaymentDetailResponse(payment *entity.Transaction) *PaymentDetailRespons
 	return &PaymentDetailResponse{
 		ID:        payment.ID,
 		Ammount:   payment.Reservation.Amount,
-		StartDate: payment.Reservation.StartDate.Format(config.DATE_RESPONSE_FORMAT),
-		EndDate:   payment.Reservation.EndDate.Format(config.DATE_RESPONSE_FORMAT),
+		StartDate: payment.Reservation.StartDate.Format(constant.DATE_RESPONSE_FORMAT),
+		EndDate:   payment.Reservation.EndDate.Format(constant.DATE_RESPONSE_FORMAT),
 		Method: BriefPaymentMethodResponse{
 			ID:            payment.Payment.ID,
 			BankIcon:      payment.Payment.Bank.Icon,
@@ -84,8 +84,8 @@ func NewPaymentDetailResponse(payment *entity.Transaction) *PaymentDetailRespons
 			AccountName:   payment.Payment.AccountName,
 		},
 		Proof:     payment.Proof.URL,
-		CreatedAt: payment.CreatedAt.Format(config.DATE_RESPONSE_FORMAT),
-		UpdatedAt: payment.UpdatedAt.Format(config.DATE_RESPONSE_FORMAT),
+		CreatedAt: payment.CreatedAt.Format(constant.DATE_RESPONSE_FORMAT),
+		UpdatedAt: payment.UpdatedAt.Format(constant.DATE_RESPONSE_FORMAT),
 	}
 }
 

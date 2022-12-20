@@ -8,6 +8,7 @@ server:
   allowedOrigins:
     - http://localhost:3000
     - http://localhost:3001
+  timezone: Asia/Makassar
 
 token:
   access:
@@ -43,3 +44,13 @@ service:
     publicKey: someKey
     privateKey: someKey
     endpoint: imgkitEndpoint
+
+# Individual feature configs
+payment:
+  expiredAt: 48h
+
+review:
+  maxEditable: 30m
+
+cron:
+  executeAt: 20:10

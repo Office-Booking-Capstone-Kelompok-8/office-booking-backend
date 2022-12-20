@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"office-booking-backend/pkg/constant"
 	"office-booking-backend/pkg/custom"
 	"office-booking-backend/pkg/database/mysql"
 	"office-booking-backend/pkg/entity"
@@ -138,27 +139,27 @@ func InitAdmin(db *gorm.DB) error {
 func InitStatus(db *gorm.DB) error {
 	status := []entity.Status{
 		{
-			ID:      1,
+			ID:      constant.PENDING_STATUS,
 			Message: "Pending",
 		},
 		{
-			ID:      2,
+			ID:      constant.REJECTED_STATUS,
 			Message: "Rejected",
 		},
 		{
-			ID:      3,
+			ID:      constant.CANCELED_STATUS,
 			Message: "Canceled",
 		},
 		{
-			ID:      4,
+			ID:      constant.AWAITING_PAYMENT_STATUS,
 			Message: "Awaiting Payment",
 		},
 		{
-			ID:      5,
+			ID:      constant.ACTIVE_STATUS,
 			Message: "Active",
 		},
 		{
-			ID:      6,
+			ID:      constant.COMPLETED_STATUS,
 			Message: "Completed",
 		},
 	}

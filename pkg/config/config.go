@@ -1,31 +1,6 @@
 package config
 
-import (
-	"time"
-
-	"github.com/spf13/viper"
-)
-
-// OTP config
-const (
-	RESET_PASSWORD_SUBJECT = "pass"
-	VERIFY_EMAIL_SUBJECT   = "verify"
-)
-
-// Global config
-const (
-	USER_ROLE           = 1
-	ADMIN_ROLE          = 2
-	DEFAULT_USER_AVATAR = "https://ik.imagekit.io/fortyfour/default-image.jpg"
-)
-
-const (
-	DATE_RESPONSE_FORMAT = "2006-01-02 15:04:05"
-)
-
-const (
-	PAYMENT_EXPIRATION_TIME = 2 * 24 * time.Hour
-)
+import "github.com/spf13/viper"
 
 func LoadConfig() (*viper.Viper, error) {
 	conf := viper.New()

@@ -22,6 +22,7 @@ type ReservationRepository interface {
 	GetReservationCountByStatus(ctx context.Context) (*entity.StatusesStat, error)
 	GetReservationCountByTime(ctx context.Context) (*entity.TimeframeStat, error)
 	GetTotalRevenue(ctx context.Context) (*entity.TimeframeStat, error)
+	GetReservationTaskUntilToday(ctx context.Context) (*entity.Reservations, error)
 	AddBuildingReservation(ctx context.Context, reservation *entity.Reservation) error
 	AddReservationReviews(ctx context.Context, review *entity.Review) error
 	UpdateReservation(ctx context.Context, reservation *entity.Reservation) error

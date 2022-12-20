@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"office-booking-backend/internal/reservation/dto"
 	"office-booking-backend/internal/reservation/repository"
+	"office-booking-backend/pkg/constant"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"strings"
@@ -29,9 +30,10 @@ func NewReservationRepositoryImpl(db *gorm.DB) repository.ReservationRepository 
 func (r *ReservationRepositoryImpl) CountUserActiveReservations(ctx context.Context, userID string) (int64, error) {
 	var count int64
 	// Count user active reservations with status id not 2 (rejected), 3 (canceled) or 5 (completed) and not expired
+	status := []int{constant.REJECTED_STATUS, constant.CANCELED_STATUS, constant.COMPLETED_STATUS}
 	err := r.db.WithContext(ctx).
 		Model(&entity.Reservation{}).
-		Where("user_id = ? AND status_id NOT IN (2, 3, 5) AND end_date > ?", userID, time.Now()).
+		Where("user_id = ? AND status_id NOT IN (?) AND end_date > ?", status, userID, time.Now()).
 		Count(&count).Error
 	if err != nil {
 		return 0, err
@@ -43,9 +45,10 @@ func (r *ReservationRepositoryImpl) CountUserActiveReservations(ctx context.Cont
 func (r *ReservationRepositoryImpl) CountBuildingActiveReservations(ctx context.Context, buildingID string) (int64, error) {
 	var count int64
 	// Count building active reservations with status id not 2 (rejected), 3 (canceled) or 5 (completed) and not expired
+	status := []int{constant.REJECTED_STATUS, constant.CANCELED_STATUS, constant.COMPLETED_STATUS}
 	err := r.db.WithContext(ctx).
 		Model(&entity.Reservation{}).
-		Where("building_id = ? AND status_id NOT IN (2, 3, 5) AND end_date > ?", buildingID, time.Now()).
+		Where("building_id = ? AND status_id NOT IN (?) AND end_date > ?", status, buildingID, time.Now()).
 		Count(&count).Error
 	if err != nil {
 		return 0, err
@@ -126,9 +129,10 @@ func (r *ReservationRepositoryImpl) IsBuildingAvailable(ctx context.Context, bui
 	var count int64
 	// Count building active reservations with status id not 2 (rejected), 3 (canceled) or 5 (completed)
 	// and not in the same time range as the new reservation
+	status := []int{constant.REJECTED_STATUS, constant.CANCELED_STATUS, constant.COMPLETED_STATUS}
 	query := r.db.WithContext(ctx).
 		Model(&entity.Reservation{}).
-		Where("building_id = ? AND status_id NOT IN (2, 3, 5)", buildingID).
+		Where("building_id = ? AND status_id NOT IN (?)", status, buildingID).
 		Where("start_date <= ? AND end_date >= ?", end, start)
 
 	for _, id := range excludedReservationID {
@@ -509,6 +513,25 @@ func (r *ReservationRepositoryImpl) DeleteReservationByID(ctx context.Context, r
 	}
 
 	return nil
+}
+
+func (r *ReservationRepositoryImpl) GetReservationTaskUntilToday(ctx context.Context) (*entity.Reservations, error) {
+	reservations := new(entity.Reservations)
+	status := []int{constant.ACTIVE_STATUS, constant.AWAITING_PAYMENT_STATUS}
+	err := r.db.WithContext(ctx).
+		Model(&entity.Reservation{}).
+		Select("id, end_date, expired_at, status_id").
+		Where("status_id IN (?)", status).
+		Where(
+			r.db.Where("DATE(expired_at) <= DATE(?)", time.Now()).
+				Or("DATE(end_date) <= DATE(?)", time.Now()),
+		).
+		Find(reservations).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return reservations, nil
 }
 
 func (r *ReservationRepositoryImpl) GetReservationReview(ctx context.Context, reservations *entity.Reservation) (*entity.Review, error) {

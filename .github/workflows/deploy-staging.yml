@@ -30,7 +30,7 @@ jobs:
       - name: Build docker image
         run: |
           docker build -t suryawarior44/office-zone:staging .
-          docker save -o dev.tar suryawarior44/office-zone:staging
+          docker save -o staging.tar suryawarior44/office-zone:staging
       - name: SCP docker image to server
         uses: appleboy/scp-action@master
         with:

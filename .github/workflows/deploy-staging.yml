@@ -103,4 +103,3 @@ jobs:
             rm staging-cron.tar
             sudo docker compose kill staging-cron
             sudo docker compose up -d staging-cron
-            docker system prune -f

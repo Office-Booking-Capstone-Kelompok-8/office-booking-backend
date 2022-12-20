@@ -1944,6 +1944,11 @@ paths:
                     monthly:
                       type: integer
                       example: 10000000
+                owner:
+                  type: string
+                  minLength: 3
+                  maxLength: 100
+                  example: PT. Jakarta Convention Center
                 location:
                   type: object
                   minProperties: 1

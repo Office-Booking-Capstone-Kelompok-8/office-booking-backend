@@ -37,7 +37,7 @@ type UpdateBuildingRequest struct {
 	Capacity    int                     `json:"capacity" validate:"omitempty,gte=1"`
 	Size        int                     `json:"size" validate:"omitempty,gte=1"`
 	Prices      PriceRequest            `json:"price" validate:"omitempty,dive"`
-	Owner       string                  `json:"owner" validate:"omitempty"`
+	Owner       string                  `json:"owner" validate:"omitempty,min=3,max=100"`
 	Locations   LocationRequest         `json:"location" validate:"omitempty,dive"`
 }
 

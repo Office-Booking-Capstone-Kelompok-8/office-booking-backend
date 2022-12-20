@@ -9,6 +9,10 @@ FROM alpine:3.16
 # Copy the binary from the builder image
 COPY --from=builder /bin/main .
 
+#  Install tzdata for timezone support
+RUN apk add --no-cache tzdata
+
+# Install and use dumb-init to give fiber a PID to inherit
 RUN apk add dumb-init
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 

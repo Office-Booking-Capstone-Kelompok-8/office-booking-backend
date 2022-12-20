@@ -59,7 +59,7 @@ func (p *PaymentController) GetPaymentMethodByID(c *fiber.Ctx) error {
 	payment, err := p.service.GetPaymentMethodByID(c.Context(), paymentIDInt)
 	if err != nil {
 		switch err {
-		case err2.ErrPaymentNotFound:
+		case err2.ErrPaymentMethodNotFound:
 			return fiber.NewError(fiber.StatusNotFound, err.Error())
 		default:
 			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
@@ -175,7 +175,7 @@ func (p *PaymentController) UpdatePaymentMethod(c *fiber.Ctx) error {
 	err = p.service.UpdatePaymentMethod(c.Context(), paymentIDInt, paymentRequest)
 	if err != nil {
 		switch err {
-		case err2.ErrPaymentNotFound:
+		case err2.ErrPaymentMethodNotFound:
 			return fiber.NewError(fiber.StatusNotFound, err.Error())
 		case err2.ErrInvalidBankID:
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())

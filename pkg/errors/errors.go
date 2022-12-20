@@ -134,4 +134,7 @@ var (
 
 	// ErrReviewNotEditable is returned when the review is not editable (e.g. the review is already passed max edit time)
 	ErrReviewNotEditable = errors.New("review is not editable")
+
+	// ErrPaymentAlreadyExpired is returned when the payment is already expired
+	ErrPaymentAlreadyExpired = errors.New("reservation payment has been expired")
 )

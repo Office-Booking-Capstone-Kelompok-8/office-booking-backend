@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type PaymentController struct {
@@ -85,7 +86,30 @@ func (p *PaymentController) GetReservationPaymentByID(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
-		Message: "payment method retrieved successfully",
+		Message: "payment detail retrieved successfully",
+		Data:    payment,
+	})
+}
+
+func (p *PaymentController) GetUsereservationPaymentByID(c *fiber.Ctx) error {
+	token := c.Locals("user").(*jwt.Token)
+	claims := token.Claims.(jwt.MapClaims)
+	userID := claims["uid"].(string)
+
+	reservationID := c.Params("reservationID")
+
+	payment, err := p.service.GetUserReservationPaymentByID(c.Context(), reservationID, userID)
+	if err != nil {
+		switch err {
+		case err2.ErrPaymentNotFound:
+			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		default:
+			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.BaseResponse{
+		Message: "payment detail retrieved successfully",
 		Data:    payment,
 	})
 }
@@ -215,8 +239,12 @@ func (p *PaymentController) UploadPaymentProof(c *fiber.Ctx) error {
 			return fiber.NewError(fiber.StatusNotFound, err.Error())
 		case err2.ErrPaymentMethodNotFound:
 			return fiber.NewError(fiber.StatusNotFound, err.Error())
+		case err2.ErrReservationNotAwaitingPayment:
+			fallthrough
 		case err2.ErrReservationAlreadyPaid:
-			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+			return fiber.NewError(fiber.StatusConflict, err.Error())
+		case err2.ErrPaymentAlreadyExpired:
+			return fiber.NewError(fiber.StatusGone, err.Error())
 		default:
 			return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 		}

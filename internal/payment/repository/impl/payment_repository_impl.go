@@ -1,7 +1,6 @@
 package impl
 
 import (
-	"fmt"
 	"office-booking-backend/pkg/entity"
 	err2 "office-booking-backend/pkg/errors"
 	"strings"
@@ -85,7 +84,7 @@ func (p *PaymentRepositoryImpl) CreateNewReservationPayment(ctx context.Context,
 	return nil
 }
 
-func (p *PaymentRepositoryImpl) GetReservationPaymentByID(ctx context.Context, reservationID string) (*entity.Transaction, error) {
+func (p *PaymentRepositoryImpl) GetReservationPaymentByID(ctx context.Context, reservationID string, userID string) (*entity.Transaction, error) {
 	// rows, err := p.db.WithContext(ctx).
 	// 	Table("transactions AS t").
 	// 	Select("t.id, t.reservation_id, t.payment_id, t.proof_id, t.expired_at, t.paid_at, t.created_at, t.updated_at, p.id, p.account_name, p.account_number, p.account_name, b.icon, r.amount, r.start_date, r.end_date").
@@ -99,14 +98,19 @@ func (p *PaymentRepositoryImpl) GetReservationPaymentByID(ctx context.Context, r
 		return nil, err
 	}
 
-	rows, err := squirrel.Select("t.id, t.reservation_id, t.payment_id, t.proof_id, t.created_at, t.updated_at, p.id, p.account_name, p.account_number, p.account_name, b.icon, b.name, r.amount, r.start_date, r.end_date, pp.id, pp.url").
+	query := squirrel.Select("t.id, t.reservation_id, t.payment_id, t.proof_id, t.created_at, t.updated_at, p.id, p.account_name, p.account_number, p.account_name, b.icon, b.name, r.amount, r.start_date, r.end_date, pp.id, pp.url").
 		From("transactions AS t").
 		Join("reservations r ON r.id = t.reservation_id").
 		Join("payments p ON p.id = t.payment_id").
 		Join("banks b ON b.id = p.bank_id").
 		Join("payment_proofs pp ON pp.id = t.proof_id").
-		Where("t.reservation_id = ?", reservationID).
-		RunWith(db).
+		Where("t.reservation_id = ?", reservationID)
+
+	if userID != "" {
+		query = query.Where("r.user_id = ?", userID)
+	}
+
+	rows, err := query.RunWith(db).
 		QueryContext(ctx)
 
 	if err != nil {
@@ -122,7 +126,6 @@ func (p *PaymentRepositoryImpl) GetReservationPaymentByID(ctx context.Context, r
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println(tx)
 		return &tx, nil
 	}
 

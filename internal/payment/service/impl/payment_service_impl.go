@@ -10,6 +10,7 @@ import (
 	reservationRepo "office-booking-backend/internal/reservation/repository"
 	err2 "office-booking-backend/pkg/errors"
 	"office-booking-backend/pkg/utils/imagekit"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -59,7 +60,17 @@ func (p *PaymentServiceImpl) GetPaymentMethodByID(ctx context.Context, paymentID
 }
 
 func (p *PaymentServiceImpl) GetReservationPaymentByID(ctx context.Context, reservationID string) (*dto.PaymentDetailResponse, error) {
-	payment, err := p.repo.GetReservationPaymentByID(ctx, reservationID)
+	payment, err := p.repo.GetReservationPaymentByID(ctx, reservationID, "")
+	if err != nil {
+		log.Println("error when get reservation payment by id: ", err)
+		return nil, err
+	}
+
+	return dto.NewPaymentDetailResponse(payment), nil
+}
+
+func (p *PaymentServiceImpl) GetUserReservationPaymentByID(ctx context.Context, reservationID string, userID string) (*dto.PaymentDetailResponse, error) {
+	payment, err := p.repo.GetReservationPaymentByID(ctx, reservationID, userID)
 	if err != nil {
 		log.Println("error when get reservation payment by id: ", err)
 		return nil, err
@@ -80,17 +91,21 @@ func (p *PaymentServiceImpl) CreatePaymentMethod(ctx context.Context, payment *d
 }
 
 func (p *PaymentServiceImpl) AddPaymentProof(ctx context.Context, reservationID string, payment *dto.CreateReservationPaymentRequest, file io.Reader) error {
-	reservatrion, err := p.reservationRepo.GetReservationByID(ctx, reservationID)
+	reservation, err := p.reservationRepo.GetReservationByID(ctx, reservationID)
 	if err != nil {
 		log.Println("error when get reservation by id: ", err)
 		return err
 	}
 
-	if reservatrion.StatusID == 5 {
+	if reservation.StatusID == 5 {
 		return err2.ErrReservationAlreadyPaid
 	}
 
-	if reservatrion.StatusID != 4 {
+	if reservation.StatusID == 3 || reservation.ExpiredAt.Before(time.Now()) {
+		return err2.ErrPaymentAlreadyExpired
+	}
+
+	if reservation.StatusID != 4 {
 		return err2.ErrReservationNotAwaitingPayment
 	}
 

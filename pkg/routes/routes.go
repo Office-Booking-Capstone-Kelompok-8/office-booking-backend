@@ -45,6 +45,24 @@ func (r *Routes) Init(app *fiber.App) {
 	v1 := app.Group("/v1")
 	v1.Get("/ping", ping)
 
+	// Payment routes
+	payment := v1.Group("/payments")
+	payment.Get("/methods", r.payment.GetAllPaymentMethod)
+	payment.Get("/methods/banks", r.payment.GetBanks)
+	payment.Get("/methods/:paymentMethodID", r.payment.GetPaymentMethodByID)
+
+	// Buildings routes
+	building := v1.Group("/buildings")
+	building.Get("/", r.building.GetAllPublishedBuildings)
+	building.Get("/facilities/category", r.building.GetFacilityCategories)
+	building.Get("/:buildingID", r.building.GetPublishedBuildingDetailByID)
+	building.Get("/:buildingID/reviews", r.building.GetBuildingReviews)
+
+	// Location routes
+	location := v1.Group("/locations")
+	location.Get("/cities", r.building.GetCities)
+	location.Get("/districts", r.building.GetDistricts)
+
 	// Auth routes
 	auth := v1.Group("/auth")
 	auth.Post("/register", r.auth.RegisterUser)
@@ -78,12 +96,8 @@ func (r *Routes) Init(app *fiber.App) {
 	uReservation.Put("/:reservationID/reviews", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.UpdateReservationReview)
 	uReservation.Get("/:reservationID/reviews", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.reservation.GetUserReservationReview)
 
-	payment := v1.Group("/payments")
-	payment.Get("/methods", r.payment.GetAllPaymentMethod)
-	payment.Get("/methods/banks", r.payment.GetBanks)
-	payment.Get("/methods/:paymentMethodID", r.payment.GetPaymentMethodByID)
 	// Enduser.Payment routes
-	payment.Get("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.payment.GetReservationPaymentByID)
+	payment.Get("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.payment.GetUsereservationPaymentByID)
 	payment.Post("/:reservationID", r.accessTokenMiddleware, middlewares.EnforceValidEmail(), r.payment.UploadPaymentProof)
 
 	// Admin routes
@@ -130,18 +144,7 @@ func (r *Routes) Init(app *fiber.App) {
 	aPayment.Post("/", r.adminAccessTokenMiddleware, r.payment.CreatePaymentMethod)
 	aPayment.Put("/:paymentID", r.adminAccessTokenMiddleware, r.payment.UpdatePaymentMethod)
 	aPayment.Delete("/:paymentID", r.adminAccessTokenMiddleware, r.payment.DeletePaymentMethod)
-
-	// Buildings routes
-	building := v1.Group("/buildings")
-	building.Get("/", r.building.GetAllPublishedBuildings)
-	building.Get("/facilities/category", r.building.GetFacilityCategories)
-	building.Get("/:buildingID", r.building.GetPublishedBuildingDetailByID)
-	building.Get("/:buildingID/reviews", r.building.GetBuildingReviews)
-
-	// Location routes
-	location := v1.Group("/locations")
-	location.Get("/cities", r.building.GetCities)
-	location.Get("/districts", r.building.GetDistricts)
+	aPayment.Get("/reservations/:reservationID/", r.adminAccessTokenMiddleware, r.payment.GetReservationPaymentByID)
 }
 
 func ping(c *fiber.Ctx) error {

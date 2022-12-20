@@ -33,7 +33,7 @@ func (r *ReservationRepositoryImpl) CountUserActiveReservations(ctx context.Cont
 	status := []int{constant.REJECTED_STATUS, constant.CANCELED_STATUS, constant.COMPLETED_STATUS}
 	err := r.db.WithContext(ctx).
 		Model(&entity.Reservation{}).
-		Where("user_id = ? AND status_id NOT IN (?) AND end_date > ?", status, userID, time.Now()).
+		Where("user_id = ? AND status_id NOT IN (?) AND end_date > ?", userID, status, time.Now()).
 		Count(&count).Error
 	if err != nil {
 		return 0, err
@@ -48,7 +48,7 @@ func (r *ReservationRepositoryImpl) CountBuildingActiveReservations(ctx context.
 	status := []int{constant.REJECTED_STATUS, constant.CANCELED_STATUS, constant.COMPLETED_STATUS}
 	err := r.db.WithContext(ctx).
 		Model(&entity.Reservation{}).
-		Where("building_id = ? AND status_id NOT IN (?) AND end_date > ?", status, buildingID, time.Now()).
+		Where("building_id = ? AND status_id NOT IN (?) AND end_date > ?", buildingID, status, time.Now()).
 		Count(&count).Error
 	if err != nil {
 		return 0, err
@@ -132,7 +132,7 @@ func (r *ReservationRepositoryImpl) IsBuildingAvailable(ctx context.Context, bui
 	status := []int{constant.REJECTED_STATUS, constant.CANCELED_STATUS, constant.COMPLETED_STATUS}
 	query := r.db.WithContext(ctx).
 		Model(&entity.Reservation{}).
-		Where("building_id = ? AND status_id NOT IN (?)", status, buildingID).
+		Where("building_id = ? AND status_id NOT IN (?)", buildingID, status).
 		Where("start_date <= ? AND end_date >= ?", end, start)
 
 	for _, id := range excludedReservationID {

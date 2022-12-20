@@ -19,6 +19,7 @@ type BuildingService interface {
 	GetBuildingStatistics(ctx context.Context) (*dto.BuildingStatResponse, error)
 	CreateEmptyBuilding(ctx context.Context, creatorID string) (string, error)
 	UpdateBuilding(ctx context.Context, building *dto.UpdateBuildingRequest, buildingID string) error
+	UpdateBuildingPublishState(ctx context.Context, building *dto.PublishRequest, buildingID string) error
 	AddBuildingPicture(ctx context.Context, buildingID string, index int, alt string, picture io.Reader) (*dto.AddPictureResponse, error)
 	AddBuildingFacility(ctx context.Context, buildingID string, facilities *dto.AddFacilitiesRequest) error
 	ValidateBuilding(ctx context.Context, buildingID string) (*validator.ErrorsResponse, error)

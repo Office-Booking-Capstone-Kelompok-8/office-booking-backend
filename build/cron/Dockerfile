@@ -7,6 +7,6 @@ RUN go build -o /bin/cron -v ./cmd/cron
 FROM alpine:3.16
 
 # Copy the binary from the builder image
-COPY --from=builder /bin/main .
+COPY --from=builder /bin/cron .
 
 CMD [ "sh", "-c", "./main" ]

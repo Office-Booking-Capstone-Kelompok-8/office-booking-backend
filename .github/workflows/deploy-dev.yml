@@ -63,8 +63,8 @@ jobs:
           source: dev-cron.tar
           target: ./office-zone
  
-  deploy:
-    needs: [build]
+  deploy-app:
+    needs: [build-app]
     name: Deploy Development Server
     runs-on: ubuntu-latest
     environment: Production

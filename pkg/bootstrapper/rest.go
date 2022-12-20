@@ -32,7 +32,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func Init(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf *viper.Viper) {
+func InitAPI(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf *viper.Viper) {
 	passwordService := passwordServicePkg.NewPasswordFuncImpl()
 	validation := validator.NewValidator()
 	generator := random.NewGenerator()

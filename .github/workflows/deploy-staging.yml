@@ -20,8 +20,9 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           source: ./docs
           target: ./office-zone
-  build:
-    name: Build Development Binary
+
+  build-app:
+    name: Build Staging Binary
     runs-on: ubuntu-latest
     environment: Production
     steps:
@@ -29,7 +30,7 @@ jobs:
         uses: actions/checkout@v3
       - name: Build docker image
         run: |
-          docker build -t suryawarior44/office-zone:staging .
+          docker build -t suryawarior44/office-zone:staging . -f build/main/Dockerfile
           docker save -o staging.tar suryawarior44/office-zone:staging
       - name: SCP docker image to server
         uses: appleboy/scp-action@master
@@ -40,6 +41,28 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           source: staging.tar
           target: ./office-zone
+  
+  build-cron:
+    name: Build Staging Cron Service Binary
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build docker image
+        run: |
+          docker build -t suryawarior44/office-zone-cron:staging . -f build/cron/Dockerfile
+          docker save -o staging-cron.tar suryawarior44/office-zone-cron:staging
+      - name: SCP docker image to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          source: staging-cron.tar
+          target: ./office-zone
+
   deploy:
       needs: [build]
       name: Deploy Staging Server
@@ -59,4 +82,25 @@ jobs:
             rm staging.tar
             sudo docker compose kill staging
             sudo docker compose up -d staging
+            docker system prune -f
+
+  deploy-cron:
+      needs: [build-cron]
+      name: Deploy Cron Service on Staging Server
+      runs-on: ubuntu-latest
+      environment: Production
+      steps:
+      - name: Run docker image on server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            cd ./office-zone
+            docker load -i staging-cron.tar
+            rm staging-cron.tar
+            sudo docker compose kill staging-cron
+            sudo docker compose up -d staging-cron
             docker system prune -f

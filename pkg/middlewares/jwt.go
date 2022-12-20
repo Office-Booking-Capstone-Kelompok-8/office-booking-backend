@@ -3,7 +3,7 @@ package middlewares
 import (
 	"context"
 	"net/http"
-	"office-booking-backend/pkg/config"
+	"office-booking-backend/pkg/constant"
 	err2 "office-booking-backend/pkg/errors"
 
 	"github.com/gofiber/fiber/v2"
@@ -53,7 +53,7 @@ func ValidateAdminAccessToken(validator AccessTokenValidator) fiber.Handler {
 		user := c.Locals("user").(*jwt.Token)
 		claims := user.Claims.(jwt.MapClaims)
 
-		if claims["role"] == float64(config.USER_ROLE) {
+		if claims["role"] == float64(constant.USER_ROLE) {
 			return fiber.NewError(fiber.StatusForbidden, err2.ErrNoPermission.Error())
 		}
 

@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"office-booking-backend/pkg/config"
+	"office-booking-backend/pkg/constant"
 	"office-booking-backend/pkg/entity"
 )
 
@@ -18,7 +18,7 @@ type UserResponse struct {
 func NewUserResponse(user *entity.User) *UserResponse {
 	picture := user.Detail.Picture.Url
 	if picture == "" {
-		picture = config.DEFAULT_USER_AVATAR
+		picture = constant.DEFAULT_USER_AVATAR
 	}
 
 	return &UserResponse{
@@ -43,7 +43,7 @@ type BriefUserResponse struct {
 func NewBriefUserResponse(user *entity.User) *BriefUserResponse {
 	picture := user.Detail.Picture.Url
 	if picture == "" {
-		picture = config.DEFAULT_USER_AVATAR
+		picture = constant.DEFAULT_USER_AVATAR
 	}
 
 	return &BriefUserResponse{

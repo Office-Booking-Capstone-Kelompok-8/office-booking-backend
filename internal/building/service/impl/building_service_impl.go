@@ -35,7 +35,7 @@ func NewBuildingServiceImpl(repo repository.BuildingRepository, reservationRepo 
 }
 
 func (b *BuildingServiceImpl) GetAllPublishedBuildings(ctx context.Context, filter *dto.SearchBuildingQueryParam) (*dto.BriefPublishedBuildingsResponse, int64, error) {
-	filter.EndDate = filter.StartDate.ToTime().AddDate(0, 0, filter.Duration)
+	filter.EndDate = filter.StartDate.ToTime().AddDate(0, filter.Duration, 0)
 
 	count := int64(0)
 
@@ -52,7 +52,7 @@ func (b *BuildingServiceImpl) GetAllPublishedBuildings(ctx context.Context, filt
 }
 
 func (b *BuildingServiceImpl) GetAllBuildings(ctx context.Context, filter *dto.SearchBuildingQueryParam) (*dto.BriefBuildingsResponse, int64, error) {
-	filter.EndDate = filter.StartDate.ToTime().AddDate(0, 0, filter.Duration)
+	filter.EndDate = filter.StartDate.ToTime().AddDate(0, filter.Duration, 0)
 
 	count := int64(0)
 

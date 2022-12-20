@@ -1,0 +1,25 @@
+# Sample docker-compose.yml for deploying Office Zone with Docker
+
+version: '3.1'
+services:
+  oz:
+    image: suryawarior44/office-zone:latest
+    container_name: oz
+    volumes:
+      # config file
+      - ./config/config.yaml:/config/config.yaml
+    networks:
+      - main
+
+  cron:
+    image: suryawarior44/office-zone-cron:latest
+    container_name: oz-cron
+    volumes:
+      # config file
+      - ./config/config.yaml:/config/config.yaml
+    networks:
+      - main
+
+networks:
+  main:
+    name: MAIN

@@ -515,6 +515,25 @@ func (r *ReservationRepositoryImpl) DeleteReservationByID(ctx context.Context, r
 	return nil
 }
 
+func (r *ReservationRepositoryImpl) GetReservationTaskUntilToday(ctx context.Context) (*entity.Reservations, error) {
+	reservations := new(entity.Reservations)
+	status := []int{constant.ACTIVE_STATUS, constant.AWAITING_PAYMENT_STATUS}
+	err := r.db.WithContext(ctx).
+		Model(&entity.Reservation{}).
+		Select("id, end_date, expired_at").
+		Where("status_id IN (?)", status).
+		Where(
+			r.db.Where("DATE(expired_at) <= DATE(?)", time.Now().Format("2006-01-02")).
+				Or("DATE(end_date) <= DATE(?)", time.Now().Format("2006-01-02")),
+		).
+		Find(reservations).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return reservations, nil
+}
+
 func (r *ReservationRepositoryImpl) GetReservationReview(ctx context.Context, reservations *entity.Reservation) (*entity.Review, error) {
 	review := new(entity.Review)
 	err := r.db.WithContext(ctx).

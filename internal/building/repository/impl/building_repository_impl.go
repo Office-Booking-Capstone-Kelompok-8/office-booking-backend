@@ -51,7 +51,7 @@ func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, filter *dt
 	if !filter.StartDate.ToTime().IsZero() && !filter.EndDate.IsZero() {
 		// Check if there is any reservation that has the same time range with the filter time range and has awaiting payment or active status
 		status := []int{constant.AWAITING_PAYMENT_STATUS, constant.ACTIVE_STATUS}
-		query = query.Where("NOT EXISTS (SELECT * FROM `reservations` WHERE `reservations`.`building_id` = `buildings`.`id` AND `reservations`.`start_date` <= ? AND `reservations`.`end_date` >= ? AND `reservations`.'status_id' IN (?))", filter.EndDate, filter.StartDate.ToTime(), status)
+		query = query.Where("NOT EXISTS (SELECT * FROM `reservations` WHERE `reservations`.`building_id` = `buildings`.`id` AND `reservations`.`start_date` <= ? AND `reservations`.`end_date` >= ? AND `reservations`.`status_id` IN ?) ", filter.EndDate, filter.StartDate.ToTime(), status)
 	}
 
 	if filter.AnnualPriceMin != 0 {

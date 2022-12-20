@@ -103,4 +103,3 @@ jobs:
             rm dev-cron.tar
             sudo docker compose kill dev-cron
             sudo docker compose up -d dev-cron
-            docker system prune -f

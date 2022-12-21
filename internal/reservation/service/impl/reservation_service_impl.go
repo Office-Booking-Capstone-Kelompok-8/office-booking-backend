@@ -389,7 +389,7 @@ func (r *ReservationServiceImpl) UpdateReservationStatus(ctx context.Context, re
 	reservationEntity := statusRequest.ToEntity(reservationID)
 	if statusRequest.StatusID == constant.AWAITING_PAYMENT_STATUS {
 		reservationEntity.AcceptedAt = time.Now()
-		reservationEntity.ExpiredAt = time.Now().Add(r.config.GetDuration("reservation.expiredAt"))
+		reservationEntity.ExpiredAt = time.Now().Add(r.config.GetDuration("payment.expiredIn"))
 	}
 
 	err := r.repo.UpdateReservation(ctx, reservationEntity)

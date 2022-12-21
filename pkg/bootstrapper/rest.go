@@ -43,7 +43,7 @@ func InitAPI(app *fiber.App, db *gorm.DB, redisClient *redis.Client, conf *viper
 	tokenService := authServicePkg.NewTokenServiceImpl(conf.GetString("token.access.secret"), conf.GetString("token.refresh.secret"), conf.GetDuration("token.access.exp"), conf.GetDuration("token.refresh.exp"), redisRepo)
 	accessTokenMiddleware := middlewares.NewJWTMiddleware(conf.GetString("token.access.secret"), middlewares.ValidateAccessToken(tokenService))
 	adminAccessTokenMiddleware := middlewares.NewJWTMiddleware(conf.GetString("token.access.secret"), middlewares.ValidateAdminAccessToken(tokenService))
-	limiterMiddeleware := middlewares.NewLimiter(conf.GetDuration("otp.exp"))
+	limiterMiddeleware := middlewares.NewLimiter(conf.GetDuration("otp.resendLimit"))
 	corsMiddleware := middlewares.NewCORSMiddleware(conf.GetStringSlice("server.allowedOrigins"))
 
 	reservationRepository := reservationRepositoryPkg.NewReservationRepositoryImpl(db)

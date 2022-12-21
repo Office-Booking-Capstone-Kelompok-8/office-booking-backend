@@ -121,6 +121,7 @@ func (b *BuildingRepositoryImpl) GetBuildingDetailByID(ctx context.Context, id s
 		Preload("Facilities", func(db *gorm.DB) *gorm.DB {
 			return db.Joins("Category")
 		}).
+		Preload("CreatedBy.Detail").
 		Preload("CreatedBy.Detail.Picture").
 		Joins("District").
 		Joins("City").
@@ -486,7 +487,6 @@ func (b *BuildingRepositoryImpl) DeleteBuildingByID(ctx context.Context, buildin
 }
 
 func (b *BuildingRepositoryImpl) GetBuildingReviewsByID(ctx context.Context, buildingID string, filter *dto.GetBuildingReviewsQueryParam) (*entity.Reviews, error) {
-
 	db, err := b.db.DB()
 	if err != nil {
 		return nil, err
@@ -516,14 +516,11 @@ func (b *BuildingRepositoryImpl) GetBuildingReviewsByID(ctx context.Context, bui
 	for rows.Next() {
 		var review entity.Review
 		var user entity.User
-		var userDetail entity.UserDetail
 		var picture entity.ProfilePicture
 		err := rows.Scan(&review.ID, &review.BuildingID, &review.UserID, &review.Rating, &review.Message, &review.CreatedAt, &review.UpdatedAt, &user.ID, &user.Detail.Name, &picture.Url)
 		if err != nil {
 			return nil, err
 		}
-
-		user.Detail = userDetail
 		user.Detail.Picture = picture
 		review.User = user
 		reviews = append(reviews, review)

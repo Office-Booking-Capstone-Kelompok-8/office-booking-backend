@@ -379,6 +379,7 @@ func (r *ReservationRepositoryImpl) GetReservationCountByStatus(ctx context.Cont
 		Table("statuses").
 		Select("statuses.id, statuses.message, COUNT(reservations.id) AS total").
 		Joins("left join reservations on reservations.status_id = statuses.id").
+		Where("reservations.deleted_at IS NULL").
 		Group("statuses.id").
 		Rows()
 	if err != nil {
@@ -388,7 +389,7 @@ func (r *ReservationRepositoryImpl) GetReservationCountByStatus(ctx context.Cont
 		err = rows.Close()
 	}()
 
-	stat := entity.StatusesStat{}
+	var stat entity.StatusesStat
 	for rows.Next() {
 		var status entity.StatusStat
 		err = rows.Scan(&status.StatusID, &status.StatusName, &status.Total)
@@ -406,11 +407,11 @@ func (r *ReservationRepositoryImpl) GetReservationCountByTime(ctx context.Contex
 	rows, err := r.db.WithContext(ctx).
 		Table(
 			"(?) AS today, (?) AS thisWeek, (?) AS thisMonth, (?) AS thisYear, (?) AS allTime",
-			r.db.Table("reservations").Select("count(*)").Where("DATE(created_at) = DATE(?)", time.Now().Format("2006-01-02")),
-			r.db.Table("reservations").Select("count(*)").Where("YEARWEEK(created_at) = YEARWEEK(?)", time.Now().Format("2006-01-02")),
-			r.db.Table("reservations").Select("count(*)").Where("MONTH(created_at) = MONTH(?)", time.Now().Format("2006-01-02")),
-			r.db.Table("reservations").Select("count(*)").Where("YEAR(created_at) = YEAR(?)", time.Now().Format("2006-01-02")),
-			r.db.Table("reservations").Select("count(*)"),
+			r.db.Table("reservations").Select("count(*)").Where("DATE(created_at) = DATE(?)", time.Now().Format("2006-01-02")).Where("deleted_at IS NULL"),
+			r.db.Table("reservations").Select("count(*)").Where("YEARWEEK(created_at) = YEARWEEK(?)", time.Now().Format("2006-01-02")).Where("deleted_at IS NULL"),
+			r.db.Table("reservations").Select("count(*)").Where("MONTH(created_at) = MONTH(?)", time.Now().Format("2006-01-02")).Where("deleted_at IS NULL"),
+			r.db.Table("reservations").Select("count(*)").Where("YEAR(created_at) = YEAR(?)", time.Now().Format("2006-01-02")).Where("deleted_at IS NULL"),
+			r.db.Table("reservations").Select("count(*)").Where("deleted_at IS NULL"),
 		).Rows()
 	if err != nil {
 		return nil, err
@@ -434,11 +435,11 @@ func (r *ReservationRepositoryImpl) GetTotalRevenue(ctx context.Context) (*entit
 	rows, err := r.db.WithContext(ctx).
 		Table(
 			"(?) AS today, (?) AS thisWeek, (?) AS thisMonth, (?) AS thisYear, (?) AS allTime",
-			r.db.Table("reservations").Select("SUM(amount)").Where("status_id >= 5").Where("DATE(created_at) = DATE(?)", time.Now().Format("2006-01-02")),
-			r.db.Table("reservations").Select("SUM(amount)").Where("status_id >= 5").Where("YEARWEEK(created_at) = YEARWEEK(?)", time.Now().Format("2006-01-02")),
-			r.db.Table("reservations").Select("SUM(amount)").Where("status_id >= 5").Where("MONTH(created_at) = MONTH(?)", time.Now().Format("2006-01-02")),
-			r.db.Table("reservations").Select("SUM(amount)").Where("status_id >= 5").Where("YEAR(created_at) = YEAR(?)", time.Now().Format("2006-01-02")),
-			r.db.Table("reservations").Select("SUM(amount)").Where("status_id >= 5"),
+			r.db.Table("reservations").Select("SUM(amount)").Where("status_id >= 5").Where("DATE(created_at) = DATE(?)", time.Now().Format("2006-01-02")).Where("deleted_at IS NULL"),
+			r.db.Table("reservations").Select("SUM(amount)").Where("status_id >= 5").Where("YEARWEEK(created_at) = YEARWEEK(?)", time.Now().Format("2006-01-02")).Where("deleted_at IS NULL"),
+			r.db.Table("reservations").Select("SUM(amount)").Where("status_id >= 5").Where("MONTH(created_at) = MONTH(?)", time.Now().Format("2006-01-02")).Where("deleted_at IS NULL"),
+			r.db.Table("reservations").Select("SUM(amount)").Where("status_id >= 5").Where("YEAR(created_at) = YEAR(?)", time.Now().Format("2006-01-02")).Where("deleted_at IS NULL"),
+			r.db.Table("reservations").Select("SUM(amount)").Where("status_id >= 5").Where("deleted_at IS NULL"),
 		).Rows()
 	if err != nil {
 		return nil, err

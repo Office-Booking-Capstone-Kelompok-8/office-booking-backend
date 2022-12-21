@@ -379,6 +379,7 @@ func (r *ReservationRepositoryImpl) GetReservationCountByStatus(ctx context.Cont
 		Table("statuses").
 		Select("statuses.id, statuses.message, COUNT(reservations.id) AS total").
 		Joins("left join reservations on reservations.status_id = statuses.id").
+		Where("reservations.deleted_at IS NULL").
 		Group("statuses.id").
 		Rows()
 	if err != nil {
@@ -388,7 +389,7 @@ func (r *ReservationRepositoryImpl) GetReservationCountByStatus(ctx context.Cont
 		err = rows.Close()
 	}()
 
-	stat := entity.StatusesStat{}
+	var stat entity.StatusesStat
 	for rows.Next() {
 		var status entity.StatusStat
 		err = rows.Scan(&status.StatusID, &status.StatusName, &status.Total)

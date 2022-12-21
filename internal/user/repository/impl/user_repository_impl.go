@@ -26,7 +26,7 @@ func NewUserRepositoryImpl(db *gorm.DB) repository.UserRepository {
 }
 
 func (u *UserRepositoryImpl) GetFullUserByEmail(ctx context.Context, email string) (*entity.User, error) {
-	user := &entity.User{}
+	user := new(entity.User)
 	err := u.db.WithContext(ctx).
 		Joins("Detail").
 		Where("email = ?", email).
@@ -66,8 +66,8 @@ func (u *UserRepositoryImpl) GetFullUserByID(ctx context.Context, id string) (*e
 		return nil, err2.ErrUserNotFound
 	}
 
-	user := &entity.User{}
-	NullAbleProfilePicture := &entity.NullAbleProfilePicture{}
+	user := new(entity.User)
+	NullAbleProfilePicture := new(entity.NullAbleProfilePicture)
 	err = rows.Scan(&user.ID, &user.Email, &user.Role, &user.IsVerified, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt,
 		&user.Detail.UserID, &user.Detail.Name, &user.Detail.Phone, &NullAbleProfilePicture.ID, &user.Detail.CreatedAt, &user.Detail.UpdatedAt, &user.Detail.DeletedAt,
 		&NullAbleProfilePicture.ID, &NullAbleProfilePicture.Url)
@@ -81,7 +81,7 @@ func (u *UserRepositoryImpl) GetFullUserByID(ctx context.Context, id string) (*e
 }
 
 func (u *UserRepositoryImpl) GetAllUsers(ctx context.Context, filter *dto.UserFilterRequest) (*entity.Users, int64, error) {
-	users := &entity.Users{}
+	users := new(entity.Users)
 	var count int64
 
 	query := u.db.WithContext(ctx).
@@ -241,7 +241,7 @@ func (u *UserRepositoryImpl) DeleteUserByID(ctx context.Context, id string) (str
 }
 
 func (u *UserRepositoryImpl) GetUserProfilePictureID(ctx context.Context, id string) (*entity.ProfilePicture, error) {
-	userDetail := &entity.UserDetail{}
+	userDetail := new(entity.UserDetail)
 	err := u.db.WithContext(ctx).
 		Model(&entity.UserDetail{}).
 		Select("picture_id").

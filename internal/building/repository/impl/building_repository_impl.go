@@ -208,9 +208,9 @@ func (b *BuildingRepositoryImpl) GetBuildingCountByCity(ctx context.Context) (*e
 		err = rows.Close()
 	}()
 
-	citiesStat := entity.CitiesStat{}
+	var citiesStat entity.CitiesStat
 	for rows.Next() {
-		cityStat := entity.CityStat{}
+		var cityStat entity.CityStat
 		err = rows.Scan(&cityStat.CityID, &cityStat.CityName, &cityStat.Total)
 		if err != nil {
 			return nil, err
@@ -429,7 +429,7 @@ func (b *BuildingRepositoryImpl) DeleteBuildingPicturesByID(ctx context.Context,
 }
 
 func changeNextPictureToIndexZero(ctx context.Context, tx *gorm.DB, buildingID string) error {
-	nextPicture := entity.Picture{}
+	var nextPicture entity.Picture
 	err := tx.WithContext(ctx).
 		Model(&entity.Picture{}).
 		Where("building_id = ?", buildingID).

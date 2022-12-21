@@ -24,7 +24,7 @@ func (a *AuthRepositoryImpl) RegisterUser(ctx context.Context, user *entity.User
 	err := a.db.WithContext(ctx).
 		Create(user).Error
 	if err != nil {
-		if strings.Contains(err.Error(), "Error 1062: Duplicate entry") {
+		if strings.Contains(err.Error(), "for key 'users.email'") {
 			return err2.ErrDuplicateEmail
 		}
 

@@ -145,19 +145,19 @@ func (u *UserServiceImpl) UploadUserAvatar(ctx context.Context, id string, file 
 		return err
 	}
 
-	errGroup := errgroup.Group{}
+	errGroup, c := errgroup.WithContext(ctx)
 	errGroup.Go(func() error {
 		if picture.ID == "" {
 			return nil
 		}
 
-		err = u.userRepository.DeleteUserProfilePicture(ctx, picture.ID)
+		err = u.userRepository.DeleteUserProfilePicture(c, picture.ID)
 		if err != nil {
 			log.Println("Error while deleting user profile picture: ", err)
 			return err
 		}
 
-		err = u.imgKitService.DeleteFile(ctx, picture.ID)
+		err = u.imgKitService.DeleteFile(c, picture.ID)
 		if err != nil {
 			log.Println("Error while deleting user avatar: ", err)
 			return err
@@ -168,7 +168,7 @@ func (u *UserServiceImpl) UploadUserAvatar(ctx context.Context, id string, file 
 
 	errGroup.Go(func() error {
 		pictureKey := uuid.New().String()
-		uploadResult, err := u.imgKitService.UploadFile(ctx, file, pictureKey, "avatars")
+		uploadResult, err := u.imgKitService.UploadFile(c, file, pictureKey, "avatars")
 		if err != nil {
 			log.Println("Error while uploading user avatar: ", err)
 			return err2.ErrPictureServiceFailed
@@ -178,7 +178,7 @@ func (u *UserServiceImpl) UploadUserAvatar(ctx context.Context, id string, file 
 		user.Picture = *dto.NewPictureEntity(uploadResult)
 		user.UserID = id
 
-		err = u.userRepository.UpdateUserDetailByID(ctx, user)
+		err = u.userRepository.UpdateUserDetailByID(c, user)
 		if err != nil {
 			log.Println("Error while updating user detail by id: ", err)
 			return err

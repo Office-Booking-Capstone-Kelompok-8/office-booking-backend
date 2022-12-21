@@ -136,9 +136,9 @@ func (b *BuildingServiceImpl) GetBuildingStatistics(ctx context.Context) (*dto.B
 	statByCities := new(dto.TotalByCities)
 	statByTimeFrame := new(dto.TotalByTimeFrame)
 
-	errGroup := errgroup.Group{}
+	errGroup, c := errgroup.WithContext(ctx)
 	errGroup.Go(func() error {
-		total, err := b.repo.GetBuildingCountByCity(ctx)
+		total, err := b.repo.GetBuildingCountByCity(c)
 		if err != nil {
 			log.Println("error when getting building count by city: ", err)
 			return err
@@ -149,7 +149,7 @@ func (b *BuildingServiceImpl) GetBuildingStatistics(ctx context.Context) (*dto.B
 	})
 
 	errGroup.Go(func() error {
-		total, err := b.repo.GetBuildingCountByTime(ctx)
+		total, err := b.repo.GetBuildingCountByTime(c)
 		if err != nil {
 			log.Println("error when getting building count by time: ", err)
 			return err
@@ -349,10 +349,10 @@ func (b *BuildingServiceImpl) GetBuildingReviews(ctx context.Context, buildingID
 	var reviews *entity.Reviews
 	var total int64
 
-	errGroup := errgroup.Group{}
+	errGroup, c := errgroup.WithContext(ctx)
 	errGroup.Go(func() error {
 		filter.Offset = (filter.Page - 1) * filter.Limit
-		savedReviews, err := b.repo.GetBuildingReviewsByID(ctx, buildingID, filter)
+		savedReviews, err := b.repo.GetBuildingReviewsByID(c, buildingID, filter)
 		if err != nil {
 			log.Println("error when getting reviews: ", err)
 			return err
@@ -363,7 +363,7 @@ func (b *BuildingServiceImpl) GetBuildingReviews(ctx context.Context, buildingID
 	})
 
 	errGroup.Go(func() error {
-		count, err := b.repo.CountBuildingReviewsByID(ctx, buildingID)
+		count, err := b.repo.CountBuildingReviewsByID(c, buildingID)
 		if err != nil {
 			log.Println("error when counting reviews: ", err)
 			return err

@@ -66,7 +66,7 @@ func (s *TestSuiteAuthRepository) TestRegisterUser() {
 		},
 		{
 			Name:         "Error: duplicate email",
-			Err:          errors.New("Error 1062: Duplicate entry '' for key "),
+			Err:          errors.New("Error 1062: Duplicate entry '' for key 'users.email'"),
 			ExpectedErr:  err2.ErrDuplicateEmail,
 			RowsAffected: 0,
 		},

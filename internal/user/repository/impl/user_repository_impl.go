@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"office-booking-backend/internal/user/dto"
 	"office-booking-backend/internal/user/repository"
 	"office-booking-backend/pkg/entity"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/go-sql-driver/mysql"
 
 	"gorm.io/gorm"
 )
@@ -163,8 +165,11 @@ func (u *UserRepositoryImpl) GetRegisteredMemberCount(ctx context.Context) (*ent
 func (u *UserRepositoryImpl) UpdateUserByID(ctx context.Context, user *entity.User) error {
 	res := u.db.WithContext(ctx).Where("id = ?", user.ID).Updates(user)
 	if res.Error != nil {
-		if strings.Contains(res.Error.Error(), "for key 'users.email'") {
-			return err2.ErrDuplicateEmail
+		var mysqlErr *mysql.MySQLError
+		if mysqlErr = res.Error.(*mysql.MySQLError); errors.Is(res.Error, mysqlErr) {
+			if mysqlErr.Number == 1062 && strings.Contains(mysqlErr.Message, "users.email") {
+				return err2.ErrDuplicateEmail
+			}
 		}
 
 		return res.Error

@@ -121,6 +121,7 @@ func (b *BuildingRepositoryImpl) GetBuildingDetailByID(ctx context.Context, id s
 		Preload("Facilities", func(db *gorm.DB) *gorm.DB {
 			return db.Joins("Category")
 		}).
+		Preload("CreatedBy.Detail").
 		Preload("CreatedBy.Detail.Picture").
 		Joins("District").
 		Joins("City").

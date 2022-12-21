@@ -116,13 +116,8 @@ func InitAdmin(db *gorm.DB) error {
 		Role:       2,
 		IsVerified: custom.Bool(true),
 		Detail: entity.UserDetail{
-			Name:      "Admin",
-			Phone:     "081234567890",
-			PictureID: "123",
-			Picture: entity.ProfilePicture{
-				ID:  "123",
-				Url: "https://ik.imagekit.io/fortyfour/default-image.jpg",
-			},
+			Name:  "Admin",
+			Phone: "081234567890",
 		},
 	}
 

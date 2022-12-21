@@ -26,7 +26,7 @@ func NewUserRepositoryImpl(db *gorm.DB) repository.UserRepository {
 }
 
 func (u *UserRepositoryImpl) GetFullUserByEmail(ctx context.Context, email string) (*entity.User, error) {
-	user := &entity.User{}
+	user := new(entity.User)
 	err := u.db.WithContext(ctx).
 		Joins("Detail").
 		Where("email = ?", email).
@@ -66,8 +66,8 @@ func (u *UserRepositoryImpl) GetFullUserByID(ctx context.Context, id string) (*e
 		return nil, err2.ErrUserNotFound
 	}
 
-	user := &entity.User{}
-	NullAbleProfilePicture := &entity.NullAbleProfilePicture{}
+	user := new(entity.User)
+	NullAbleProfilePicture := new(entity.NullAbleProfilePicture)
 	err = rows.Scan(&user.ID, &user.Email, &user.Role, &user.IsVerified, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt,
 		&user.Detail.UserID, &user.Detail.Name, &user.Detail.Phone, &NullAbleProfilePicture.ID, &user.Detail.CreatedAt, &user.Detail.UpdatedAt, &user.Detail.DeletedAt,
 		&NullAbleProfilePicture.ID, &NullAbleProfilePicture.Url)
@@ -81,7 +81,7 @@ func (u *UserRepositoryImpl) GetFullUserByID(ctx context.Context, id string) (*e
 }
 
 func (u *UserRepositoryImpl) GetAllUsers(ctx context.Context, filter *dto.UserFilterRequest) (*entity.Users, int64, error) {
-	users := &entity.Users{}
+	users := new(entity.Users)
 	var count int64
 
 	query := u.db.WithContext(ctx).
@@ -136,11 +136,11 @@ func (u *UserRepositoryImpl) GetRegisteredMemberStat(ctx context.Context) (*enti
 func (u *UserRepositoryImpl) GetRegisteredMemberCount(ctx context.Context) (*entity.TimeframeStat, error) {
 	rows, err := u.db.WithContext(ctx).
 		Table("(?) AS today, (?) AS thisWeek, (?) AS thisMonth, (?) AS thisYear, (?) AS allTime",
-			u.db.Table("users").Select("count(*)").Where("DATE(created_at) = DATE(?)", time.Now().Format("2006-01-02")),
-			u.db.Table("users").Select("count(*)").Where("YEARWEEK(created_at) = YEARWEEK(?)", time.Now().Format("2006-01-02")),
-			u.db.Table("users").Select("count(*)").Where("MONTH(created_at) = MONTH(?)", time.Now().Format("2006-01-02")),
-			u.db.Table("users").Select("count(*)").Where("YEAR(created_at) = YEAR(?)", time.Now().Format("2006-01-02")),
-			u.db.Table("users").Select("count(*)"),
+			u.db.Table("users").Select("count(*)").Where("DATE(created_at) = DATE(?)", time.Now().Format("2006-01-02")).Where("deleted_at IS NULL"),
+			u.db.Table("users").Select("count(*)").Where("YEARWEEK(created_at) = YEARWEEK(?)", time.Now().Format("2006-01-02")).Where("deleted_at IS NULL"),
+			u.db.Table("users").Select("count(*)").Where("MONTH(created_at) = MONTH(?)", time.Now().Format("2006-01-02")).Where("deleted_at IS NULL"),
+			u.db.Table("users").Select("count(*)").Where("YEAR(created_at) = YEAR(?)", time.Now().Format("2006-01-02")).Where("deleted_at IS NULL"),
+			u.db.Table("users").Select("count(*)").Where("deleted_at IS NULL"),
 		).Rows()
 	if err != nil {
 		return nil, err
@@ -241,7 +241,7 @@ func (u *UserRepositoryImpl) DeleteUserByID(ctx context.Context, id string) (str
 }
 
 func (u *UserRepositoryImpl) GetUserProfilePictureID(ctx context.Context, id string) (*entity.ProfilePicture, error) {
-	userDetail := &entity.UserDetail{}
+	userDetail := new(entity.UserDetail)
 	err := u.db.WithContext(ctx).
 		Model(&entity.UserDetail{}).
 		Select("picture_id").

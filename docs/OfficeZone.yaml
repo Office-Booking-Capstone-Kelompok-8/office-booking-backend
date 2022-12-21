@@ -3063,19 +3063,19 @@ paths:
                     properties:
                       today:
                         type: integer
-                        example: 1
+                        example: 0
                       thisWeek:
                         type: integer
-                        example: 1
+                        example: 100000
                       thisMonth:
                         type: integer
-                        example: 1
+                        example: 2100000
                       thisYear:
                         type: integer
-                        example: 1
+                        example: 2100000
                       allTime:
                         type: integer
-                        example: 1
+                        example: 2200000
         401:
           $ref: '#/components/responses/InvalidOrMissingToken'
         403:

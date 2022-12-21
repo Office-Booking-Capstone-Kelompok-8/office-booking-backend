@@ -198,6 +198,7 @@ func (b *BuildingRepositoryImpl) GetBuildingCountByCity(ctx context.Context) (*e
 		Model(&entity.City{}).
 		Select("cities.id, cities.name, COUNT(buildings.id) as count").
 		Joins("LEFT JOIN buildings ON buildings.city_id = cities.id").
+		Where("buildings.deleted_at IS NULL").
 		Group("cities.id").Rows()
 	if err != nil {
 		return nil, err
@@ -225,11 +226,11 @@ func (b *BuildingRepositoryImpl) GetBuildingCountByTime(ctx context.Context) (*e
 	rows, err := b.db.WithContext(ctx).
 		Table(
 			"(?) AS today, (?) AS thisWeek, (?) AS thisMonth, (?) AS thisYear, (?) AS allTime",
-			b.db.Table("buildings").Select("count(*)").Where("DATE(created_at) = DATE(?)", time.Now().Format("2006-01-02")),
-			b.db.Table("buildings").Select("count(*)").Where("YEARWEEK(created_at) = YEARWEEK(?)", time.Now().Format("2006-01-02")),
-			b.db.Table("buildings").Select("count(*)").Where("MONTH(created_at) = MONTH(?)", time.Now().Format("2006-01-02")),
-			b.db.Table("buildings").Select("count(*)").Where("YEAR(created_at) = YEAR(?)", time.Now().Format("2006-01-02")),
-			b.db.Table("buildings").Select("count(*)"),
+			b.db.Table("buildings").Select("count(*)").Where("DATE(created_at) = DATE(?)", time.Now().Format("2006-01-02")).Where("deleted_at IS NULL"),
+			b.db.Table("buildings").Select("count(*)").Where("YEARWEEK(created_at) = YEARWEEK(?)", time.Now().Format("2006-01-02")).Where("deleted_at IS NULL"),
+			b.db.Table("buildings").Select("count(*)").Where("MONTH(created_at) = MONTH(?)", time.Now().Format("2006-01-02")).Where("deleted_at IS NULL"),
+			b.db.Table("buildings").Select("count(*)").Where("YEAR(created_at) = YEAR(?)", time.Now().Format("2006-01-02")).Where("deleted_at IS NULL"),
+			b.db.Table("buildings").Select("count(*)").Where("deleted_at IS NULL"),
 		).Rows()
 	if err != nil {
 		return nil, err

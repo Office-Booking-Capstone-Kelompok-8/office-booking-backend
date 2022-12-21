@@ -375,13 +375,17 @@ func (r *ReservationRepositoryImpl) GetUserReservationByID(ctx context.Context, 
 }
 
 func (r *ReservationRepositoryImpl) GetReservationCountByStatus(ctx context.Context) (*entity.StatusesStat, error) {
-	rows, err := r.db.WithContext(ctx).
-		Table("statuses").
-		Select("statuses.id, statuses.message, COUNT(reservations.id) AS total").
-		Joins("left join reservations on reservations.status_id = statuses.id").
-		Where("reservations.deleted_at IS NULL").
-		Group("statuses.id").
-		Rows()
+	db, err := r.db.DB()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := sq.Select("s.id, s.message, COUNT(r.id) AS total").
+		From("statuses s").
+		LeftJoin("reservations r ON s.id = r.status_id AND r.deleted_at IS NULL").
+		Where("r.deleted_at IS NULL").
+		GroupBy("s.id").
+		RunWith(db).QueryContext(ctx)
 	if err != nil {
 		return nil, err
 	}

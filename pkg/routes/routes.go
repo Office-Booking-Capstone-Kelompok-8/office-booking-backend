@@ -74,7 +74,7 @@ func (r *Routes) Init(app *fiber.App) {
 	otp := auth.Group("/otp")
 	requestOtp := otp.Group("/request")
 	requestOtp.Post("/reset-password", r.limiter.ResetPasswordOTPLimitter(), r.auth.RequestPasswordResetOTP)
-	requestOtp.Post("/email", r.accessTokenMiddleware, r.limiter.ResetPasswordOTPLimitter(), r.auth.RequestVerifyEmailOTP)
+	requestOtp.Post("/email", r.accessTokenMiddleware, r.limiter.VerifyEmailOTPLimitter(), r.auth.RequestVerifyEmailOTP)
 	verifyOtp := otp.Group("/verify")
 	verifyOtp.Post("/reset-password", r.auth.VerifyPasswordResetOTP)
 	verifyOtp.Post("/email", r.accessTokenMiddleware, r.auth.VerifyEmailOTP)

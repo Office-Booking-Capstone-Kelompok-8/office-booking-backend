@@ -33,7 +33,7 @@ func (b *BuildingRepositoryImpl) GetAllBuildings(ctx context.Context, filter *dt
 
 	query := b.db.WithContext(ctx).
 		Preload("Pictures", func(db *gorm.DB) *gorm.DB {
-			return db.Order("`pictures`.`index` ASC").Limit(1)
+			return db.Order("`pictures`.`index` ASC")
 		}).
 		Joins("District").
 		Joins("City").

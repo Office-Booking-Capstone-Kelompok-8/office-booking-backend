@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"office-booking-backend/internal/reservation/dto"
@@ -106,6 +107,10 @@ func (r *ReservationRepositoryImpl) CountReservation(ctx context.Context, filter
 		query = query.Where(sq.LtOrEq{"r.end_date": filter.EndDate.ToTime()})
 	}
 
+	if !filter.CreatedStart.ToTime().IsZero() && !filter.CreatedEnd.ToTime().IsZero() {
+		query = query.Where("DATE(r.created_at) BETWEEN DATE(?) AND DATE(?)", filter.CreatedStart.ToTime(), filter.CreatedEnd.ToTime())
+	}
+
 	rows, err := query.RunWith(db).QueryContext(ctx)
 	if err != nil {
 		return 0, err
@@ -153,7 +158,7 @@ func (r *ReservationRepositoryImpl) GetReservations(ctx context.Context, filter 
 		return nil, err
 	}
 
-	query := sq.Select("r.id, r.company_name, r.building_id, r.start_date, r.end_date, r.amount,  r.status_id, r.created_at, r.updated_at, s.id, s.message, b.id, b.name, p.thumbnail_url, c.name, u.id, u.email, ud.name, pp.url").
+	query := sq.Select("r.id, r.company_name, r.building_id, r.start_date, r.end_date, r.amount,  r.status_id, r.expired_at, r.created_at, r.updated_at, s.id, s.message, b.id, b.name, p.thumbnail_url, c.name, u.id, u.email, ud.name, pp.url").
 		From("reservations r").
 		Join("statuses s ON r.status_id = s.id").
 		Join("buildings b ON r.building_id = b.id").
@@ -231,9 +236,10 @@ func (r *ReservationRepositoryImpl) GetReservations(ctx context.Context, filter 
 	var reservations entity.Reservations
 	for rows.Next() {
 		var reservation entity.Reservation
+		var NullAbleExpiredAt sql.NullTime
 		NullAbleProfilePicture := &entity.NullAbleProfilePicture{}
 		reservation.Building.Pictures = append(reservation.Building.Pictures, entity.Picture{})
-		err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate, &reservation.Amount, &reservation.StatusID, &reservation.CreatedAt, &reservation.UpdatedAt,
+		err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate, &reservation.Amount, &reservation.StatusID, &NullAbleExpiredAt, &reservation.CreatedAt, &reservation.UpdatedAt,
 			&reservation.Status.ID, &reservation.Status.Message,
 			&reservation.Building.ID, &reservation.Building.Name, &reservation.Building.Pictures[0].ThumbnailUrl, &reservation.Building.City.Name,
 			&reservation.User.ID, &reservation.User.Email, &reservation.User.Detail.Name, &NullAbleProfilePicture.Url)
@@ -241,6 +247,7 @@ func (r *ReservationRepositoryImpl) GetReservations(ctx context.Context, filter 
 			return nil, err
 		}
 
+		reservation.ExpiredAt = NullAbleExpiredAt.Time
 		reservation.User.Detail.Picture = NullAbleProfilePicture.ConvertToProfilePicture()
 
 		reservations = append(reservations, reservation)
@@ -255,7 +262,7 @@ func (r *ReservationRepositoryImpl) GetUserReservations(ctx context.Context, use
 		return nil, err
 	}
 
-	rows, err := sq.Select("r.id, r.company_name, r.building_id, r.start_date, r.end_date, r.amount,  r.status_id, r.created_at, r.updated_at, s.id, s.message, b.id, b.name, p.thumbnail_url, c.name").
+	rows, err := sq.Select("r.id, r.company_name, r.building_id, r.start_date, r.end_date, r.amount,  r.status_id, r.expired_at, r.created_at, r.updated_at, s.id, s.message, b.id, b.name, p.thumbnail_url, c.name").
 		From("reservations r").
 		Join("statuses s ON r.status_id = s.id").
 		Join("buildings b ON r.building_id = b.id").
@@ -276,14 +283,16 @@ func (r *ReservationRepositoryImpl) GetUserReservations(ctx context.Context, use
 	var reservations entity.Reservations
 	for rows.Next() {
 		var reservation entity.Reservation
+		var NullAbleExpiredAt sql.NullTime
 		reservation.Building.Pictures = append(reservation.Building.Pictures, entity.Picture{})
-		err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate, &reservation.Amount, &reservation.StatusID, &reservation.CreatedAt, &reservation.UpdatedAt,
+		err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate, &reservation.Amount, &reservation.StatusID, &NullAbleExpiredAt, &reservation.CreatedAt, &reservation.UpdatedAt,
 			&reservation.Status.ID, &reservation.Status.Message,
 			&reservation.Building.ID, &reservation.Building.Name, &reservation.Building.Pictures[0].ThumbnailUrl, &reservation.Building.City.Name)
 		if err != nil {
 			return nil, err
 		}
 
+		reservation.ExpiredAt = NullAbleExpiredAt.Time
 		reservations = append(reservations, reservation)
 	}
 
@@ -319,8 +328,10 @@ func (r *ReservationRepositoryImpl) GetReservationByID(ctx context.Context, rese
 
 	var reservation entity.Reservation
 	NullAbleProfilePicture := &entity.NullAbleProfilePicture{}
+	NullAbleAcceptedAt := &sql.NullTime{}
+	NullAbleExpiredAt := &sql.NullTime{}
 	reservation.Building.Pictures = append(reservation.Building.Pictures, entity.Picture{})
-	err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate, &reservation.AcceptedAt, &reservation.ExpiredAt, &reservation.Amount,
+	err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate, &NullAbleAcceptedAt, &NullAbleExpiredAt, &reservation.Amount,
 		&reservation.UserID, &reservation.StatusID, &reservation.Message, &reservation.CreatedAt, &reservation.UpdatedAt, &reservation.Status.ID, &reservation.Status.Message,
 		&reservation.Building.ID, &reservation.Building.Name, &reservation.Building.Address, &reservation.Building.Pictures[0].ThumbnailUrl,
 		&reservation.Building.City.Name, &reservation.Building.District.Name, &reservation.User.ID, &reservation.User.Email, &reservation.User.Detail.Name,
@@ -329,6 +340,8 @@ func (r *ReservationRepositoryImpl) GetReservationByID(ctx context.Context, rese
 		return nil, err
 	}
 
+	reservation.AcceptedAt = NullAbleAcceptedAt.Time
+	reservation.ExpiredAt = NullAbleExpiredAt.Time
 	reservation.User.Detail.Picture = NullAbleProfilePicture.ConvertToProfilePicture()
 
 	return &reservation, nil
@@ -363,13 +376,18 @@ func (r *ReservationRepositoryImpl) GetUserReservationByID(ctx context.Context, 
 
 	var reservation entity.Reservation
 	reservation.Building.Pictures = append(reservation.Building.Pictures, entity.Picture{})
-	err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate, &reservation.AcceptedAt, &reservation.ExpiredAt, &reservation.Amount,
+	NullAbleAcceptedAt := &sql.NullTime{}
+	NullAbleExpiredAt := &sql.NullTime{}
+	err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate, &NullAbleAcceptedAt, &NullAbleExpiredAt, &reservation.Amount,
 		&reservation.UserID, &reservation.StatusID, &reservation.Message, &reservation.CreatedAt, &reservation.UpdatedAt, &reservation.Status.ID, &reservation.Status.Message,
 		&reservation.Building.ID, &reservation.Building.Name, &reservation.Building.Address, &reservation.Building.Pictures[0].ThumbnailUrl,
 		&reservation.Building.City.Name, &reservation.Building.District.Name)
 	if err != nil {
 		return nil, err
 	}
+
+	reservation.AcceptedAt = NullAbleAcceptedAt.Time
+	reservation.ExpiredAt = NullAbleExpiredAt.Time
 
 	return &reservation, nil
 }

@@ -136,11 +136,11 @@ func (u *UserRepositoryImpl) GetRegisteredMemberStat(ctx context.Context) (*enti
 func (u *UserRepositoryImpl) GetRegisteredMemberCount(ctx context.Context) (*entity.TimeframeStat, error) {
 	rows, err := u.db.WithContext(ctx).
 		Table("(?) AS today, (?) AS thisWeek, (?) AS thisMonth, (?) AS thisYear, (?) AS allTime",
-			u.db.Table("users").Select("count(*)").Where("DATE(created_at) = DATE(?)", time.Now().Format("2006-01-02")).Where("deleted_at IS NULL"),
-			u.db.Table("users").Select("count(*)").Where("YEARWEEK(created_at) = YEARWEEK(?)", time.Now().Format("2006-01-02")).Where("deleted_at IS NULL"),
-			u.db.Table("users").Select("count(*)").Where("MONTH(created_at) = MONTH(?)", time.Now().Format("2006-01-02")).Where("deleted_at IS NULL"),
-			u.db.Table("users").Select("count(*)").Where("YEAR(created_at) = YEAR(?)", time.Now().Format("2006-01-02")).Where("deleted_at IS NULL"),
-			u.db.Table("users").Select("count(*)").Where("deleted_at IS NULL"),
+			u.db.Table("users").Select("count(*)").Where("DATE(created_at) = DATE(?)", time.Now().Format("2006-01-02")).Where("users.role = 1").Where("deleted_at IS NULL"),
+			u.db.Table("users").Select("count(*)").Where("YEARWEEK(created_at) = YEARWEEK(?)", time.Now().Format("2006-01-02")).Where("users.role = 1").Where("deleted_at IS NULL"),
+			u.db.Table("users").Select("count(*)").Where("MONTH(created_at) = MONTH(?)", time.Now().Format("2006-01-02")).Where("users.role = 1").Where("deleted_at IS NULL"),
+			u.db.Table("users").Select("count(*)").Where("YEAR(created_at) = YEAR(?)", time.Now().Format("2006-01-02")).Where("users.role = 1").Where("deleted_at IS NULL"),
+			u.db.Table("users").Select("count(*)").Where("users.role = 1").Where("deleted_at IS NULL"),
 		).Rows()
 	if err != nil {
 		return nil, err

@@ -237,7 +237,7 @@ func (r *ReservationRepositoryImpl) GetReservations(ctx context.Context, filter 
 	for rows.Next() {
 		var reservation entity.Reservation
 		var NullAbleExpiredAt sql.NullTime
-		NullAbleProfilePicture := &entity.NullAbleProfilePicture{}
+		var NullAbleProfilePicture entity.NullAbleProfilePicture
 		reservation.Building.Pictures = append(reservation.Building.Pictures, entity.Picture{})
 		err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate, &reservation.Amount, &reservation.StatusID, &NullAbleExpiredAt, &reservation.CreatedAt, &reservation.UpdatedAt,
 			&reservation.Status.ID, &reservation.Status.Message,
@@ -327,9 +327,9 @@ func (r *ReservationRepositoryImpl) GetReservationByID(ctx context.Context, rese
 	}
 
 	var reservation entity.Reservation
-	NullAbleProfilePicture := &entity.NullAbleProfilePicture{}
-	NullAbleAcceptedAt := &sql.NullTime{}
-	NullAbleExpiredAt := &sql.NullTime{}
+	var NullAbleAcceptedAt sql.NullTime
+	var NullAbleExpiredAt sql.NullTime
+	var NullAbleProfilePicture entity.NullAbleProfilePicture
 	reservation.Building.Pictures = append(reservation.Building.Pictures, entity.Picture{})
 	err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate, &NullAbleAcceptedAt, &NullAbleExpiredAt, &reservation.Amount,
 		&reservation.UserID, &reservation.StatusID, &reservation.Message, &reservation.CreatedAt, &reservation.UpdatedAt, &reservation.Status.ID, &reservation.Status.Message,
@@ -375,9 +375,9 @@ func (r *ReservationRepositoryImpl) GetUserReservationByID(ctx context.Context, 
 	}
 
 	var reservation entity.Reservation
+	var NullAbleAcceptedAt sql.NullTime
+	var NullAbleExpiredAt sql.NullTime
 	reservation.Building.Pictures = append(reservation.Building.Pictures, entity.Picture{})
-	NullAbleAcceptedAt := &sql.NullTime{}
-	NullAbleExpiredAt := &sql.NullTime{}
 	err = rows.Scan(&reservation.ID, &reservation.CompanyName, &reservation.BuildingID, &reservation.StartDate, &reservation.EndDate, &NullAbleAcceptedAt, &NullAbleExpiredAt, &reservation.Amount,
 		&reservation.UserID, &reservation.StatusID, &reservation.Message, &reservation.CreatedAt, &reservation.UpdatedAt, &reservation.Status.ID, &reservation.Status.Message,
 		&reservation.Building.ID, &reservation.Building.Name, &reservation.Building.Address, &reservation.Building.Pictures[0].ThumbnailUrl,

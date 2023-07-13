@@ -123,6 +123,9 @@ func (b *BuildingRepositoryImpl) GetBuildingDetailByID(ctx context.Context, id s
 		Preload("Facilities", func(db *gorm.DB) *gorm.DB {
 			return db.Joins("Category")
 		}).
+		Preload("Reservations", func(db *gorm.DB) *gorm.DB {
+			return db.Where("`reservations`.`end_date` >= ?", time.Now().Format("2006-01-02")).Joins("Status").Order("`reservations`.`start_date` ASC")
+		}).
 		Preload("CreatedBy.Detail").
 		Preload("CreatedBy.Detail.Picture").
 		Joins("District").

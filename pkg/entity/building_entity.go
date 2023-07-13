@@ -12,6 +12,7 @@ type Building struct {
 	Name         string
 	Description  string   `gorm:"type:text"`
 	Pictures     Pictures `gorm:"foreignKey:BuildingID"`
+	Reservations Reservations
 	Capacity     int
 	AnnualPrice  int
 	MonthlyPrice int

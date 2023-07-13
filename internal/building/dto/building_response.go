@@ -182,30 +182,64 @@ type Geo struct {
 	Latitude  float64 `json:"lat"`
 }
 
+type Status struct {
+	ID      int    `json:"id"`
+	Message string `json:"message"`
+}
+
+type BriefReservationResponse struct {
+	Status    *Status `json:"status"`
+	StartDate string  `json:"startDate"`
+	EndDate   string  `json:"endDate"`
+}
+
+func NewBriefReservationResponse(reservation *entity.Reservation) *BriefReservationResponse {
+	return &BriefReservationResponse{
+		Status: &Status{
+			ID:      reservation.Status.ID,
+			Message: reservation.Status.Message,
+		},
+		StartDate: reservation.StartDate.Format("2006-01-02"),
+		EndDate:   reservation.EndDate.Format("2006-01-02"),
+	}
+}
+
+type BriefReservationsResponse []BriefReservationResponse
+
+func NewBriefReservationsResponse(reservations *entity.Reservations) *BriefReservationsResponse {
+	var briefReservations BriefReservationsResponse
+	for _, reservation := range *reservations {
+		briefReservations = append(briefReservations, *NewBriefReservationResponse(&reservation))
+	}
+	return &briefReservations
+}
+
 type FullPublishedBuildingResponse struct {
-	ID          string        `json:"id"`
-	Name        string        `json:"name"`
-	Pictures    *Pictures     `json:"pictures"`
-	Description string        `json:"description"`
-	Facilities  *Facilities   `json:"facilities"`
-	Capacity    int           `json:"capacity"`
-	Size        int           `json:"size"`
-	Review      *Review       `json:"review"`
-	Prices      *Price        `json:"price"`
-	Owner       string        `json:"owner"`
-	Locations   *FullLocation `json:"location"`
-	Agent       *Agent        `json:"agent"`
+	ID           string                     `json:"id"`
+	Name         string                     `json:"name"`
+	Pictures     *Pictures                  `json:"pictures"`
+	Description  string                     `json:"description"`
+	Facilities   *Facilities                `json:"facilities"`
+	Reservations *BriefReservationsResponse `json:"reservations"`
+	Capacity     int                        `json:"capacity"`
+	Size         int                        `json:"size"`
+	Review       *Review                    `json:"review"`
+	Prices       *Price                     `json:"price"`
+	Owner        string                     `json:"owner"`
+	Locations    *FullLocation              `json:"location"`
+	Agent        *Agent                     `json:"agent"`
 }
 
 func NewFullPublishedBuildingResponse(building *entity.Building) *FullPublishedBuildingResponse {
 	return &FullPublishedBuildingResponse{
-		ID:          building.ID,
-		Name:        building.Name,
-		Pictures:    NewPictures(&building.Pictures),
-		Description: building.Description,
-		Facilities:  NewFacilities(&building.Facilities),
-		Capacity:    building.Capacity,
-		Size:        building.Size,
+		ID:           building.ID,
+		Name:         building.Name,
+		Pictures:     NewPictures(&building.Pictures),
+		Description:  building.Description,
+		Facilities:   NewFacilities(&building.Facilities),
+		Capacity:     building.Capacity,
+		Size:         building.Size,
+		Reservations: NewBriefReservationsResponse(&building.Reservations),
 		Review: &Review{
 			Rating: building.Rating,
 			Count:  building.ReviewCount,
@@ -229,30 +263,32 @@ func NewFullPublishedBuildingResponse(building *entity.Building) *FullPublishedB
 }
 
 type FullBuildingResponse struct {
-	ID          string        `json:"id" validate:"required,uuid"`
-	Name        string        `json:"name" validate:"required,min=3,max=100"`
-	Pictures    *Pictures     `json:"pictures" validate:"required,min=1,dive"`
-	Description string        `json:"description" validate:"required,min=3,max=10000"`
-	Facilities  *Facilities   `json:"facilities" validate:"required,min=1,dive"`
-	Capacity    int           `json:"capacity" validate:"required,min=1"`
-	Size        int           `json:"size" validate:"required,gte=1"`
-	Review      *Review       `json:"review"`
-	Prices      *Price        `json:"price" validate:"required,dive"`
-	Owner       string        `json:"owner" validate:"required"`
-	Locations   *FullLocation `json:"location" validate:"required,dive"`
-	Agent       *Agent        `json:"agent,omitempty"`
-	IsPublished bool          `json:"isPublished" `
+	ID           string                     `json:"id" validate:"required,uuid"`
+	Name         string                     `json:"name" validate:"required,min=3,max=100"`
+	Pictures     *Pictures                  `json:"pictures" validate:"required,min=1,dive"`
+	Description  string                     `json:"description" validate:"required,min=3,max=10000"`
+	Facilities   *Facilities                `json:"facilities" validate:"required,min=1,dive"`
+	Capacity     int                        `json:"capacity" validate:"required,min=1"`
+	Size         int                        `json:"size" validate:"required,gte=1"`
+	Reservations *BriefReservationsResponse `json:"reservations,omitempty"`
+	Review       *Review                    `json:"review"`
+	Prices       *Price                     `json:"price" validate:"required,dive"`
+	Owner        string                     `json:"owner" validate:"required"`
+	Locations    *FullLocation              `json:"location" validate:"required,dive"`
+	Agent        *Agent                     `json:"agent,omitempty"`
+	IsPublished  bool                       `json:"isPublished" `
 }
 
 func NewFullBuildingResponse(building *entity.Building) *FullBuildingResponse {
 	return &FullBuildingResponse{
-		ID:          building.ID,
-		Name:        building.Name,
-		Pictures:    NewPictures(&building.Pictures),
-		Description: building.Description,
-		Facilities:  NewFacilities(&building.Facilities),
-		Capacity:    building.Capacity,
-		Size:        building.Size,
+		ID:           building.ID,
+		Name:         building.Name,
+		Pictures:     NewPictures(&building.Pictures),
+		Description:  building.Description,
+		Facilities:   NewFacilities(&building.Facilities),
+		Capacity:     building.Capacity,
+		Size:         building.Size,
+		Reservations: NewBriefReservationsResponse(&building.Reservations),
 		Review: &Review{
 			Rating: building.Rating,
 			Count:  building.ReviewCount,
